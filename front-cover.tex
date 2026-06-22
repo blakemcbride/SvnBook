@@ -1,0 +1,42 @@
+% Front-cover-only artwork at trim size (6.69 x 9.61 in), full-bleed design.
+% Build:  xelatex front-cover.tex   (run twice; uses TikZ "current page")
+% Then convert to JPG, e.g.:  magick -density 300 front-cover.pdf -flatten front-cover.jpg
+\documentclass{article}
+\usepackage[paperwidth=6.69in,paperheight=9.61in,margin=0in]{geometry}
+\usepackage{tikz}
+\usepackage[no-math]{fontspec}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\definecolor{coverbg}{RGB}{26,38,64}       % deep navy
+\definecolor{coveraccent}{RGB}{226,119,40} % subversion orange
+
+\begin{document}%
+\begin{tikzpicture}[remember picture,overlay,x=1in,y=1in]
+\begin{scope}[shift={(current page.south west)}]
+  \fill[coverbg] (0,0) rectangle (6.69,9.61);
+  \def\cx{3.345}
+
+  \node[text=white,align=center,text width=5.6in,
+        font=\sffamily\bfseries\fontsize{36}{42}\selectfont]
+        at (\cx,7.35) {Version Control\\with Subversion};
+
+  \draw[coveraccent,line width=2pt] (\cx-2.4,6.35) -- (\cx+2.4,6.35);
+
+  \node[text=coveraccent,align=center,
+        font=\sffamily\fontsize{19}{23}\selectfont]
+        at (\cx,5.85) {For Subversion 1.14.5};
+
+  \node[text=white,align=center,text width=5.6in,
+        font=\sffamily\fontsize{15}{22}\selectfont]
+        at (\cx,2.55)
+        {Ben Collins-Sussman\\Brian W. Fitzpatrick\\C. Michael Pilato};
+
+  \node[text=white!72,align=center,text width=5.4in,
+        font=\sffamily\itshape\fontsize{9.5}{12}\selectfont]
+        at (\cx,1.1)
+        {Updated to Subversion~1.14.5 by Claude Code\\
+         under the direction of Blake McBride};
+\end{scope}
+\end{tikzpicture}%
+\end{document}

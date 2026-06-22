@@ -2,8 +2,10 @@
 #
 #   make            -> book.pdf
 #   make cover      -> cover.pdf (wraparound print cover: back|spine|front)
+#   make front-cover-> front-cover.jpg (front cover only, 300 dpi)
 #   make clean      -> remove build artifacts
 #
+# 'front-cover' additionally requires ImageMagick (the 'magick' command).
 # Requires xelatex (texlive-xetex) for native UTF-8 (the text uses → … ™ ®).
 # book.tex is the master; the chapters live in tex/ and are pulled in with
 # \input.  Images are in images/.
@@ -27,7 +29,16 @@ cover.pdf: cover.tex images/cc-by.png
 
 cover: cover.pdf
 
-clean:
-	rm -rf build book.pdf cover.pdf
+front-cover.jpg: front-cover.tex
+	@mkdir -p build
+	$(ENGINE) $(FLAGS) front-cover.tex
+	$(ENGINE) $(FLAGS) front-cover.tex   # second pass: TikZ "current page"
+	magick -density 300 build/front-cover.pdf -background white -flatten \
+	       -quality 92 front-cover.jpg
 
-.PHONY: clean cover
+front-cover: front-cover.jpg
+
+clean:
+	rm -rf build book.pdf cover.pdf front-cover.jpg
+
+.PHONY: clean cover front-cover
