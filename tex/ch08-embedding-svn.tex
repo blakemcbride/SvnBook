@@ -605,6 +605,12 @@ to compensate for complex APIs that SWIG needs some help translating
 between languages. For more information on SWIG itself, see the
 project\textquotesingle s web site at \href{https://www.swig.org/}{}.
 
+As of Subversion 1.14, the SWIG Python bindings (and
+Subversion\textquotesingle s test suite) support Python 3; support for
+the older Python 2 is deprecated and may be dropped in a later 1.14.x
+point release. Building the Python bindings now also requires the
+\texttt{py3c} Python 3 compatibility library.
+
 Subversion also has language bindings for Java. The javahl bindings
 (located in \texttt{subversion/bindings/java} in the Subversion source
 tree) aren\textquotesingle t SWIG-based, but are instead a mixture of

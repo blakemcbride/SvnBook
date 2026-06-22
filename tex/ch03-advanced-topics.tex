@@ -4110,6 +4110,37 @@ blog post category and photo service tag analogies break down---if you
 find yourself needing to assign a file to multiple changelists,
 you\textquotesingle re out of luck.
 
+\section{Shelving and Checkpointing}\label{svn.advanced.shelving}
+
+Subversion 1.10 introduced \emph{shelving}, an experimental feature for
+temporarily setting aside some or all of the uncommitted changes in your
+working copy---restoring the working copy to a clean state---so that you
+can work on something else and then restore (``unshelve'') those changes
+later. It is conceptually similar to the ``stash'' feature found in some
+other version control systems. A companion experimental feature,
+\emph{checkpointing}, lets you save successive snapshots of your
+uncommitted work and roll back to an earlier one.
+
+These features are genuinely experimental, and have been reworked several
+times: the original 1.10 implementation was replaced by incompatible
+versions in 1.11, 1.12, and 1.14, and the on-disk format of one version
+cannot be read by another. For that reason the shelving subcommands are
+hidden from \texttt{svn\ help} by default and must be enabled by setting
+the \texttt{SVN\_EXPERIMENTAL\_COMMANDS} environment variable, and some
+distributions omit them from their Subversion packages entirely.
+
+Because of this instability, we don\textquotesingle t document the
+shelving commands in detail here---the exact command set and behavior
+depend on your particular Subversion build and may change again in a
+future release. If your build includes the feature, run \texttt{svn\ help}
+with \texttt{SVN\_EXPERIMENTAL\_COMMANDS} set to list the shelving
+subcommands it provides (historically \texttt{svn\ shelve},
+\texttt{svn\ unshelve}, and \texttt{svn\ shelves}, later reorganized into
+a family of \texttt{svn\ shelf-*} subcommands), and consult that
+build\textquotesingle s own help output for the authoritative syntax. For
+anything you cannot afford to lose, prefer a committed branch over an
+experimental shelf.
+
 \section{Network Model}\label{svn.serverconfig.netmodel}
 
 At some point, you\textquotesingle re going to need to understand how
