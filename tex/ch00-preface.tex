@@ -381,6 +381,59 @@ socially. There is also a new built-in command-line file merge tool for
 interactive conflict resolution. As always, Subversion 1.8 includes many
 additional features, defect fixes, and improvements in behavior and
 performance.
+\item[Subversion 1.9 (August 2015)]
+Release 1.9 introduced a new FSFS repository format (format 7) featuring
+logical addressing and full checksum coverage, substantially reducing
+disk I/O. It shipped a new low-level repository maintenance tool,
+\texttt{svnfsfs}, alongside the new \texttt{svn\ auth} command for
+inspecting and removing cached authentication credentials and the new
+\texttt{svnadmin\ info} command. The client gained numerous
+conveniences, including \texttt{svn\ info\ -\/-show-item} for scripting,
+several new \texttt{svn\ cleanup} options
+(\texttt{-\/-remove-unversioned}, \texttt{-\/-remove-ignored}, and
+\texttt{-\/-include-externals}), \texttt{svn\ copy\ -\/-pin-externals},
+and prospective (forward-looking) \texttt{svn\ blame}.
+\item[Subversion 1.10 (April 2018)]
+Release 1.10\textquotesingle s headline feature was a vastly improved
+interactive conflict resolver, able to recognize moves and renames in
+repository history and to untangle many tree conflicts with little user
+effort. It also brought a completely new path-based authorization
+implementation with wildcard (\texttt{glob}) support and much better
+performance, and added LZ4 compression both on disk (filesystem format
+8) and over the network. This release also introduced the experimental
+\emph{shelving} feature (\texttt{svn\ shelve}, \texttt{svn\ unshelve},
+and \texttt{svn\ shelves}) for temporarily setting aside uncommitted
+changes.
+\item[Subversion 1.11 (October 2018)]
+Release 1.11 was the first in a new series of time-based regular
+releases, supported for shorter periods than the long-term support
+releases that bracket them. It reworked the experimental shelving feature
+atop a new storage mechanism and added experimental commit
+\emph{checkpointing}, allowing a snapshot of uncommitted work to be saved
+and later restored.
+\item[Subversion 1.12 (April 2019)]
+Release 1.12 continued to refine the experimental shelving and
+checkpointing features (its shelves are not compatible with those of
+1.10) and improved the conflict resolver\textquotesingle s handling of
+moved files and directories. The \texttt{svn\ list} command learned a
+\texttt{-\/-human-readable} option and stopped truncating long author
+names, and \texttt{svn\ info} began reporting repository file sizes. On
+Unix-like systems, storage of passwords in plaintext is now disabled by
+default.
+\item[Subversion 1.13 (October 2019)]
+Release 1.13 added the \texttt{svnadmin\ rev-size} command for reporting
+the size of a revision, sped up \texttt{svn\ status} in the working
+copy, and tidied \texttt{svn\ help} output by hiding experimental
+subcommands and global options.
+\item[Subversion 1.14 (May 2020)]
+Release 1.14 is a long-term support (LTS) release---the line to which the
+version documented by this book, 1.14.5, belongs. Its most visible change
+is support for Python 3 in Subversion\textquotesingle s SWIG language
+bindings and test suite, with Python 2 support deprecated. It also added
+the \texttt{svnadmin\ build-repcache} command and carried forward the
+ongoing (still experimental) work on shelving and checkpointing. Because
+it is an LTS release, 1.14 continues to receive maintenance updates such
+as the 1.14.5 release that this book documents.
 \end{description}
 
 \section{Audience}\label{svn.preface.audience}
