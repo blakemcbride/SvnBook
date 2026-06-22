@@ -933,6 +933,7 @@ contents of directories, see \texttt{svn\ list} later in this chapter.
 \subsection{Options}
 
 \begin{verbatim}
+--ignore-keywords
 --revision (-r) REV
 \end{verbatim}
 
@@ -2285,6 +2286,7 @@ from another user or working copy.
 --force
 --force-log
 --message (-m) MESSAGE
+--quiet (-q)
 --targets FILENAME
 \end{verbatim}
 
@@ -2863,9 +2865,13 @@ revisions as specified by the \texttt{-\/-show-revs} option.
 
 \begin{verbatim}
 --depth ARG
+--incremental
+--log
+--quiet (-q)
 --recursive (-R)
 --revision (-r) REV
 --show-revs ARG
+--verbose (-v)
 \end{verbatim}
 
 \subsection{Examples}
@@ -3002,6 +3008,7 @@ copies}).
 \subsection{Options}
 
 \begin{verbatim}
+--allow-mixed-revisions
 --editor-cmd CMD
 --encoding ENC
 --file (-F) FILENAME
@@ -4145,6 +4152,7 @@ spaces.
 --incremental
 --no-ignore
 --quiet (-q)
+--revision (-r) REV
 --show-updates (-u)
 --verbose (-v)
 --xml
@@ -4350,6 +4358,7 @@ copy.
 
 \begin{verbatim}
 --force
+--quiet (-q)
 --targets FILENAME
 \end{verbatim}
 
