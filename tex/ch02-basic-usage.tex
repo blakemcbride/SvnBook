@@ -891,10 +891,9 @@ $ svn update
 Updating '.':
 U    INSTALL
 G    README
-Conflict discovered in 'bar.c'.
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options:
+Merge conflict discovered in file 'bar.c'.
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options:
         
 \end{verbatim}
 
@@ -920,74 +919,78 @@ but you can see all of the options by typing \textless s\textgreater:
 
 \begin{verbatim}
 …
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options: s
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options: s
 
+  (p)  - skip this conflict and leave it unresolved  [postpone]
+  (tf) - accept incoming version of entire file  [theirs-full]
+  (mf) - reject all incoming changes for this file  [mine-full]
+  (tc) - accept incoming changes only where they conflict  [theirs-conflict]
+  (mc) - reject incoming changes which conflict and accept the rest  [mine-conflict]
+  (r)  - accept the file as it appears in the working copy  [working]
+  (q)  - postpone all remaining conflicts
   (e)  - change merged file in an editor  [edit]
   (df) - show all changes made to merged file
-  (r)  - accept merged version of file
-
   (dc) - show all conflicts (ignoring merged version)
-  (mc) - accept my version for all conflicts (same)  [mine-conflict]
-  (tc) - accept their version for all conflicts (same)  [theirs-conflict]
-
-  (mf) - accept my version of entire file (even non-conflicts)  [mine-full]
-  (tf) - accept their version of entire file (same)  [theirs-full]
-
-  (m)  - use internal merge tool to resolve conflict
-  (l)  - launch external tool to resolve conflict  [launch]
-  (p)  - mark the conflict to be resolved later  [postpone]
-  (q)  - postpone all remaining conflicts
+  (m)  - use merge tool to resolve conflict
+  (l)  - launch external merge tool to resolve conflict  [launch]
+  (i)  - use built-in merge tool to resolve conflict
   (s)  - show this list (also 'h', '?')
 Words in square brackets are the corresponding --accept option arguments.
 
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options:
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options:
 \end{verbatim}
 
 Let\textquotesingle s briefly review each of these options before we go
 into detail on what each option means.
 
 \begin{description}
+\item[\texttt{(p)\ postpone\ {[}postpone{]}}]
+Leave the file in a conflicted state for you to resolve after your update
+is complete.
+\item[\texttt{(tf)\ theirs-full\ {[}theirs-full{]}}]
+Discard all of your local changes to the file and use the incoming
+version of the entire file from the repository.
+\item[\texttt{(mf)\ mine-full\ {[}mine-full{]}}]
+Reject all of the incoming changes for the file and keep your local
+version of the entire file.
+\item[\texttt{(tc)\ theirs-conflict\ {[}theirs-conflict{]}}]
+Accept the incoming changes from the repository only in the regions where
+they conflict with your local changes; keep your local changes
+everywhere else.
+\item[\texttt{(mc)\ mine-conflict\ {[}mine-conflict{]}}]
+Reject the incoming changes from the repository in the regions where they
+conflict with your local changes, but accept all of the non-conflicting
+incoming changes.
+\item[\texttt{(r)\ resolved\ {[}working{]}}]
+Accept the file as it currently appears in your working copy. Use this
+once you have manually resolved the conflict---for example, after editing
+the file---to tell Subversion that the conflict markers are gone and the
+file is ready.
+\item[\texttt{(q)\ quit}]
+Postpone this and all remaining conflicts, leaving them to be resolved
+after the operation completes.
 \item[\texttt{(e)\ edit\ {[}edit{]}}]
 Open the file in conflict with your favorite editor, as set in the
 environment variable \texttt{EDITOR}.
 \item[\texttt{(df)\ diff-full}]
-Display the differences between the base revision and the conflicted
-file itself in unified diff format.
-\item[\texttt{(r)\ resolved}]
-After editing a file, tell \texttt{svn} that you\textquotesingle ve
-resolved the conflicts in the file and that it should accept the current
-contents---basically that you\textquotesingle ve ``resolved'' the
-conflict.
+Display, in unified diff format, all of the changes that have been merged
+into the conflicted file.
 \item[\texttt{(dc)\ display-conflict}]
-Display all conflicting regions of the file, ignoring changes which were
-successfully merged.
-\item[\texttt{(mc)\ mine-conflict\ {[}mine-conflict{]}}]
-Discard any newly received changes from the server which conflict with
-your local changes to the file under review. However, accept and merge
-all non-conflicting changes received from the server for that file.
-\item[\texttt{(tc)\ theirs-conflict\ {[}theirs-conflict{]}}]
-Discard any local changes which conflict with incoming changes from the
-server for the file under review. However, preserve all non-conflicting
-local changes to that file.
-\item[\texttt{(mf)\ mine-full\ {[}mine-full{]}}]
-Discard all newly received changes from the server for the file under
-review, but preserve all your local changes for that file.
-\item[\texttt{(tf)\ theirs-full\ {[}theirs-full{]}}]
-Discard all your local changes to the file under review and use only the
-newly received changes from the server for that file.
+Display only the conflicting regions of the file, ignoring changes which
+were merged successfully.
 \item[\texttt{(m)\ merge}]
-Launch an internal file merge tool to perform the conflict resolution.
-The option is available starting with Subversion 1.8.
-\item[\texttt{(l)\ launch}]
+Resolve the conflict interactively with a merge tool---by default
+Subversion\textquotesingle s built-in tool, or an external tool if you
+have configured one.
+\item[\texttt{(l)\ launch\ {[}launch{]}}]
 Launch an external program to perform the conflict resolution. This
 requires a bit of preparation beforehand.
-\item[\texttt{(p)\ postpone\ {[}postpone{]}}]
-Leave the file in a conflicted state for you to resolve after your
-update is complete.
+\item[\texttt{(i)\ internal}]
+Resolve the conflict using Subversion\textquotesingle s built-in
+interactive merge tool. This option is available starting with Subversion
+1.8.
 \item[\texttt{(s)\ show\ all}]
 Show the list of all possible commands you can use in interactive
 conflict resolution.
@@ -1008,25 +1011,27 @@ any conflict regions:
 
 \begin{verbatim}
 …
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options: df
---- .svn/text-base/sandwich.txt.svn-base      Tue Dec 11 21:33:57 2007
-+++ .svn/tmp/tempfile.32.tmp     Tue Dec 11 21:34:33 2007
-@@ -1 +1,5 @@
--Just buy a sandwich.
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options: df
+--- sandwich.txt.r2     - THEIRS
++++ sandwich.txt        - MERGED
+@@ -1 +1,7 @@
 +<<<<<<< .mine
 +Go pick up a cheesesteak.
++||||||| .r1
++Just buy a sandwich.
 +=======
-+Bring me a taco!
-+>>>>>>> .r32
+ Bring me a taco!
++>>>>>>> .r2
 …
 \end{verbatim}
 
-The first line of the diff content shows the previous contents of the
-working copy (the \texttt{BASE} revision), the next content line is your
-change, and the last content line is the change that was just received
-from the server (\emph{usually} the \texttt{HEAD} revision).
+This shows, in unified diff format, how your conflicted working file
+(\texttt{MERGED}) differs from the incoming repository version
+(\texttt{THEIRS}). Within the conflicting region, the markers delimit
+your local change (the \texttt{.mine} section), the original
+common-ancestor text (the \texttt{|||||||} section, added in Subversion
+1.9), and the incoming change (the \texttt{.r2} section).
 
 The second command is similar to the first, but the ``display-conflict''
 (\texttt{dc}) command shows only the conflict regions, not all the
@@ -1061,9 +1066,8 @@ conflicting areas and allows you to choose from a number of options to
 resolve the conflicts area-by-area:
 
 \begin{verbatim}
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options: m
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options: m
 Merging 'Makefile'.
 Conflicting section found during merge:
 (1) their version (at line 24)                  |(2) your version (at line 24)
@@ -1188,10 +1192,9 @@ gets a conflict, which she postpones:
 \begin{verbatim}
 $ svn update
 Updating '.':
-Conflict discovered in 'sandwich.txt'.
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options: p
+Merge conflict discovered in file 'sandwich.txt'.
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options: p
 C    sandwich.txt
 Updated to revision 2.
 Summary of conflicts:
@@ -1287,6 +1290,7 @@ Provolone
 Salami
 Mortadella
 Prosciutto
+||||||| .r1
 =======
 Sauerkraut
 Grilled Chicken
@@ -1295,10 +1299,11 @@ Creole Mustard
 Bottom piece of bread
 \end{verbatim}
 
-The strings of less-than signs, equals signs, and greater-than signs are
-conflict markers and are not part of the actual data in conflict. You
-generally want to ensure that those are removed from the file before
-your next commit. The text between the first two sets of markers is
+The strings of less-than signs, vertical bars, equals signs, and
+greater-than signs are conflict markers and are not part of the actual
+data in conflict. You generally want to ensure that those are removed
+from the file before your next commit. Subversion divides the conflicting
+region into three parts. The text between the first two markers is
 composed of the changes you made in the conflicting area:
 
 \begin{verbatim}
@@ -1306,11 +1311,21 @@ composed of the changes you made in the conflicting area:
 Salami
 Mortadella
 Prosciutto
+||||||| .r1
+\end{verbatim}
+
+The text between the \texttt{|||||||} and \texttt{=======} markers shows
+the original text from the common ancestor revision (added in Subversion
+1.9). Here it is empty, because both you and Sally inserted new lines
+where the base file had none:
+
+\begin{verbatim}
+||||||| .r1
 =======
 \end{verbatim}
 
-The text between the second and third sets of conflict markers is the
-text from Sally\textquotesingle s commit:
+And the text between the last two conflict markers is the text from
+Sally\textquotesingle s commit:
 
 \begin{verbatim}
 =======
@@ -1374,10 +1389,9 @@ Subversion will discard your edits and remove the temporary files:
 \begin{verbatim}
 $ svn update
 Updating '.':
-Conflict discovered in 'sandwich.txt'.
-Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
-        (mc) my side of conflict, (tc) their side of conflict,
-        (s) show all options: p
+Merge conflict discovered in file 'sandwich.txt'.
+Select: (p) Postpone, (df) Show diff, (e) Edit file, (m) Merge,
+        (s) Show all options: p
 C    sandwich.txt
 Updated to revision 2.
 Summary of conflicts:
