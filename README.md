@@ -62,8 +62,8 @@ make clean    # remove build artifacts
 Requires **xelatex** (e.g. Fedora's `texlive-xetex`); the text uses Unicode
 characters (→ … ™ ®) that need a Unicode-aware engine. The build runs three
 passes (content, table of contents, cross-references) and currently produces
-a clean **572-page** PDF (trimmed to **7.5 × 9.25 in**) with 0 errors and 0
-undefined cross-references.
+a clean **576-page** PDF (trimmed to **6.69 × 9.61 in**, i.e. 170 × 244 mm)
+with 0 errors and 0 undefined cross-references.
 
 ## Repository layout
 
