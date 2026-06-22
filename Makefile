@@ -1,6 +1,7 @@
 # Build the Subversion book (LaTeX) into a PDF.
 #
 #   make            -> book.pdf
+#   make cover      -> cover.pdf (wraparound print cover: back|spine|front)
 #   make clean      -> remove build artifacts
 #
 # Requires xelatex (texlive-xetex) for native UTF-8 (the text uses → … ™ ®).
@@ -18,7 +19,15 @@ book.pdf: $(SOURCES)
 	$(ENGINE) $(FLAGS) book.tex   # third pass: cross-references
 	cp build/book.pdf book.pdf
 
-clean:
-	rm -rf build book.pdf
+cover.pdf: cover.tex images/cc-by.png
+	@mkdir -p build
+	$(ENGINE) $(FLAGS) cover.tex
+	$(ENGINE) $(FLAGS) cover.tex   # second pass: TikZ "current page"
+	cp build/cover.pdf cover.pdf
 
-.PHONY: clean
+cover: cover.pdf
+
+clean:
+	rm -rf build book.pdf cover.pdf
+
+.PHONY: clean cover

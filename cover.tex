@@ -1,0 +1,121 @@
+% Wraparound print cover for "Version Control with Subversion" (1.14.5 ed.)
+% Lays out BACK COVER | SPINE | FRONT COVER as a single PDF page, with bleed.
+% Build:  xelatex cover.tex   (run twice; uses TikZ "current page")
+%
+% -------- Geometry assumptions (edit these for your printer) ---------------
+%   Trim size        : 6.69 in x 9.61 in   (matches book.tex)
+%   Bleed            : 0.125 in on every outer edge
+%   Spine width      : page_count * paper_thickness
+%                      = 576 pages * 0.002252 in/page  = 1.2972 in
+%                      (0.002252 in/page = Amazon KDP white paper; use your
+%                       printer's pages-per-inch / caliper for an exact spine.)
+% --------------------------------------------------------------------------
+\documentclass{article}
+\usepackage[paperwidth=14.9272in,paperheight=9.86in,margin=0in]{geometry}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage[no-math]{fontspec}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\definecolor{coverbg}{RGB}{26,38,64}      % deep navy
+\definecolor{coveraccent}{RGB}{226,119,40}% subversion orange
+\definecolor{coverbgsoft}{RGB}{36,51,84}  % slightly lighter navy (back panel)
+
+% Named dimensions (inches), measured from the page's bottom-left corner.
+\newcommand{\Bleed}{0.125}
+\newcommand{\Tw}{6.69}      % trim width
+\newcommand{\Th}{9.61}      % trim height
+\newcommand{\Sp}{1.2972}    % spine width
+
+\begin{document}%
+\begin{tikzpicture}[remember picture,overlay,x=1in,y=1in]
+\begin{scope}[shift={(current page.south west)}]
+  % ---- background (covers full page incl. bleed) ----
+  \fill[coverbg] (0,0) rectangle (14.9272,9.86);
+  % back-cover panel a subtly different shade; bleeds off the outer (left,
+  % top, bottom) edges and stops cleanly at the spine fold on the right.
+  \fill[coverbgsoft] (0,0) rectangle (\Bleed+\Tw,9.86);
+
+  % Useful x landmarks
+  %   back trim:  [0.125 .. 6.815]   center 3.47
+  %   spine:      [6.815 .. 8.1122]  center 7.4636
+  %   front trim: [8.1122 .. 14.8022] center 11.4572
+  \def\backcx{3.47}
+  \def\spinecx{7.4636}
+  \def\frontcx{11.4572}
+
+  % ====================== FRONT COVER ======================
+  \node[text=white,align=center,text width=5.6in,
+        font=\sffamily\bfseries\fontsize{36}{42}\selectfont]
+        at (\frontcx,7.55) {Version Control\\with Subversion};
+
+  \draw[coveraccent,line width=2pt] (\frontcx-2.4,6.55) -- (\frontcx+2.4,6.55);
+
+  \node[text=coveraccent,align=center,
+        font=\sffamily\fontsize{19}{23}\selectfont]
+        at (\frontcx,6.05) {For Subversion 1.14.5};
+
+  \node[text=white,align=center,text width=5.6in,
+        font=\sffamily\fontsize{15}{22}\selectfont]
+        at (\frontcx,2.65)
+        {Ben Collins-Sussman\\Brian W. Fitzpatrick\\C. Michael Pilato};
+
+  \node[text=white!72,align=center,text width=5.4in,
+        font=\sffamily\itshape\fontsize{9.5}{12}\selectfont]
+        at (\frontcx,1.15)
+        {Updated to Subversion~1.14.5 by Claude Code\\
+         under the direction of Blake McBride};
+
+  % ====================== SPINE ============================
+  % English convention: spine reads top-to-bottom (rotate clockwise).
+  \node[rotate=-90,text=white,
+        font=\sffamily\bfseries\fontsize{15}{17}\selectfont]
+        at (\spinecx,6.1) {Version Control with Subversion};
+  \node[rotate=-90,text=coveraccent,
+        font=\sffamily\fontsize{11}{13}\selectfont]
+        at (\spinecx,2.2) {1.14.5};
+
+  % ====================== BACK COVER =======================
+  \node[text=white,align=flush left,text width=5.55in,anchor=north west,
+        font=\sffamily\fontsize{10.5}{14.5}\selectfont]
+        at (0.55,9.15) {%
+    {\bfseries\fontsize{15}{18}\selectfont\color{coveraccent}%
+      The definitive guide to Apache Subversion\par}
+    \vspace{8pt}
+    Apache Subversion is a powerful, open source, centralized version control
+    system trusted to manage source code and documents for projects of every
+    size. \textit{Version Control with Subversion} is its standard
+    guide---written by core Subversion developers and used by practitioners
+    worldwide.\par
+    \vspace{6pt}
+    Starting from first principles, this book walks you through everyday
+    version control, branching and merging, repository administration, server
+    configuration, and a complete reference for every command-line tool.\par
+    \vspace{6pt}
+    This edition brings the classic text up to date with Subversion 1.14.5:
+    \par\vspace{3pt}
+    \textbullet~The redesigned interactive conflict resolver and three-way
+      conflict markers\\
+    \textbullet~Wildcard (``glob'') path-based authorization\\
+    \textbullet~FSFS logical addressing and LZ4 compression\\
+    \textbullet~A new \texttt{svnfsfs} reference and the latest
+      \texttt{svn}/\texttt{svnadmin} commands\\
+    \textbullet~A new appendix on open source Subversion command-line utilities
+  };
+
+  % ISBN / barcode placeholder (white box, bottom-right of back cover)
+  \fill[white] (4.30,0.45) rectangle (6.40,1.65);
+  \node[text=black!70,align=center,font=\sffamily\fontsize{8}{10}\selectfont]
+        at (5.35,1.05) {ISBN / barcode\\area};
+
+  % License + CC-BY mark (bottom-left of back cover)
+  \node[anchor=south west] at (0.55,1.02)
+        {\includegraphics[height=0.42in]{images/cc-by.png}};
+  \node[text=white!75,anchor=south west,text width=3.0in,
+        font=\sffamily\fontsize{8}{10}\selectfont]
+        at (0.55,0.50)
+        {Licensed under the Creative Commons Attribution License~2.0.};
+\end{scope}
+\end{tikzpicture}%
+\end{document}
