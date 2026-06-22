@@ -749,6 +749,47 @@ or disk usage of their repositories. You can find these options---and
 the documentation for them---in the \texttt{db/fsfs.conf} file in the
 repository.
 
+The on-disk FSFS format has evolved over time, and a newly created
+repository uses the most capable format its version of Subversion
+supports. Format 7, introduced in Subversion 1.9, switched FSFS to
+\emph{logical addressing} and added full checksum coverage,
+substantially reducing the amount of disk I/O needed to read revision
+data. Format 8, introduced in Subversion 1.10, added support for LZ4
+compression. (If a new repository must remain compatible with an older
+server, create it with the \texttt{-\/-compatible-version} option to
+\texttt{svnadmin\ create} so that it uses an older format.)
+
+The settings most worth knowing about are the following:
+
+\begin{description}
+\item[\texttt{compression}]
+Selects the algorithm used to compress file contents:
+\texttt{lz4}, \texttt{zlib}, \texttt{zlib-1} through \texttt{zlib-9}, or
+\texttt{none}. LZ4---available only on format 8 and later
+repositories---is very fast and is the default for such repositories;
+zlib compresses more tightly but more slowly, and a bare \texttt{zlib} is
+equivalent to \texttt{zlib-5}. The older \texttt{compression-level}
+option, which configured the zlib level, is still honored for backward
+compatibility.
+\item[\texttt{enable-rep-sharing}]
+When enabled (the default), identical file and property contents are
+stored only once across the entire repository, even when they appear in
+otherwise unrelated files. This is the data tracked by the representation
+cache (see \hyperref[svn.ref.svnadmin.c.build-repcache]{svnadmin
+build-repcache}).
+\item[\texttt{enable-dir-deltification}, \texttt{enable-props-deltification}]
+Control whether directory listings and property lists, respectively, are
+stored as deltas against earlier revisions to save space. Both are
+enabled by default.
+\item[\texttt{max-deltification-walk}, \texttt{max-linear-deltification}]
+Tune how aggressively Subversion deltifies stored representations,
+trading disk space against the work required to reconstruct full text.
+\end{description}
+
+Changing these options affects only revisions written after the change;
+existing data is left as it is until it is rewritten---for example, by a
+dump and load.
+
 \section{Repository Maintenance}\label{svn.reposadmin.maint}
 
 Maintaining a Subversion repository can be daunting, mostly due to the
@@ -782,9 +823,9 @@ Type 'svnadmin help <subcommand>' for help on a specific subcommand.
 Type 'svnadmin --version' to see the program version and FS modules.
 
 Available subcommands:
+   build-repcache
    crashtest
    create
-   deltify
 …
 \end{verbatim}
 
