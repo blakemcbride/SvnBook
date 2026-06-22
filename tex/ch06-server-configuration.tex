@@ -3333,7 +3333,10 @@ sections, section names are of one of two forms: either
 \texttt{{[}repos-name:path{]}} or \texttt{{[}path{]}} when
 \texttt{AuthzSVNAccessFile} is used. If you configured per repository
 access files via \texttt{AuthzSVNReposRelativeAccessFile} directive, you
-should always use \texttt{{[}path{]}} form only. Authenticated usernames
+should always use \texttt{{[}path{]}} form only. (Subversion 1.10 added a
+third, wildcard-aware form of section name; see
+\hyperref[svn.serverconfig.pathbasedauthz.wildcards]{Path Patterns with
+Wildcards}.) Authenticated usernames
 are the option names within each section, and an
 option\textquotesingle s value describes that user\textquotesingle s
 level of access to the repository path: either \texttt{r} (read-only) or
@@ -3624,6 +3627,56 @@ calc = @calc-developers, @calc-owners
 [calc:/projects/calc/tags]
 ~@calc-owners = r
 \end{verbatim}
+
+\subsection{Path Patterns with
+Wildcards}\label{svn.serverconfig.pathbasedauthz.wildcards}
+
+The access rules described so far each name a single, literal path. As of
+Subversion 1.10, a rule\textquotesingle s path may instead contain
+wildcards, letting a single rule apply to many paths at once. A wildcard
+rule is written in a section whose name carries a \texttt{:glob:} marker
+immediately after the opening bracket---either
+\texttt{{[}:glob:repos-name:/path{]}} or \texttt{{[}:glob:/path{]}}, the
+latter (without a repository name) applying across all repositories.
+
+Two wildcards are recognized within the path:
+
+\begin{description}
+\item[\texttt{*}]
+Matches exactly one arbitrary path segment. It never matches a slash, so
+it stays within a single level of the directory tree.
+\item[\texttt{**}]
+Matches an arbitrary number of path segments (zero or more) separated by
+slashes. Written as \texttt{/**/} it can match zero intervening segments,
+so \texttt{/*/**/*} matches any path of at least two segments.
+\end{description}
+
+Classic shell-style patterns work within a single segment as well---for
+example, \texttt{*.c} matches all the C source files in a directory---and
+a literal asterisk can be matched by escaping it with a backslash.
+
+For instance, to grant a group read/write access to the \texttt{tags}
+directory of \emph{every} project in the \texttt{calc} repository, no
+matter how deeply nested it is:
+
+\begin{verbatim}
+[:glob:calc:/**/tags]
+@calc-developers = rw
+\end{verbatim}
+
+Or to make every C source file throughout a repository read-only for a
+group of reviewers:
+
+\begin{verbatim}
+[:glob:calc:/**/*.c]
+@reviewers = r
+\end{verbatim}
+
+Literal (non-wildcard) rules continue to take precedence over wildcard
+rules, so you can still carve out exceptions with an ordinary section. To
+avoid ambiguity, Subversion refuses to load an access file in which a
+wildcard rule and a literal rule resolve to the very same path; such
+collisions are reported as an error rather than silently resolved.
 
 \subsection{Some Gotchas with Access
 Control}\label{svn.serverconfig.pathbasedauthz.gotchas}
