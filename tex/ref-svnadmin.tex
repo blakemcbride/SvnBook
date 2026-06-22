@@ -21,6 +21,12 @@ Bypass the repository hook system.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bypass_prop_validation}{}\texttt{-\/-bypass-prop-validation}]
 When loading a dump file, disable the logic which validates property
 values.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.check_normalization}{}\texttt{-\/-check-normalization}]
+When used with \texttt{svnadmin\ verify}, additionally report any names
+within a single directory (or any \texttt{svn:mergeinfo} values) that are
+distinct as byte strings but would collide after Unicode normalization---a
+situation that can cause trouble for clients on different platforms.
+(Subversion 1.9.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.compatible_version}{}\texttt{-\/-compatible-version}
 \textless ARG\textgreater{}]
 Use repository format compatible with Subversion version
@@ -33,6 +39,12 @@ specified directory instead of the default location
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.deltas}{}\texttt{-\/-deltas}]
 When creating a repository dump file, specify changes in versioned
 properties and file contents as deltas against their previous state.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.exclude}{}\texttt{-\/-exclude}
+\textless ARG\textgreater{}]
+When used with \texttt{svnadmin\ dump}, omit from the dump any nodes whose
+paths match the given prefix (or, with \texttt{-\/-pattern}, glob). May be
+repeated. The effect is like an authz-based exclusion: a copy from an
+excluded path is transformed into a plain add. (Subversion 1.10.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.file}{}\texttt{-\/-file}
 (\texttt{-F}) \textless FILENAME\textgreater{}]
 Uses the contents of the named file for the specified subcommand.
@@ -51,14 +63,29 @@ By default, when loading data into an empty repository,
 \texttt{svnadmin} will set the repository\textquotesingle s UUID to the
 UUID from the dump stream. This option will cause the UUID from the
 stream to be ignored.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.include}{}\texttt{-\/-include}
+\textless ARG\textgreater{}]
+The inverse of \texttt{-\/-exclude}: when used with
+\texttt{svnadmin\ dump}, dump \emph{only} the nodes whose paths match the
+given prefix (or, with \texttt{-\/-pattern}, glob). May be repeated.
+(Subversion 1.10.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.incremental}{}\texttt{-\/-incremental}]
 Dump a revision only as a diff against the previous revision, instead of
 the usual fulltext.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.keep_going}{}\texttt{-\/-keep-going}]
+When used with \texttt{svnadmin\ verify}, continue checking subsequent
+revisions after a corruption is found instead of stopping at the first
+error, so a single run reports all detected problems. (Subversion 1.9.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.memory_cache_size}{}\texttt{-\/-memory-cache-size}
 (\texttt{-M}) \textless ARG\textgreater{}]
 Configures the size (in Megabytes) of the extra in-memory cache used to
 minimize redundant operations. The default value is \texttt{16}. (This
 cache is used for FSFS-backed repositories only.)
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.metadata_only}{}\texttt{-\/-metadata-only}]
+When used with \texttt{svnadmin\ verify}, check only the
+repository\textquotesingle s metadata and structure without reading and
+verifying the full text of every representation. This is much faster but
+less thorough. (Subversion 1.9.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.parent_dir}{}\texttt{-\/-parent-dir}
 \textless DIR\textgreater{}]
 When loading a dump file, root paths at \textless DIR\textgreater{}
@@ -78,9 +105,21 @@ of Subversion earlier than Subversion 1.6.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.revision}{}\texttt{-\/-revision}
 (\texttt{-r}) \textless ARG\textgreater{}]
 Specify a particular revision to operate on.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.pattern}{}\texttt{-\/-pattern}]
+When used with \texttt{svnadmin\ dump} together with \texttt{-\/-exclude}
+or \texttt{-\/-include}, treat the supplied path prefixes as file glob
+patterns (using \texttt{*}, \texttt{?}, \texttt{{[}{]}}, and
+\texttt{\textbackslash{}}) rather than as literal prefixes. (Subversion
+1.10.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.quiet}{}\texttt{-\/-quiet}
 (\texttt{-q})]
 Do not show normal progress---show only errors.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.transaction}{}\texttt{-\/-transaction}
+(\texttt{-t}) \textless ARG\textgreater{}]
+Operate on the named uncommitted transaction instead of a committed
+revision. Accepted by the \texttt{svnadmin} subcommands that can act on a
+transaction, such as \texttt{verify}, \texttt{delrevprop}, and
+\texttt{setrevprop}.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.use_post_commit_hook}{}\texttt{-\/-use-post-commit-hook}]
 When loading a dump file, runs the repository\textquotesingle s
 post-commit hook after finalizing each newly loaded revision.
@@ -337,8 +376,12 @@ option.
 
 \begin{verbatim}
 --deltas
+--exclude ARG
+--file (-F) FILE
+--include ARG
 --incremental
 --memory-cache-size (-M) ARG
+--pattern
 --quiet (-q)
 --revision (-r) ARG
 \end{verbatim}
@@ -1098,9 +1141,13 @@ backup, didn\textquotesingle t you?).
 \subsection{Options}
 
 \begin{verbatim}
+--check-normalization
+--keep-going
 --memory-cache-size (-M) ARG
+--metadata-only
 --quiet (-q)
 --revision (-r) ARG
+--transaction (-t) ARG
 \end{verbatim}
 
 \subsection{Examples}
