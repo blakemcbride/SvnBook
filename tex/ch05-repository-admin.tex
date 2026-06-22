@@ -140,13 +140,11 @@ development---including feature introduction or expansion---is planned
 for the Berkeley DB backend. Subversion effectively offers a single
 viable repository storage layer option. FSFS won.
 
-This book will continue to provide information relevant to
-administrators of BDB-backed repositories where it makes sense to do so,
-but most of this chapter will assume what the rest of the world does:
-that FSFS is \emph{the} Subversion storage backend implementation.
-Please refer to \hyperref[svn.berkeleydb]{The Berkeley DB Legacy
-Filesystem} or to older versions of this documentation for more complete
-information about administering such repositories.
+This book assumes throughout what the rest of the world does: that FSFS
+is \emph{the} Subversion storage backend implementation. Berkeley DB is
+mentioned only for historical context; administrators of legacy
+BDB-backed repositories should consult older versions of this
+documentation for information about maintaining them.
 
 \section{Strategies for Repository
 Deployment}\label{svn.reposadmin.planning}
@@ -409,19 +407,13 @@ Assuming that the parent directory \texttt{/var/svn} exists and that you
 have sufficient permissions to modify that directory, the previous
 command creates a new repository in the directory
 \texttt{/var/svn/repos}, and with the default filesystem data store
-(FSFS). You can explicitly choose the filesystem type using the
-\texttt{-\/-fs-type} argument, which accepts as a parameter either
-\texttt{fsfs} or \texttt{bdb}.
+(FSFS). You can explicitly select the filesystem type using the
+\texttt{-\/-fs-type} argument; new repositories should always use
+\texttt{fsfs}.
 
 \begin{verbatim}
 $ # Create an FSFS-backed repository
 $ svnadmin create --fs-type fsfs /var/svn/repos
-$
-\end{verbatim}
-
-\begin{verbatim}
-# Create a legacy Berkeley-DB-backed repository
-$ svnadmin create --fs-type bdb /var/svn/repos
 $
 \end{verbatim}
 
@@ -1283,9 +1275,6 @@ work, you can run it on live repositories, or even as part of a
 post-commit hook. Repacking packed shards is legal, but will have no
 effect on the disk usage of the repository.
 
-\texttt{svnadmin\ pack} has no effect on BDB-backed Subversion
-repositories.
-
 \subsection{Migrating Repository Data
 Elsewhere}\label{svn.reposadmin.maint.migrate}
 
@@ -1325,9 +1314,8 @@ haven\textquotesingle t occurred since Subversion\textquotesingle s 1.0
 release, and the Subversion developers promise not to force users to
 dump and load their repositories when upgrading between minor versions
 (such as from 1.3 to 1.4) of Subversion. But there are still other
-reasons for dumping and loading, including re-deploying a Berkeley DB
-repository on a new OS or CPU architecture, switching between the
-Berkeley DB and FSFS backends, or (as we\textquotesingle ll cover later
+reasons for dumping and loading, such as migrating repository history
+into another repository, or (as we\textquotesingle ll cover later
 in this chapter in \hyperref[svn.reposadmin.maint.filtering]{Filtering
 Repository History}) purging versioned data from repository history.
 
@@ -1341,11 +1329,9 @@ different storage mechanism or version control system altogether.
 Because the dump file format is, for the most part, human-readable, it
 should be relatively easy to describe generic sets of changes---each of
 which should be treated as a new revision---using this file format. In
-fact, the \texttt{cvs2svn} utility (see
-\hyperref[svn.forcvs.convert]{Converting a Repository from CVS to
-Subversion}) uses the dump format to represent the contents of a CVS
-repository so that those contents can be copied into a Subversion
-repository.
+fact, the \texttt{cvs2svn} utility uses the dump format to represent the
+contents of a CVS repository so that those contents can be copied into a
+Subversion repository.
 
 For now, we\textquotesingle ll concern ourselves only with migration of
 repository data between Subversion repositories, which
@@ -2391,20 +2377,18 @@ repository administrators---full and incremental. A full backup of the
 repository involves squirreling away in one sweeping action all the
 information required to fully reconstruct that repository in the event
 of a catastrophe. Usually, it means, quite literally, the duplication of
-the entire repository directory (which includes either a Berkeley DB or
-FSFS environment). Incremental backups are lesser things: backups of
+the entire repository directory (which includes the FSFS
+environment). Incremental backups are lesser things: backups of
 only the portion of the repository data that has changed since the
 previous backup.
 
 As far as full backups go, the naïve approach might seem like a sane
 one, but unless you temporarily disable all other access to your
 repository, simply doing a recursive directory copy runs the risk of
-generating a faulty backup. In the case of Berkeley DB, the
-documentation describes a certain order in which database files can be
-copied that will guarantee a valid backup copy. A similar ordering
-exists for FSFS data. But you don\textquotesingle t have to implement
-these algorithms yourself, because the Subversion development team has
-already done so. The \texttt{svnadmin\ hotcopy} command takes care of
+generating a faulty backup. Subversion\textquotesingle s FSFS data must
+be copied in a particular order to guarantee a valid backup copy. But
+you don\textquotesingle t have to implement that algorithm yourself,
+because the Subversion development team has already done so. The \texttt{svnadmin\ hotcopy} command takes care of
 the minutiae involved in making a hot backup of your repository. And its
 invocation is as trivial as the Unix \texttt{cp} or Windows
 \texttt{copy} operations:

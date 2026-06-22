@@ -2913,13 +2913,6 @@ of \texttt{svn\ status} output, and removed by the \texttt{svn\ cleanup}
 command, as described in \hyperref[svn.tour.cleanup]{Sometimes You Just
 Need to Clean Up}.
 
-Administrators using the older Berkeley DB repository backend will need
-to be familiar with database locks, which exist to prevent clashes
-between multiple programs trying to access the database. This is the
-sort of lock whose unwanted persistence after an error can cause a
-repository to be ``wedged,'' as described in
-\hyperref[svn.berkeleydb.maintenance.recovery]{Berkeley DB Recovery}.
-
 Additionally, there are svnsync locks, which effect mutual exclusion
 between multiple instances of the \texttt{svnsync} command that write to
 the same mirror of a repository. This is the sort of lock implemented by

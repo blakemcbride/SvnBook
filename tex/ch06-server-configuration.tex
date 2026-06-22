@@ -3902,15 +3902,14 @@ umask 002
 /usr/bin/svn-real "$@"
 \end{verbatim}
 
-Another common problem is often encountered on Unix-like systems. If
-your repository is backed by Berkeley DB, for example, it occasionally
-creates new log files to journal its actions. Even if the Berkeley DB
-repository is wholly owned by the \texttt{svn} group, these newly
-created log files won\textquotesingle t necessarily be owned by that
-same group, which then creates more permissions problems for your users.
-A good workaround is to set the group SUID bit on the
+Another common problem is often encountered on Unix-like systems. As
+your repository accumulates revisions, Subversion creates new files
+within it. Even if the repository is wholly owned by the \texttt{svn}
+group, these newly created files won\textquotesingle t necessarily be
+owned by that same group, which then creates more permissions problems
+for your users. A good workaround is to set the group SUID bit on the
 repository\textquotesingle s \texttt{db} directory. This causes all
-newly created log files to have the same group owner as the parent
+newly created files to have the same group owner as the parent
 directory.
 
 Once you\textquotesingle ve jumped through these hoops, your repository

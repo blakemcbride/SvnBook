@@ -43,7 +43,7 @@ Contextual differencing and merging routines
 \item[libsvn\_fs]
 Filesystem commons and module loader
 \item[libsvn\_fs\_base]
-The Berkeley DB filesystem backend
+The legacy Berkeley DB filesystem backend
 \item[libsvn\_fs\_fs]
 The native filesystem (FSFS) backend
 \item[libsvn\_ra]
@@ -119,10 +119,10 @@ The Subversion filesystem is not a kernel-level filesystem that one
 would install in an operating system (such as the Linux ext2 or NTFS),
 but instead is a virtual filesystem. Rather than storing ``files'' and
 ``directories'' as real files and directories (the kind you can navigate
-through using your favorite shell program), it uses one of two available
-abstract storage backends---either a Berkeley DB database environment or
-a flat-file representation. (To learn more about the two repository
-backends, see \hyperref[svn.reposadmin.basics.backends]{Speaking of
+through using your favorite shell program), it uses an abstract storage
+backend---today, a flat-file representation known as FSFS. (To learn
+more about the repository backend and its history, see
+\hyperref[svn.reposadmin.basics.backends]{Speaking of
 Filesystems\ldots{}}.) There has even been considerable interest by the
 development community in giving future releases of Subversion the
 ability to use other backend database systems, perhaps through a
@@ -168,9 +168,7 @@ forever accessible as an immutable snapshot of ``the way things were.''
 The Transaction Distraction
 
 The notion of a Subversion transaction can become easily confused with
-the transaction support provided by the underlying database itself,
-especially given the former\textquotesingle s close proximity to the
-Berkeley DB database code in \texttt{libsvn\_fs\_base}. Both types of
+the transaction support provided by an underlying database. Both types of
 transaction exist to provide atomicity and isolation. In other words,
 transactions give you the ability to perform a set of actions in an
 all-or-nothing fashion---either all the actions in the set complete with
@@ -497,8 +495,8 @@ most pervasive APR datatype, found in nearly every Subversion API
 prototype, is the \texttt{apr\_pool\_t}---the APR memory pool.
 Subversion uses pools internally for all its memory allocation needs
 (unless an external library requires a different memory management
-mechanism for data passed through its API),\footnote{Berkeley DB is an
-  example of such a library.} and while a person coding against the
+mechanism for data passed through its API), and while a person coding
+against the
 Subversion APIs is not required to do the same, she \emph{is} required
 to provide pools to the API functions that need them. This means that
 users of the Subversion API must also link against APR, must call
@@ -658,11 +656,7 @@ Subversion.\footnote{Redistributions in any form must be accompanied by
   details.} Finally, by aiming to be a pure Java Subversion library,
 SVNKit is limited in which portions of Subversion can be reasonably
 cloned while still keeping up with Subversion\textquotesingle s
-releases. This has already happened once---SVNKit cannot access
-BDB-backed Subversion repositories via the \texttt{file://} protocol
-because there\textquotesingle s no pure Java implementation of Berkeley
-DB that is file-format-compatible with the native implementation of that
-library.
+releases.
 
 That said, SVNKit has a well-established track record of reliability.
 And a pure Java solution is much more robust in the face of programming

@@ -16,22 +16,11 @@ Options in \texttt{svnadmin} are global, just as they are in
 \protect\phantomsection\label{svn.ref.svnadmin.sw}{}
 
 \begin{description}
-\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bdb_log_keep}{}\texttt{-\/-bdb-log-keep}]
-(Berkeley DB-specific.) Disable automatic log removal of database
-logfiles. Having these logfiles around can be convenient if you need to
-restore from a catastrophic repository failure.
-\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bdb_txn_nosync}{}\texttt{-\/-bdb-txn-nosync}]
-(Berkeley DB-specific.) Disables fsync when committing database
-transactions. Used with the \texttt{svnadmin\ create} command to create
-a Berkeley DB-backed repository with \texttt{DB\_TXN\_NOSYNC} enabled
-(which improves speed but has some risks associated with it).
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bypass_hooks}{}\texttt{-\/-bypass-hooks}]
 Bypass the repository hook system.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bypass_prop_validation}{}\texttt{-\/-bypass-prop-validation}]
 When loading a dump file, disable the logic which validates property
 values.
-\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.clean_logs}{}\texttt{-\/-clean-logs}]
-Remove unused Berkeley DB logs.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.compatible_version}{}\texttt{-\/-compatible-version}
 \textless ARG\textgreater{}]
 Use repository format compatible with Subversion version
@@ -50,8 +39,8 @@ Uses the contents of the named file for the specified subcommand.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.fs_type}{}\texttt{-\/-fs-type}
 \textless ARG\textgreater{}]
 When creating a repository, use \textless ARG\textgreater{} as the
-requested filesystem type. \textless ARG\textgreater{} may be either
-\texttt{bdb} or \texttt{fsfs}.
+requested filesystem type. \textless ARG\textgreater{} should be
+\texttt{fsfs}.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.force_uuid}{}\texttt{-\/-force-uuid}]
 By default, when loading data into a repository that already contains
 revisions, \texttt{svnadmin} will ignore the UUID from the dump stream.
@@ -124,9 +113,9 @@ erroring out when it cannot be.
 
 Open the repository at \textless REPOS\_PATH\textgreater, then abort,
 thus simulating a process that crashes while holding an open repository
-handle. This is used for testing automatic repository recovery (a new
-feature in Berkeley DB 4.4). It\textquotesingle s unlikely that
-you\textquotesingle ll need to run this command.
+handle. This is used for testing automatic repository recovery.
+It\textquotesingle s unlikely that you\textquotesingle ll need to run
+this command.
 
 \subsection{Options}
 
@@ -169,8 +158,6 @@ with elevated privileges (such as the \texttt{root} user).
 \subsection{Options}
 
 \begin{verbatim}
---bdb-log-keep
---bdb-txn-nosync
 --compatible-version ARG
 --config-dir DIR
 --fs-type ARG
@@ -186,17 +173,6 @@ Creating a new repository is this easy:
 \begin{verbatim}
 $ cd /var/svn
 $ svnadmin create repos
-$
-\end{verbatim}
-
-In Subversion 1.0, a Berkeley DB repository is always created. In
-Subversion 1.1, a Berkeley DB repository is the default repository type,
-but an FSFS repository can be created using the \texttt{-\/-fs-type}
-option:
-
-\begin{verbatim}
-$ cd /var/svn
-$ svnadmin create repos --fs-type fsfs
 $
 \end{verbatim}
 
@@ -388,73 +364,10 @@ modifications. The UUID of the hotcopy destination repository must match
 the UUID of the hotcopy source repository. Incremental hotcopy mode is
 supported for FSFS repositories only.
 
-If you pass the \texttt{-\/-clean-logs} option, \texttt{svnadmin} will
-perform a hot copy of your repository, and then remove unused Berkeley
-DB logs from the original repository.
-
 \subsection{Options}
 
 \begin{verbatim}
---clean-logs
 --incremental
-\end{verbatim}
-
-As described in
-\hyperref[svn.berkeleydb.limitations.architectural]{Architectural
-Limitations}, hot-copied Berkeley DB repositories are \emph{not}
-portable across operating systems, nor will they work on machines with a
-different ``endianness'' than the machine where they were created.
-
-\section{svnadmin list-dblogs}\label{svn.ref.svnadmin.c.list-dblogs}
-
-\emph{Ask Berkeley DB which logfiles exist for a given Subversion
-repository (applies only to repositories using the \texttt{bdb}
-backend).}
-
-\textbf{Synopsis}
-
-\texttt{svnadmin\ list-dblogs\ REPOS\_PATH}
-
-\subsection{Description}
-
-Berkeley DB creates logs of all changes to the repository, which allow
-it to recover in the face of catastrophe. Unless you enable
-\texttt{DB\_LOG\_AUTOREMOVE}, the logfiles accumulate, although most are
-no longer used and can be deleted to reclaim disk space. See
-\hyperref[svn.reposadmin.maint.diskspace]{Managing Disk Space} for more
-information.
-
-\section{svnadmin
-list-unused-dblogs}\label{svn.ref.svnadmin.c.list-unused-dblogs}
-
-\emph{Ask Berkeley DB which logfiles can be safely deleted (applies only
-to repositories using the \texttt{bdb} backend).}
-
-\textbf{Synopsis}
-
-\texttt{svnadmin\ list-unused-dblogs\ REPOS\_PATH}
-
-\subsection{Description}
-
-Berkeley DB creates logs of all changes to the repository, which allow
-it to recover in the face of catastrophe. Unless you enable
-\texttt{DB\_LOG\_AUTOREMOVE}, the logfiles accumulate, although most are
-no longer used and can be deleted to reclaim disk space. See
-\hyperref[svn.reposadmin.maint.diskspace]{Managing Disk Space} for more
-information.
-
-\subsection{Examples}
-
-Remove all unused logfiles from the repository:
-
-\begin{verbatim}
-$ svnadmin list-unused-dblogs /var/svn/repos
-/var/svn/repos/log.0000000031
-/var/svn/repos/log.0000000032
-/var/svn/repos/log.0000000033
-
-$ svnadmin list-unused-dblogs /var/svn/repos | xargs rm
-## disk space reclaimed!
 \end{verbatim}
 
 \section{svnadmin load}\label{svn.ref.svnadmin.c.load}
@@ -639,10 +552,9 @@ None
 
 \section{svnadmin recover}\label{svn.ref.svnadmin.c.recover}
 
-\emph{Bring a repository database back into a consistent state (applies
-only to repositories using the \texttt{bdb} backend). In addition, if
+\emph{Bring a repository back into a consistent state. In addition, if
 \texttt{repos/conf/passwd} does not exist, it will create a default
-password file .}
+password file.}
 
 \textbf{Synopsis}
 

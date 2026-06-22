@@ -312,8 +312,8 @@ full details, please visit Subversion\textquotesingle s web site at
 \begin{description}
 \item[Subversion 1.1 (September 2004)]
 Release 1.1 introduced FSFS, a flat-file repository storage option for
-the repository. While the Berkeley DB backend is still widely used and
-supported, FSFS has since become the default choice for newly created
+the repository. Berkeley DB had been the original storage backend, but
+FSFS has since become the standard choice for newly created
 repositories due to its low barrier to entry and minimal maintenance
 requirements. Also in this release came the ability to put symbolic
 links under version control, auto-escaping of URLs, and a localized user
@@ -411,8 +411,7 @@ While this book is written with the assumption that the reader has never
 used a version control system, we\textquotesingle ve also tried to make
 it easy for users of CVS (and other systems) to make a painless leap
 into Subversion. Special sidebars may mention other version control
-systems from time to time, and \hyperref[svn.forcvs]{Subversion for CVS
-Users} summarizes many of the differences between CVS and Subversion.
+systems from time to time.
 
 Note also that the source code examples used throughout the book are
 only examples. While they will compile with the proper compiler
@@ -453,9 +452,8 @@ control before and are dying to get a Subversion server up and running
 ASAP. \hyperref[svn.reposadmin]{Repository Administration} and
 \hyperref[svn.serverconfig]{Server Configuration} will show you how to
 create your first repository and make it available over the network.
-After that\textquotesingle s done, \hyperref[svn.tour]{Basic Usage} and
-\hyperref[svn.forcvs]{Subversion for CVS Users} are the fastest routes
-to learning the Subversion client.
+After that\textquotesingle s done, \hyperref[svn.tour]{Basic Usage} is
+the fastest route to learning the Subversion client.
 \item[New users]
 Your administrator has probably set up Subversion already, and you need
 to learn how to use the client. If you\textquotesingle ve never used a
@@ -533,13 +531,6 @@ whole family!
 \item[{\hyperref[svn.intro]{Subversion Quick-Start Guide}}]
 For the impatient, a whirlwind explanation of how to install Subversion
 and start using it immediately. You have been warned.
-\item[{\hyperref[svn.forcvs]{Subversion for CVS Users}}]
-Covers the similarities and differences between Subversion and CVS, with
-numerous suggestions on how to break all the bad habits you picked up
-from years of using CVS. Included are descriptions of Subversion
-revision numbers, versioned directories, offline operations,
-\texttt{update} versus \texttt{status}, branches, tags, metadata,
-conflict resolution, and authentication.
 \item[{\hyperref[svn.webdav]{WebDAV and Autoversioning}}]
 Describes the details of WebDAV and DeltaV and how you can configure
 your Subversion repository to be mounted read/write as a DAV share.
