@@ -122,6 +122,10 @@ file\textquotesingle s content.
 
 Consult the output of \texttt{svn\ help\ SUBCOMMAND} to see exactly
 which actions are supported by the specific subcommand of interest.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.adds_as_modification}{}\texttt{-\/-adds-as-modification}]
+When updating, if an incoming addition lands on a path that you have also
+scheduled for addition, merge the two instead of raising a tree conflict.
+(Subversion 1.14.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.allow_mixed_revisions}{}\texttt{-\/-allow-mixed-revisions}]
 Disables the verification---performed by default by \texttt{svn\ merge}
 as of Subversion 1.7---that the target of a merge operation and all of
@@ -288,6 +292,11 @@ Tells Subversion to ignore ancestry when calculating differences (rely
 on path contents alone). Also disables
 \hyperref[svn.branchmerge.basicmerging.mergetracking]{Merge Tracking}
 when used with the \texttt{svn\ merge} subcommand.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.human_readable}{}\texttt{-\/-human-readable}
+(\texttt{-H})]
+Show file sizes with base-2 unit suffixes (for example, \texttt{1.7K} or
+\texttt{4.0M}) rather than as exact byte counts. Used by \texttt{svn\ info}
+and, in verbose mode, by \texttt{svn\ list}. (Subversion 1.12.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_externals}{}\texttt{-\/-ignore-externals}]
 Tells Subversion to ignore externals definitions and the external
 working copies managed by them.
@@ -298,6 +307,12 @@ Instructs \texttt{svn\ diff} to suppress output of property changes.
 \item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_whitespace}{}\texttt{-\/-ignore-whitespace}]
 Instructs \texttt{svn\ patch} to ignore whitespace when attempting to
 identify patch context.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.include_externals}{}\texttt{-\/-include-externals}]
+Also operate on externals defined by \texttt{svn:externals} properties,
+for the subcommands that support it (such as \texttt{svn\ status},
+\texttt{svn\ info}, \texttt{svn\ list}, \texttt{svn\ commit},
+\texttt{svn\ copy}, and \texttt{svn\ cleanup}). (Subversion 1.9 and
+later.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.incremental}{}\texttt{-\/-incremental}]
 Prints output in a format suitable for concatenation to prior similar
 output.
@@ -358,6 +373,11 @@ or \texttt{svn:global-ignores}properties. See
 \hyperref[svn.advanced.confarea.opts.config]{General configuration} and
 \hyperref[svn.advanced.props.special.ignore]{Ignoring Unversioned Items}
 for more information.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_newline}{}\texttt{-\/-no-newline}]
+Do not print the customary trailing newline at the end of the
+command\textquotesingle s output. Useful with \texttt{svn\ propget} and
+\texttt{svn\ info\ -\/-show-item} when capturing a single value in a
+script.
 \item[\protect\phantomsection\label{svn.ref.svn.sw.no_unlock}{}\texttt{-\/-no-unlock}]
 Tells Subversion not to automatically unlock files. (The default commit
 behavior is to unlock all files listed as part of the commit.) See
@@ -411,6 +431,10 @@ Instructs \texttt{svn\ diff} to produce output compatible with generic
 third-party patch tools. The result of using this option is the same as
 running \texttt{svn\ diff} with
 \texttt{-\/-show-copies-as-adds\ -\/-ignore-properties} options.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.pin_externals}{}\texttt{-\/-pin-externals}]
+When copying, pin any externals that lack an explicit revision to the
+revision they currently resolve to, recording that revision in the new
+copy\textquotesingle s \texttt{svn:externals} property. (Subversion 1.9.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.properties_only}{}\texttt{-\/-properties-only}]
 Instructs \texttt{svn\ diff} to show only property changes.
 \item[\protect\phantomsection\label{svn.ref.svn.sw.quiet}{}\texttt{-\/-quiet}
@@ -444,6 +468,16 @@ example.
 Used with \texttt{svn\ changelist} to disassociate---rather than
 associate (which is the default operation)---the target(s) from a
 changelist.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.remove_added}{}\texttt{-\/-remove-added}]
+When used with \texttt{svn\ revert}, reverting a scheduled addition also
+removes the item from disk instead of leaving it behind as an unversioned
+file. (Subversion 1.14.)
+\item[\protect\phantomsection\label{svn.ref.svn.sw.remove_ignored}{}\texttt{-\/-remove-ignored}]
+When used with \texttt{svn\ cleanup}, remove ignored files and
+directories from the working copy. (Subversion 1.9.)
+\item[\protect\phantomsection\label{svn.ref.svn.sw.remove_unversioned}{}\texttt{-\/-remove-unversioned}]
+When used with \texttt{svn\ cleanup}, remove unversioned files and
+directories from the working copy. (Subversion 1.9.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.reverse_diff}{}\texttt{-\/-reverse-diff}]
 Causes \texttt{svn\ patch} to interpret the input patch instructions in
 reverse---treating added lines as removed ones and vice-versa.
@@ -515,6 +549,13 @@ file from which the copy was created.
 \item[\protect\phantomsection\label{svn.ref.svn.sw.show_inherited_props}{}\texttt{-\/-show-inherited-props}]
 Causes \texttt{svn\ propget} and \texttt{svn\ proplist} to display the
 versioned properties inherited by the target file or directory.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.show_item}{}\texttt{-\/-show-item}
+\textless ARG\textgreater{}]
+When used with \texttt{svn\ info}, print only the value of the single
+requested field---for example, \texttt{revision}, \texttt{url},
+\texttt{relative-url}, \texttt{repos-root-url}, \texttt{repos-uuid},
+\texttt{last-changed-revision}, or \texttt{wc-root}---which is convenient
+for scripting. (Subversion 1.9.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.show_revs}{}\texttt{-\/-show-revs}
 \textless ARG\textgreater{}]
 Used to make \texttt{svn\ mergeinfo} display certain classes of merge
@@ -571,6 +612,10 @@ server. If not provided, or if incorrect, Subversion will prompt you for
 this information as needed.
 
 This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.vacuum_pristines}{}\texttt{-\/-vacuum-pristines}]
+When used with \texttt{svn\ cleanup}, remove unreferenced files from the
+working copy\textquotesingle s pristine store inside the \texttt{.svn}
+directory. (Subversion 1.10.)
 \item[\protect\phantomsection\label{svn.ref.svn.sw.verbose}{}\texttt{-\/-verbose}
 (\texttt{-v})]
 Requests that the client print out as much information as it can while
@@ -1214,6 +1259,11 @@ option, but you should need these options extremely infrequently.
 
 \begin{verbatim}
 --diff3-cmd CMD
+--include-externals
+--quiet (-q)
+--remove-ignored
+--remove-unversioned
+--vacuum-pristines
 \end{verbatim}
 
 \subsection{Examples}
@@ -1263,6 +1313,7 @@ commit, continue with no message, or edit the message again.
 --encoding ENC
 --file (-F) FILENAME
 --force-log
+--include-externals
 --keep-changelists
 --message (-m) MESSAGE
 --no-unlock
@@ -1363,6 +1414,7 @@ support cross-repository copying.
 --ignore-externals
 --message (-m) MESSAGE
 --parents
+--pin-externals
 --quiet (-q)
 --revision (-r) REV
 --with-revprop ARG
@@ -1993,9 +2045,13 @@ object at that path):
 \begin{verbatim}
 --changelist (--cl) ARG
 --depth ARG
+--human-readable (-H)
+--include-externals
 --incremental
+--no-newline
 --recursive (-R)
 --revision (-r) REV
+--show-item ARG
 --targets FILENAME
 --xml
 \end{verbatim}
@@ -2143,9 +2199,12 @@ specified). All of the information is present; the \texttt{-\/-verbose}
 
 \begin{verbatim}
 --depth ARG
+--human-readable (-H)
+--include-externals
 --incremental
 --recursive (-R)
 --revision (-r) REV
+--search PATTERN
 --verbose (-v)
 --xml
 \end{verbatim}
@@ -3288,6 +3347,7 @@ more information on properties.
 \begin{verbatim}
 --changelist (--cl) ARG
 --depth ARG
+--no-newline
 --recursive (-R)
 --revision (-r) REV
 --revprop
@@ -3870,6 +3930,7 @@ have performed (e.g., files scheduled for addition or deletion can be
 --depth ARG
 --quiet (-q)
 --recursive (-R)
+--remove-added
 --targets FILENAME
 \end{verbatim}
 
@@ -4373,6 +4434,7 @@ set a new ``sticky'' working copy depth on the update target.
 
 \begin{verbatim}
 --accept ACTION
+--adds-as-modification
 --changelist (--cl) ARG
 --depth ARG
 --diff3-cmd CMD
