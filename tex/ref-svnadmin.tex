@@ -101,6 +101,42 @@ requisite repository lock has been obtained instead of immediately
 erroring out when it cannot be.
 \end{description}
 
+\section{svnadmin
+build-repcache}\label{svn.ref.svnadmin.c.build-repcache}
+
+\emph{Build the representation cache for a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ build-repcache\ REPOS\_PATH\ {[}-r\ LOWER{[}:UPPER{]}{]}}
+
+\subsection{Description}
+
+Add any missing entries to the repository\textquotesingle s
+representation cache, the index that allows identical file and property
+content to be stored only once (``representation sharing''). If a
+revision range is supplied with \texttt{-\/-revision}, only those
+revisions are processed; otherwise all revisions are. This is useful for
+populating the cache of a repository that was created before
+rep-sharing was enabled, or whose cache was lost. This command was
+introduced in Subversion 1.14.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+--quiet (-q)
+\end{verbatim}
+
+\subsection{Examples}
+
+Populate the representation cache for an entire repository:
+
+\begin{verbatim}
+$ svnadmin build-repcache /var/svn/repos
+$
+\end{verbatim}
+
 \section{svnadmin crashtest}\label{svn.ref.svnadmin.c.crashtest}
 
 \emph{Simulate a process that crashes.}
@@ -173,6 +209,46 @@ Creating a new repository is this easy:
 \begin{verbatim}
 $ cd /var/svn
 $ svnadmin create repos
+$
+\end{verbatim}
+
+\section{svnadmin delrevprop}\label{svn.ref.svnadmin.c.delrevprop}
+
+\emph{Delete a revision property.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ delrevprop\ REPOS\_PATH\ -r\ REVISION\ NAME}
+
+\texttt{svnadmin\ delrevprop\ REPOS\_PATH\ -t\ TXN\ NAME}
+
+\subsection{Description}
+
+Delete the revision property \texttt{NAME} from revision
+\texttt{REVISION} (or, in the second form, from the uncommitted
+transaction \texttt{TXN}). Because revision properties are not versioned,
+this command \emph{irreversibly} destroys the previous value of the
+property. By default the repository\textquotesingle s revision-property
+change hooks are \emph{not} run; use
+\texttt{-\/-use-pre-revprop-change-hook} and
+\texttt{-\/-use-post-revprop-change-hook} to trigger them (for example,
+to send a notification from your \texttt{post-revprop-change} hook).
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+--transaction (-t) ARG
+--use-pre-revprop-change-hook
+--use-post-revprop-change-hook
+\end{verbatim}
+
+\subsection{Examples}
+
+Remove a bogus \texttt{svn:author} value accidentally set on revision 19:
+
+\begin{verbatim}
+$ svnadmin delrevprop /var/svn/repos -r 19 svn:author
 $
 \end{verbatim}
 
@@ -286,6 +362,43 @@ $ svnadmin dump /var/svn/repos -r 21 --incremental > incr.dump
 * Dumped revision 21.
 \end{verbatim}
 
+\section{svnadmin
+dump-revprops}\label{svn.ref.svnadmin.c.dump-revprops}
+
+\emph{Dump the revision properties of a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ dump-revprops\ REPOS\_PATH\ {[}-r\ LOWER{[}:UPPER{]}{]}}
+
+\subsection{Description}
+
+Dump only the revision \emph{properties} of the repository---not its
+versioned contents---to stdout in the portable dump-file format, sending
+progress feedback to stderr. If a revision range is given with
+\texttt{-\/-revision}, only those revisions\textquotesingle{} properties
+are dumped; otherwise the properties of all revisions are dumped. The
+output can be reloaded with \texttt{svnadmin\ load-revprops}. This
+command was introduced in Subversion 1.10.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+--quiet (-q)
+\end{verbatim}
+
+\subsection{Examples}
+
+Back up just the revision properties of a repository:
+
+\begin{verbatim}
+$ svnadmin dump-revprops /var/svn/repos > revprops.dump
+* Dumped revision 0.
+* Dumped revision 1.
+* Dumped revision 2.
+\end{verbatim}
+
 \section{svnadmin freeze}\label{svn.ref.svnadmin.c.freeze}
 
 \emph{Prevent commits to the repository while running an arbitary
@@ -370,6 +483,47 @@ supported for FSFS repositories only.
 --incremental
 \end{verbatim}
 
+\section{svnadmin info}\label{svn.ref.svnadmin.c.info}
+
+\emph{Display information about a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ info\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print general information about the repository at \texttt{REPOS\_PATH}:
+its UUID, the number of revisions, the repository and filesystem (FSFS)
+format numbers, the minimum Subversion version the repository is
+compatible with, and various FSFS details such as the shard size, how
+many shards have been packed, and whether logical addressing is in use.
+This command was introduced in Subversion 1.9.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+\begin{verbatim}
+$ svnadmin info /var/svn/repos
+Path: /var/svn/repos
+UUID: 7d34851a-e497-4b89-b2cf-639b91bda4ba
+Revisions: 2
+Repository Format: 5
+Compatible With Version: 1.10.0
+Repository Capability: mergeinfo
+Filesystem Type: fsfs
+Filesystem Format: 8
+FSFS Sharded: yes
+FSFS Shard Size: 1000
+FSFS Shards Packed: 0/0
+FSFS Logical Addressing: yes
+Configuration File: /var/svn/repos/db/fsfs.conf
+$
+\end{verbatim}
+
 \section{svnadmin load}\label{svn.ref.svnadmin.c.load}
 
 \emph{Read a repository dump stream from \texttt{stdin}.}
@@ -448,6 +602,47 @@ manually tweak the dump stream itself to fix those property values.
 Finally, if you\textquotesingle d rather not deal with the problem right
 now, use the \texttt{-\/-bypass-prop-validation} option with
 \texttt{svnadmin\ load}.
+
+\section{svnadmin
+load-revprops}\label{svn.ref.svnadmin.c.load-revprops}
+
+\emph{Load revision properties into a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ load-revprops\ REPOS\_PATH}
+
+\subsection{Description}
+
+Read a dump-file-formatted stream from stdin and set the revision
+properties in the repository\textquotesingle s filesystem---the reverse
+of \texttt{svnadmin\ dump-revprops}. Revisions present in the stream but
+not in the repository cause an error. If \texttt{-\/-revision} is given,
+only the matching revisions from the stream are loaded. This command was
+introduced in Subversion 1.10.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+--quiet (-q)
+--bypass-prop-validation
+--force-uuid
+--normalize-props
+--no-flush-to-disk
+\end{verbatim}
+
+\subsection{Examples}
+
+Restore the revision properties dumped earlier with
+\texttt{svnadmin\ dump-revprops}:
+
+\begin{verbatim}
+$ svnadmin load-revprops /var/svn/repos < revprops.dump
+Properties set on revision 0.
+Properties set on revision 1.
+Properties set on revision 2.
+\end{verbatim}
 
 \section{svnadmin lock}\label{svn.ref.svnadmin.c.lock}
 
@@ -612,6 +807,38 @@ Please wait; recovering the repository may take some time...
 
 Recovery completed.
 The latest repos revision is 34.
+\end{verbatim}
+
+\section{svnadmin rev-size}\label{svn.ref.svnadmin.c.rev-size}
+
+\emph{Measure the size of a revision.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ rev-size\ REPOS\_PATH\ -r\ REVISION}
+
+\subsection{Description}
+
+Print the total size, in bytes, of the on-disk representation of revision
+\texttt{REVISION}. The reported size includes the revision\textquotesingle s
+properties but excludes FSFS indexes. With \texttt{-\/-quiet}, only the
+number and a newline are printed, which is convenient for scripting. This
+command was introduced in Subversion 1.13.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+--quiet (-q)
+\end{verbatim}
+
+\subsection{Examples}
+
+\begin{verbatim}
+$ svnadmin rev-size /var/svn/repos -r 2
+         800 bytes in revision 2
+$ svnadmin rev-size /var/svn/repos -r 2 --quiet
+800
 \end{verbatim}
 
 \section{svnadmin rmlocks}\label{svn.ref.svnadmin.c.rmlocks}

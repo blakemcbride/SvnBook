@@ -681,6 +681,73 @@ A  (bin)  versioned-dir/otherdir/docs/baz.doc
 …
 \end{verbatim}
 
+\section{svn auth}\label{svn.ref.svn.c.auth}
+
+\emph{Manage cached authentication credentials.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ auth\ {[}PATTERN...{]}}
+
+\texttt{svn\ auth\ -\/-remove\ PATTERN\ {[}PATTERN...{]}}
+
+\subsection{Description}
+
+Subversion caches authentication credentials---usernames, passwords, SSL
+certificates, and SSL client-certificate passphrases---on disk so that
+you are not prompted for them on every operation. The \texttt{svn\ auth}
+command lets you inspect and clean out that cache.
+
+With no arguments, \texttt{svn\ auth} lists all cached credentials. If
+one or more \texttt{PATTERN} arguments are given, only credentials whose
+attributes match \emph{all} of the patterns are listed; patterns are
+matched case-sensitively and may contain the glob wildcards \texttt{?}
+(any single character), \texttt{*} (any sequence of characters), and
+\texttt{{[}abc{]}} (any listed character). With the \texttt{-\/-remove}
+option, the matching credentials are deleted from the cache rather than
+listed.
+
+This command was introduced in Subversion 1.9.
+
+\subsection{Options}
+
+\begin{verbatim}
+--remove
+--show-passwords
+\end{verbatim}
+
+\subsection{Examples}
+
+List all of the credentials cached on your system:
+
+\begin{verbatim}
+$ svn auth
+------------------------------------------------------------------------
+Credential kind: svn.simple
+Authentication realm: <https://svn.example.com:443> Example Realm
+Username: harry
+
+------------------------------------------------------------------------
+Credential kind: svn.ssl.server
+Authentication realm: https://svn.example.com:443
+…
+$
+\end{verbatim}
+
+Show only the credentials for a particular host, including the cached
+passwords:
+
+\begin{verbatim}
+$ svn auth --show-passwords svn.example.com
+…
+\end{verbatim}
+
+Remove all of the cached credentials matching a pattern:
+
+\begin{verbatim}
+$ svn auth --remove '*example.com*'
+\end{verbatim}
+
 \section{svn blame (praise, annotate, ann)}\label{svn.ref.svn.c.blame}
 
 \emph{Show author and revision information inline for the specified

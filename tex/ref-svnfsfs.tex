@@ -1,0 +1,148 @@
+\chapter{svnfsfs Reference---Subversion FSFS Filesystem
+Tool}\label{svn.ref.svnfsfs}
+
+\texttt{svnfsfs} is a low-level tool for examining and tuning the FSFS
+data store that backs a Subversion repository. It was introduced in
+Subversion 1.9 to hold FSFS-specific functionality that does not belong
+in the general-purpose \texttt{svnadmin} tool. Most administrators will
+never need it; it is intended for diagnostics, for advanced tuning, and
+for recovering a damaged repository under the guidance of the Subversion
+development community.
+
+Like \texttt{svnadmin}, \texttt{svnfsfs} works via direct repository
+access and so must be run on the machine that holds the repository,
+referring to it by a local path rather than a URL. Its
+\texttt{dump-index} and \texttt{load-index} subcommands operate on the
+FSFS logical addressing index and therefore require a format 7 (Subversion
+1.9 or later) repository.
+
+\section{svnfsfs dump-index}\label{svn.ref.svnfsfs.c.dump-index}
+
+\emph{Dump the index contents for a revision or pack file.}
+
+\textbf{Synopsis}
+
+\texttt{svnfsfs\ dump-index\ REPOS\_PATH\ -r\ REV}
+
+\subsection{Description}
+
+Print, to stdout, the contents of the logical-addressing index for the
+revision or pack file that contains revision \texttt{REV}. This is
+available only for format 7 (Subversion 1.9 and later) repositories. The
+output begins with a header line and then lists one entry per line,
+ordered by location within the revision or pack file, giving each
+item\textquotesingle s byte offset, length, type (for example,
+\texttt{frep} for a file representation, \texttt{drep} for a directory
+representation, \texttt{node} for a node-revision record, and
+\texttt{chgs} for a changed-paths list), revision, item number, and
+checksum. The output can be edited and fed back in with
+\texttt{svnfsfs\ load-index} to repair a corrupted index.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+\begin{verbatim}
+$ svnfsfs dump-index /var/svn/repos -r 1
+       Start       Length Type   Revision     Item Checksum
+           0           2f frep          1        3 7ee0088a
+          2f           1f frep          1        4 3ba36966
+          4e           a7 node          1        5 441a8d27
+          f5           3b fprop         1        6 7033638d
+         130           e3 node          1        7 1efba051
+         213           52 drep          1        8 f54298a5
+         …
+$
+\end{verbatim}
+
+\section{svnfsfs help (h, ?)}\label{svn.ref.svnfsfs.c.help}
+
+\emph{Help!}
+
+\textbf{Synopsis}
+
+\texttt{svnfsfs\ help\ {[}SUBCOMMAND...{]}}
+
+\subsection{Description}
+
+This subcommand is useful when you\textquotesingle re trapped on a
+desert island with neither a Net connection nor a copy of this book.
+
+\subsection{Options}
+
+None
+
+\section{svnfsfs load-index}\label{svn.ref.svnfsfs.c.load-index}
+
+\emph{Rewrite the index from a dumped-index stream.}
+
+\textbf{Synopsis}
+
+\texttt{svnfsfs\ load-index\ REPOS\_PATH}
+
+\subsection{Description}
+
+Read index contents from stdin and rewrite the FSFS logical-addressing
+index accordingly. The input uses the same format produced by
+\texttt{svnfsfs\ dump-index}, except that the header and per-entry
+checksums are optional and ignored. The data must cover the entire
+revision or pack file; the revision number is taken automatically from
+the input, and the entries need not be in any particular order. This
+subcommand is used to repair a damaged index, typically with input
+derived from a \texttt{dump-index} of the affected revision.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+Rebuild the index of a revision from a (possibly hand-corrected) dump:
+
+\begin{verbatim}
+$ svnfsfs dump-index /var/svn/repos -r 42 > r42.index
+$ # ...edit r42.index as needed...
+$ svnfsfs load-index /var/svn/repos < r42.index
+$
+\end{verbatim}
+
+\section{svnfsfs stats}\label{svn.ref.svnfsfs.c.stats}
+
+\emph{Print FSFS storage statistics.}
+
+\textbf{Synopsis}
+
+\texttt{svnfsfs\ stats\ REPOS\_PATH}
+
+\subsection{Description}
+
+Write detailed statistics about the FSFS data store to stdout: how many
+bytes are consumed by revisions, changed-path lists, node-revision
+records, and representations; how effective representation sharing and
+deltification have been; and per-item-type breakdowns. These numbers are
+useful for understanding where a repository\textquotesingle s on-disk
+size comes from and for gauging the benefit of packing or repacking.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+\begin{verbatim}
+$ svnfsfs stats /var/svn/repos
+
+Global statistics:
+               1,868 bytes in            3 revisions
+                 203 bytes in            4 changes
+               1,225 bytes in            8 node revision records
+                 316 bytes in            9 representations
+                 292 bytes expanded representation size
+                 326 bytes with rep-sharing off
+…
+$
+\end{verbatim}
