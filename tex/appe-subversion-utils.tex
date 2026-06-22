@@ -1,0 +1,94 @@
+\chapter{Subversion Command-Line Utilities}\label{svn.utils}
+
+While Subversion\textquotesingle s own \texttt{svn} client is complete and
+powerful, a handful of everyday operations---creating and switching
+branches, tagging a release, or checking whether a working copy is
+clean---take more typing than they ideally would, and their exact
+incantations are easy to forget. This appendix describes \emph{Subversion
+Utils}, a small, free and open source collection of command-line helpers
+that wrap these common operations behind short, memorable commands. They
+are written in portable C and run on Linux, macOS, and Windows. The
+project lives at
+\url{https://github.com/blakemcbride/Subversion-Utils} and is released
+into the public domain under the Unlicense.
+
+The utilities assume the conventional Subversion repository
+layout---a \texttt{trunk} directory alongside \texttt{branches} and
+\texttt{tags} directories, as recommended in
+\hyperref[svn.branchmerge]{Branching and Merging}---and they drive the
+ordinary \texttt{svn} client under the hood. They therefore require no
+special server support and interoperate cleanly with plain \texttt{svn}
+usage: you can mix them freely with the standard client, and nothing about
+your repository changes by adopting them.
+
+\section{Building and Installing}\label{svn.utils.install}
+
+Building the utilities requires only a C compiler, \texttt{make}, and a
+working \texttt{svn} client on your \texttt{PATH}. On Linux and macOS:
+
+\begin{verbatim}
+$ make
+$ sudo make install            # install into /usr/local/bin
+\end{verbatim}
+
+To install elsewhere on your \texttt{PATH} without administrative
+privileges, set \texttt{PREFIX}:
+
+\begin{verbatim}
+$ make install PREFIX=~/.local
+\end{verbatim}
+
+On Windows, build with MinGW-w64:
+
+\begin{verbatim}
+$ make CC=x86_64-w64-mingw32-gcc
+\end{verbatim}
+
+or, from a Visual Studio Developer Command Prompt, with MSVC:
+
+\begin{verbatim}
+> nmake /f Makefile.msvc
+\end{verbatim}
+
+Once the utilities are installed, confirm everything is in place by
+running \texttt{svn-list} inside a working copy.
+
+\section{The Utilities}\label{svn.utils.commands}
+
+The collection comprises the following commands. Each prints its own usage
+message when run with the \texttt{-h} option, even when you are not inside
+a working copy.
+
+\begin{description}
+\item[\texttt{svn-branch}]
+Create, switch, merge, pull, delete, and list branches, and show the name
+of the branch the current working copy is on. This collapses the
+multistep \texttt{svn\ copy}, \texttt{svn\ switch}, and \texttt{svn\ merge}
+dance into a single, easily remembered command.
+\item[\texttt{svn-tag}]
+Create, switch, delete, diff, and list tags.
+\item[\texttt{svn-new}]
+Create a fresh repository layout---\texttt{trunk}, \texttt{branches}, and
+\texttt{tags}---in a single commit.
+\item[\texttt{svn-list}]
+Display the repository\textquotesingle s top-level layout (its
+\texttt{trunk}, \texttt{branches}, and \texttt{tags}).
+\item[\texttt{svn-log}]
+Run \texttt{svn\ log} with automatic paging.
+\item[\texttt{svn-diff}]
+A pager-friendly \texttt{svn\ diff}: it pages its output through
+\texttt{less} when run on a terminal, and a single numeric argument is
+treated as a revision whose changes should be shown. It can also diff the
+\texttt{trunk} or a named branch against your working copy.
+\item[\texttt{svn-sync}]
+Bring the set of versioned files into line with what is actually present on
+disk: schedule unversioned files for addition and missing files for
+deletion. (This is unrelated to the \hyperref[svn.ref.svnsync]{svnsync}
+repository-mirroring tool.)
+\item[\texttt{svn-is-clean}]
+Report whether a working copy is clean---that is, free of local
+modifications. It is designed for use in scripts and signals its answer
+through its exit code: \texttt{0} if the working copy is clean,
+\texttt{1} if it contains uncommitted changes, and \texttt{2} if the
+target is not a working copy at all.
+\end{description}
