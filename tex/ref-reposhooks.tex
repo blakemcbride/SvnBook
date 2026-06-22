@@ -1,0 +1,439 @@
+\chapter{Subversion Repository Hook Reference}\label{svn.ref.reposhooks}
+
+Subversion repositories provide a number of event hooks which are
+essentially opportunities for administrators to extend
+Subversion\textquotesingle s functionality at key moments of key
+operations. Repository hooks are implemented as programs executed by
+Subversion itself at those key moments---before and after a commit,
+before and after a user locks a file, and so on.
+
+For each hook it provides, Subversion will attempt to execute the
+program of that hook\textquotesingle s name which is found in the
+\texttt{hooks/} subdirectory of the repository\textquotesingle s on-disk
+directory structure. For example, on a Unix system, the start-commit
+hook script would be installed at
+\texttt{REPOS\_PATH/hooks/start-commit}, where it could be a binary
+executable program, a shell script, a Python program, etc. On a Windows
+system, the program would be installed in the same location, but would
+be named \texttt{START-COMMIT.EXE} or \texttt{START-COMMIT.BAT} instead
+of simply \texttt{start-commit}.
+
+This reference guide describes the various hooks which Subversion offers
+to administrators, detailing when the hook is invoked, its input
+parameters, and how its behavior affects the Subversion workflow.
+
+\section{start-commit}\label{svn.ref.reposhooks.start-commit}
+
+\emph{Notification of the beginning of a commit.}
+
+\textbf{Synopsis}
+
+\texttt{start-commit\ REPOS-PATH\ USER\ CAPABILITIES\ TXN-NAME}
+
+\subsection{Description}
+
+The start-commit hook is run immediately after the commit transaction is
+created and its initial properties set. It is typically used as an early
+termination mechanism, avoiding what could be a lengthy commit process
+which would eventually fail at a later phase anyway due to a
+user\textquotesingle s lack of commit privileges or some other commit
+metadata validation failure.
+
+If the start-commit hook program returns a nonzero exit value, the
+commit process is stopped, the commit transaction is destroyed, and
+anything printed to \texttt{stderr} is marshalled back to the client.
+
+The start-commit hook is not a suitable place to evaluate the substance
+of a particular commit, as it is invoked before any file or directory
+change information has been transmitted. Use the pre-commit hook script
+(which is described in
+\hyperref[svn.ref.reposhooks.pre-commit]{pre-commit} elsewhere in this
+reference) for that purpose.
+
+Prior to Subversion 1.8, the Subversion invoked the start-commit hook
+\emph{before} creating the commit transaction. Failure of the script
+resulted in that transaction not being created at all. This was changed
+in Subversion 1.8, though, to allow implementations of the start-commit
+hook access to the transaction\textquotesingle s properties, which can
+include (among other things) the revision log associated with the
+commit.
+
+\subsection{Input Parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Authenticated username attempting the commit
+\item
+  Colon-separated list of capabilities that a client passes to the
+  server, including \texttt{depth}, \texttt{mergeinfo}, and
+  \texttt{log-revprops} (new in Subversion 1.5)
+\item
+  Commit transaction name (new in Subversion 1.8)
+\end{enumerate}
+
+\subsection{Common uses}
+
+Access control (e.g., temporarily lock out commits for some reason).
+
+A means to allow access only from clients that have certain
+capabilities.
+
+\section{pre-commit}\label{svn.ref.reposhooks.pre-commit}
+
+\emph{Notification just prior to commit completion.}
+
+\textbf{Synopsis}
+
+\texttt{pre-commit\ REPOS-PATH\ TXN-NAME}
+
+\subsection{Description}
+
+The pre-commit hook is run just before a commit transaction is promoted
+to a new revision. Typically, this hook is used to protect against
+commits that are disallowed due to content or location (e.g., your site
+might require that all commits to a certain branch include a ticket
+number from the bug tracker, or that the incoming log message is
+nonempty).
+
+If the pre-commit hook program returns a nonzero exit value, the commit
+is aborted, the commit transaction is removed, and anything printed to
+\texttt{stderr} is marshalled back to the client.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Commit transaction name
+\end{enumerate}
+
+Additionally, Subversion passes any lock tokens provided by the
+committing client to the hook script via standard input. When present,
+these are formatted as a single line containing the string
+\texttt{LOCK-TOKENS:}, followed by additional lines---one per lock
+token---which contain the lock token information. Each lock token
+information line consists of the URI-escaped repository filesystem path
+associated with the lock, followed by the pipe (\texttt{\textbar{}})
+separator character, and finally the lock token string.
+
+\subsection{Common uses}
+
+Change validation and control
+
+\section{post-commit}\label{svn.ref.reposhooks.post-commit}
+
+\emph{Notification of a successful commit.}
+
+\textbf{Synopsis}
+
+\texttt{post-commit\ REPOS-PATH\ REVISION\ TXN-NAME}
+
+\subsection{Description}
+
+The post-commit hook is run after the transaction is committed and a new
+revision is created. Most people use this hook to send out descriptive
+emails about the commit or to notify some other tool (such as an issue
+tracker) that a commit has happened. Some configurations also use this
+hook to trigger backup processes.
+
+If the post-commit hook returns a nonzero exit status, the commit
+\emph{will not} be aborted since it has already completed. However,
+anything that the hook printed to \texttt{stderr} will be marshalled
+back to the client, making it easier to diagnose hook failures.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Revision number created by the commit
+\item
+  Name of the transaction that has become the revision triggering the
+  post-commit hook.
+\end{enumerate}
+
+\subsection{Common uses}
+
+Commit notification; tool integration
+
+\section{pre-revprop-change}\label{svn.ref.reposhooks.pre-revprop-change}
+
+\emph{Notification of a revision property change attempt.}
+
+\textbf{Synopsis}
+
+\texttt{pre-revprop-change\ REPOS-PATH\ REVISION\ USER\ PROPNAME\ ACTION}
+
+\subsection{Description}
+
+The pre-revprop-change hook is run immediately prior to the modification
+of a revision property when performed outside the scope of a normal
+commit. Unlike the other hooks, the default state of this one is to deny
+the proposed action. The hook must actually exist and return a zero exit
+value before a revision property modification can happen.
+
+If the pre-revprop-change hook doesn\textquotesingle t exist,
+isn\textquotesingle t executable, or returns a nonzero exit value, no
+change to the property will be made, and anything printed to
+\texttt{stderr} is marshalled back to the client.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Revision whose property is about to be modified
+\item
+  Authenticated username attempting the property change
+\item
+  Name of the property changed
+\item
+  Change description: \texttt{A} (added), \texttt{D} (deleted), or
+  \texttt{M} (modified)
+\end{enumerate}
+
+Additionally, Subversion passes the intended new value of the property
+to the hook program via standard input.
+
+\subsection{Common uses}
+
+Access control; change validation and control
+
+\section{post-revprop-change}\label{svn.ref.reposhooks.post-revprop-change}
+
+\emph{Notification of a successful revision property change.}
+
+\textbf{Synopsis}
+
+\texttt{post-revprop-change\ REPOS-PATH\ REVISION\ USER\ PROPNAME\ ACTION}
+
+\subsection{Description}
+
+The post-revprop-change hook is run immediately after the modification
+of a revision property when performed outside the scope of a normal
+commit. As you can derive from the description of its counterpart, the
+pre-revprop-change hook, this hook will not run at all unless the
+pre-revprop-change hook is implemented. It is typically used to send
+email notification of the property change.
+
+If the post-revprop-change hook returns a nonzero exit status, the
+change \emph{will not} be aborted since it has already completed.
+However, anything that the hook printed to \texttt{stderr} will be
+marshalled back to the client, making it easier to diagnose hook
+failures.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Revision whose property was modified
+\item
+  Authenticated username of the person making the change
+\item
+  Name of the property changed
+\item
+  Change description: \texttt{A} (added), \texttt{D} (deleted), or
+  \texttt{M} (modified)
+\end{enumerate}
+
+Additionally, Subversion passes to the hook program, via standard input,
+the previous value of the property.
+
+\subsection{Common uses}
+
+Property change notification
+
+\section{pre-lock}\label{svn.ref.reposhooks.pre-lock}
+
+\emph{Notification of a path lock attempt.}
+
+\textbf{Synopsis}
+
+\texttt{pre-lock\ REPOS-PATH\ PATH\ USER\ COMMENT\ STEAL}
+
+\subsection{Description}
+
+The pre-lock hook runs whenever someone attempts to lock a path. It can
+be used to prevent locks altogether or to create a more complex policy
+specifying exactly which users are allowed to lock particular paths. If
+the hook notices a preexisting lock, it can also decide whether a user
+is allowed to ``steal'' the existing lock.
+
+If the pre-lock hook program returns a nonzero exit value, the lock
+action is aborted and anything printed to \texttt{stderr} is marshalled
+back to the client.
+
+The hook program may optionally dictate the lock token which will be
+assigned to the lock by printing the desired lock token to standard
+output. Because of this, implementations of this hook should carefully
+avoid unexpected output sent to standard output.
+
+If the pre-lock script takes advantage of lock token dictation feature,
+the responsibility of generating a \emph{unique} lock token falls to the
+script itself. Failure to generate unique lock tokens may result in
+undefined---and very likely, undesired---behavior.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Versioned path that is to be locked
+\item
+  Authenticated username of the person attempting the lock
+\item
+  Comment provided when the lock was created
+\item
+  \texttt{1} if the user is attempting to steal an existing lock;
+  \texttt{0} otherwise
+\end{enumerate}
+
+\subsection{Common uses}
+
+Access control
+
+\section{post-lock}\label{svn.ref.reposhooks.post-lock}
+
+\emph{Notification of a successful path lock.}
+
+\textbf{Synopsis}
+
+\texttt{post-lock\ REPOS-PATH\ USER}
+
+\subsection{Description}
+
+The post-lock hook runs after one or more paths have been locked. It is
+typically used to send email notification of the lock event.
+
+If the post-lock hook returns a nonzero exit status, the lock \emph{will
+not} be aborted since it has already completed. However, anything that
+the hook printed to \texttt{stderr} will be marshalled back to the
+client, making it easier to diagnose hook failures.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Authenticated username of the person who locked the paths
+\end{enumerate}
+
+Additionally, the list of paths locked is passed to the hook program via
+standard input, one path per line.
+
+\subsection{Common uses}
+
+Lock notification
+
+\section{pre-unlock}\label{svn.ref.reposhooks.pre-unlock}
+
+\emph{Notification of a path unlock attempt.}
+
+\textbf{Synopsis}
+
+\texttt{pre-unlock\ REPOS-PATH\ PATH\ USER\ TOKEN\ BREAK-UNLOCK}
+
+\subsection{Description}
+
+The pre-unlock hook runs whenever someone attempts to remove a lock on a
+file. It can be used to create policies that specify which users are
+allowed to unlock particular paths. It\textquotesingle s particularly
+important for determining policies about lock breakage. If user A locks
+a file, is user B allowed to break the lock? What if the lock is more
+than a week old? These sorts of things can be decided and enforced by
+the hook.
+
+If the pre-unlock hook program returns a nonzero exit value, the unlock
+action is aborted and anything printed to \texttt{stderr} is marshalled
+back to the client.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Versioned path which is to be unlocked
+\item
+  Authenticated username of the person attempting the unlock
+\item
+  Lock token associated with the lock which is to be removed
+\item
+  \texttt{1} if the user is attempting to break the lock; \texttt{0}
+  otherwise
+\end{enumerate}
+
+\subsection{Common uses}
+
+Access control
+
+\section{post-unlock}\label{svn.ref.reposhooks.post-unlock}
+
+\emph{Notification of a successful path unlock.}
+
+\textbf{Synopsis}
+
+\texttt{post-unlock\ REPOS-PATH\ USER}
+
+\subsection{Description}
+
+The post-unlock hook runs after one or more paths have been unlocked. It
+is typically used to send email notification of the unlock event.
+
+If the post-unlock hook returns a nonzero exit status, the unlock
+\emph{will not} be aborted since it has already completed. However,
+anything that the hook printed to \texttt{stderr} will be marshalled
+back to the client, making it easier to diagnose hook failures.
+
+\subsection{Input parameter(s)}
+
+The command-line arguments passed to the hook program, in order, are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Repository path
+\item
+  Authenticated username of the person who unlocked the paths
+\end{enumerate}
+
+Additionally, the list of paths unlocked is passed to the hook program
+via standard input, one path per line.
+
+\subsection{Common uses}
+
+Unlock notification
+

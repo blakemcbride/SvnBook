@@ -1,0 +1,975 @@
+\chapter{svnadmin Reference---Subversion Repository
+Administration}\label{svn.ref.svnadmin}
+
+\texttt{svnadmin} is the administrative tool for monitoring and
+repairing your Subversion repository. For detailed information on
+repository administration, see the maintenance section for
+\hyperref[svn.reposadmin.maint.tk.svnadmin]{svnadmin}.
+
+Since \texttt{svnadmin} works via direct repository access (and thus can
+only be used on the machine that holds the repository), it refers to the
+repository with a path, not a URL.
+
+Options in \texttt{svnadmin} are global, just as they are in
+\texttt{svn}:
+
+\protect\phantomsection\label{svn.ref.svnadmin.sw}{}
+
+\begin{description}
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bdb_log_keep}{}\texttt{-\/-bdb-log-keep}]
+(Berkeley DB-specific.) Disable automatic log removal of database
+logfiles. Having these logfiles around can be convenient if you need to
+restore from a catastrophic repository failure.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bdb_txn_nosync}{}\texttt{-\/-bdb-txn-nosync}]
+(Berkeley DB-specific.) Disables fsync when committing database
+transactions. Used with the \texttt{svnadmin\ create} command to create
+a Berkeley DB-backed repository with \texttt{DB\_TXN\_NOSYNC} enabled
+(which improves speed but has some risks associated with it).
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bypass_hooks}{}\texttt{-\/-bypass-hooks}]
+Bypass the repository hook system.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.bypass_prop_validation}{}\texttt{-\/-bypass-prop-validation}]
+When loading a dump file, disable the logic which validates property
+values.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.clean_logs}{}\texttt{-\/-clean-logs}]
+Remove unused Berkeley DB logs.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.compatible_version}{}\texttt{-\/-compatible-version}
+\textless ARG\textgreater{}]
+Use repository format compatible with Subversion version
+\textless ARG\textgreater.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.config_dir}{}\texttt{-\/-config-dir}
+\textless DIR\textgreater{}]
+Instructs Subversion to read configuration information from the
+specified directory instead of the default location
+(\texttt{.subversion} in the user\textquotesingle s home directory).
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.deltas}{}\texttt{-\/-deltas}]
+When creating a repository dump file, specify changes in versioned
+properties and file contents as deltas against their previous state.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.file}{}\texttt{-\/-file}
+(\texttt{-F}) \textless FILENAME\textgreater{}]
+Uses the contents of the named file for the specified subcommand.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.fs_type}{}\texttt{-\/-fs-type}
+\textless ARG\textgreater{}]
+When creating a repository, use \textless ARG\textgreater{} as the
+requested filesystem type. \textless ARG\textgreater{} may be either
+\texttt{bdb} or \texttt{fsfs}.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.force_uuid}{}\texttt{-\/-force-uuid}]
+By default, when loading data into a repository that already contains
+revisions, \texttt{svnadmin} will ignore the UUID from the dump stream.
+This option will cause the repository\textquotesingle s UUID to be set
+to the UUID from the stream.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.ignore_uuid}{}\texttt{-\/-ignore-uuid}]
+By default, when loading data into an empty repository,
+\texttt{svnadmin} will set the repository\textquotesingle s UUID to the
+UUID from the dump stream. This option will cause the UUID from the
+stream to be ignored.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.incremental}{}\texttt{-\/-incremental}]
+Dump a revision only as a diff against the previous revision, instead of
+the usual fulltext.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.memory_cache_size}{}\texttt{-\/-memory-cache-size}
+(\texttt{-M}) \textless ARG\textgreater{}]
+Configures the size (in Megabytes) of the extra in-memory cache used to
+minimize redundant operations. The default value is \texttt{16}. (This
+cache is used for FSFS-backed repositories only.)
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.parent_dir}{}\texttt{-\/-parent-dir}
+\textless DIR\textgreater{}]
+When loading a dump file, root paths at \textless DIR\textgreater{}
+instead of \texttt{/}.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.pre_1.4_compatible}{}\texttt{-\/-pre-1.4-compatible}]
+\emph{Deprecated}. See option \texttt{-\/-compatible-version}. When
+creating a new repository, use a format that is compatible with versions
+of Subversion earlier than Subversion 1.4.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.pre_1.5_compatible}{}\texttt{-\/-pre-1.5-compatible}]
+\emph{Deprecated}. See option \texttt{-\/-compatible-version}. When
+creating a new repository, use a format that is compatible with versions
+of Subversion earlier than Subversion 1.5.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.pre_1.6_compatible}{}\texttt{-\/-pre-1.6-compatible}]
+\emph{Deprecated}. See option \texttt{-\/-compatible-version}. When
+creating a new repository, use a format that is compatible with versions
+of Subversion earlier than Subversion 1.6.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.revision}{}\texttt{-\/-revision}
+(\texttt{-r}) \textless ARG\textgreater{}]
+Specify a particular revision to operate on.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.quiet}{}\texttt{-\/-quiet}
+(\texttt{-q})]
+Do not show normal progress---show only errors.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.use_post_commit_hook}{}\texttt{-\/-use-post-commit-hook}]
+When loading a dump file, runs the repository\textquotesingle s
+post-commit hook after finalizing each newly loaded revision.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.use_post_revprop_change_hook}{}\texttt{-\/-use-post-revprop-change-hook}]
+When changing a revision property, runs the repository\textquotesingle s
+post-revprop-change hook after changing the revision property.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.use_pre_commit_hook}{}\texttt{-\/-use-pre-commit-hook}]
+When loading a dump file, runs the repository\textquotesingle s
+pre-commit hook before finalizing each newly loaded revision. If the
+hook fails, aborts the commit and terminates the load process.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.use_pre_revprop_change_hook}{}\texttt{-\/-use-pre-revprop-change-hook}]
+When changing a revision property, runs the repository\textquotesingle s
+pre-revprop-change hook before changing the revision property. If the
+hook fails, aborts the modification and terminates.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.wait}{}\texttt{-\/-wait}]
+For operations which require exclusive repository access, wait until the
+requisite repository lock has been obtained instead of immediately
+erroring out when it cannot be.
+\end{description}
+
+\section{svnadmin crashtest}\label{svn.ref.svnadmin.c.crashtest}
+
+\emph{Simulate a process that crashes.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ crashtest\ REPOS\_PATH}
+
+\subsection{Description}
+
+Open the repository at \textless REPOS\_PATH\textgreater, then abort,
+thus simulating a process that crashes while holding an open repository
+handle. This is used for testing automatic repository recovery (a new
+feature in Berkeley DB 4.4). It\textquotesingle s unlikely that
+you\textquotesingle ll need to run this command.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+\begin{verbatim}
+$ svnadmin crashtest /var/svn/repos
+Aborted
+\end{verbatim}
+
+Exciting, isn\textquotesingle t it?
+
+\section{svnadmin create}\label{svn.ref.svnadmin.c.create}
+
+\emph{Create a new, empty repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ create\ REPOS\_PATH}
+
+\subsection{Description}
+
+Create a new, empty repository at the path provided. If the provided
+directory does not exist, it will be created for you.\footnote{Remember,
+  \texttt{svnadmin} works only with local \emph{paths}, not \emph{URLs}.}
+As of Subversion 1.2, \texttt{svnadmin} creates new repositories with
+the \texttt{FSFS} filesystem backend by default.
+
+While \texttt{svnadmin\ create} will create the base directory for a new
+repository, it will not create intermediate directories. For example, if
+you have an empty directory named \texttt{/var/svn}, creating
+\texttt{/var/svn/repos} will work, while attempting to create
+\texttt{/var/svn/subdirectory/repos} will fail with an error. Also, keep
+in mind that, depending on where on your system you are creating your
+repository, you might need to run \texttt{svnadmin\ create} as a user
+with elevated privileges (such as the \texttt{root} user).
+
+\subsection{Options}
+
+\begin{verbatim}
+--bdb-log-keep
+--bdb-txn-nosync
+--compatible-version ARG
+--config-dir DIR
+--fs-type ARG
+--pre-1.4-compatible
+--pre-1.5-compatible
+--pre-1.6-compatible
+\end{verbatim}
+
+\subsection{Examples}
+
+Creating a new repository is this easy:
+
+\begin{verbatim}
+$ cd /var/svn
+$ svnadmin create repos
+$
+\end{verbatim}
+
+In Subversion 1.0, a Berkeley DB repository is always created. In
+Subversion 1.1, a Berkeley DB repository is the default repository type,
+but an FSFS repository can be created using the \texttt{-\/-fs-type}
+option:
+
+\begin{verbatim}
+$ cd /var/svn
+$ svnadmin create repos --fs-type fsfs
+$
+\end{verbatim}
+
+\section{svnadmin deltify}\label{svn.ref.svnadmin.c.deltify}
+
+\emph{Deltify changed paths in a revision range.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ deltify\ {[}-r\ LOWER{[}:UPPER{]}{]}\ REPOS\_PATH}
+
+\subsection{Description}
+
+\texttt{svnadmin\ deltify} exists in current versions of Subversion only
+for historical reasons. This command is deprecated and no longer needed.
+
+It dates from a time when Subversion offered administrators greater
+control over compression strategies in the repository. This turned out
+to be a lot of complexity for \emph{very} little gain, and this
+``feature'' was deprecated.
+
+\subsection{Options}
+
+\begin{verbatim}
+--memory-cache-size (-M) ARG
+--quiet (-q)
+--revision (-r) ARG
+\end{verbatim}
+
+\section{svnadmin dump}\label{svn.ref.svnadmin.c.dump}
+
+\emph{Dump the contents of the filesystem to \texttt{stdout}.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ dump\ REPOS\_PATH\ {[}-r\ LOWER{[}:UPPER{]}{]}\ {[}-\/-incremental{]}\ {[}-\/-deltas{]}}
+
+\subsection{Description}
+
+Dump the contents of the filesystem to \texttt{stdout} in a ``dump
+file'' portable format, sending feedback to \texttt{stderr}. Dump
+revisions \textless LOWER\textgreater{} revision through
+\textless UPPER\textgreater{} revision. If no revisions are given, dump
+all revision trees. If only \textless LOWER\textgreater{} is given, dump
+that one revision tree. See
+\hyperref[svn.reposadmin.maint.migrate]{Migrating Repository Data
+Elsewhere} for a practical use.
+
+By default, the Subversion dump stream contains a single revision (the
+first revision in the requested revision range) in which every file and
+directory in the repository in that revision is presented as though that
+whole tree was added at once, followed by other revisions (the remainder
+of the revisions in the requested range), which contain only the files
+and directories that were modified in those revisions. For a modified
+file, the complete full-text representation of its contents, as well as
+all of its properties, are presented in the dump file; for a directory,
+all of its properties are presented.
+
+Two useful options modify the dump file generator\textquotesingle s
+behavior. The first is the \texttt{-\/-incremental} option, which simply
+causes that first revision in the dump stream to contain only the files
+and directories modified in that revision, instead of being presented as
+the addition of a new tree, and in exactly the same way that every other
+revision in the dump file is presented. This is useful for generating a
+relatively small dump file to be loaded into another repository that
+already has the files and directories that exist in the original
+repository.
+
+The second useful option is \texttt{-\/-deltas}. This option causes
+\texttt{svnadmin\ dump} to, instead of emitting full-text
+representations of file contents and property lists, emit only deltas of
+those items against their previous versions. This reduces (in some
+cases, drastically) the size of the dump file that
+\texttt{svnadmin\ dump} creates. There are, however, disadvantages to
+using this option---deltified dump files are more CPU-intensive to
+create and tend not to compress as well as their nondeltified
+counterparts when using third-party tools such as \texttt{gzip} and
+\texttt{bzip2}.
+
+Beginning with Subversion 1.8, \texttt{svndumpfilter} can operate on
+deltified dump streams. Prior to this release, \texttt{svndumpfilter}
+would not work with dump streams created using \texttt{-\/-deltas}
+option.
+
+\subsection{Options}
+
+\begin{verbatim}
+--deltas
+--incremental
+--memory-cache-size (-M) ARG
+--quiet (-q)
+--revision (-r) ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Dump your whole repository:
+
+\begin{verbatim}
+$ svnadmin dump /var/svn/repos > full.dump
+* Dumped revision 0.
+* Dumped revision 1.
+* Dumped revision 2.
+…
+\end{verbatim}
+
+Incrementally dump a single transaction from your repository:
+
+\begin{verbatim}
+$ svnadmin dump /var/svn/repos -r 21 --incremental > incr.dump
+* Dumped revision 21.
+\end{verbatim}
+
+\section{svnadmin freeze}\label{svn.ref.svnadmin.c.freeze}
+
+\emph{Prevent commits to the repository while running an arbitary
+program.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ freeze\ REPOS\_PATH\ PROGRAM\ {[}ARG...{]}}
+
+\texttt{svnadmin\ freeze\ -\/-file\ FILENAME\ PROGRAM\ {[}ARG...{]}}
+
+\subsection{Description}
+
+This subcommand prevents concurrent commits to the repository
+\textless REPOS\_PATH\textgreater{} (i.e. it freezes the repository)
+while running \textless PROGRAM\textgreater{} with
+\textless ARG\textgreater{} arguments. Clients trying to commit
+concurrently will wait until the repository becomes available again. The
+subcommand is intended for backup purposes so that third-party backup
+tools such as \texttt{rsync} can be safely used on a live repository.
+
+If \texttt{-\/-file} option is used, then all repositories listed in
+\textless FILENAME\textgreater{} will froze. The file format is a list
+of \textless REPOS\_PATH\textgreater{} separated by newlines.
+Repositories freeze in the same order as they are listed in the file.
+
+\subsection{Options}
+
+\begin{verbatim}
+--file (-F) FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Freeze the repository and run \texttt{rsync} to make its backup:
+
+\begin{verbatim}
+$ svnadmin freeze /var/svn/repos -- rsync -av /var/svn/repos /backup/repos
+\end{verbatim}
+
+\section{svnadmin help (h, ?)}\label{svn.ref.svnadmin.c.help}
+
+\emph{Help!}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ help\ {[}SUBCOMMAND...{]}}
+
+\subsection{Description}
+
+This subcommand is useful when you\textquotesingle re trapped on a
+desert island with neither a Net connection nor a copy of this book.
+
+\section{svnadmin hotcopy}\label{svn.ref.svnadmin.c.hotcopy}
+
+\emph{Make a hot copy of a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ hotcopy\ REPOS\_PATH\ NEW\_REPOS\_PATH}
+
+\subsection{Description}
+
+This subcommand makes a ``hot'' backup of your repository, including all
+hooks, configuration files, and, of course, database files. You can run
+this command at any time and make a safe copy of the repository,
+regardless of whether other processes are using the repository.
+
+Prior to Subversion 1.8, \texttt{svnadmin\ hotcopy} always made a full
+hot copy of the source repository. Beginning with Subversion 1.8 it
+supports incremental copy to the existing destination copy of the same
+source repository. By passing the \texttt{-\/-incremental} option to
+\texttt{svnadmin\ hotcopy}, you can instruct Subversion to copy only new
+revisions and revisions which have changed in size or had timestamp
+modifications. The UUID of the hotcopy destination repository must match
+the UUID of the hotcopy source repository. Incremental hotcopy mode is
+supported for FSFS repositories only.
+
+If you pass the \texttt{-\/-clean-logs} option, \texttt{svnadmin} will
+perform a hot copy of your repository, and then remove unused Berkeley
+DB logs from the original repository.
+
+\subsection{Options}
+
+\begin{verbatim}
+--clean-logs
+--incremental
+\end{verbatim}
+
+As described in
+\hyperref[svn.berkeleydb.limitations.architectural]{Architectural
+Limitations}, hot-copied Berkeley DB repositories are \emph{not}
+portable across operating systems, nor will they work on machines with a
+different ``endianness'' than the machine where they were created.
+
+\section{svnadmin list-dblogs}\label{svn.ref.svnadmin.c.list-dblogs}
+
+\emph{Ask Berkeley DB which logfiles exist for a given Subversion
+repository (applies only to repositories using the \texttt{bdb}
+backend).}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ list-dblogs\ REPOS\_PATH}
+
+\subsection{Description}
+
+Berkeley DB creates logs of all changes to the repository, which allow
+it to recover in the face of catastrophe. Unless you enable
+\texttt{DB\_LOG\_AUTOREMOVE}, the logfiles accumulate, although most are
+no longer used and can be deleted to reclaim disk space. See
+\hyperref[svn.reposadmin.maint.diskspace]{Managing Disk Space} for more
+information.
+
+\section{svnadmin
+list-unused-dblogs}\label{svn.ref.svnadmin.c.list-unused-dblogs}
+
+\emph{Ask Berkeley DB which logfiles can be safely deleted (applies only
+to repositories using the \texttt{bdb} backend).}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ list-unused-dblogs\ REPOS\_PATH}
+
+\subsection{Description}
+
+Berkeley DB creates logs of all changes to the repository, which allow
+it to recover in the face of catastrophe. Unless you enable
+\texttt{DB\_LOG\_AUTOREMOVE}, the logfiles accumulate, although most are
+no longer used and can be deleted to reclaim disk space. See
+\hyperref[svn.reposadmin.maint.diskspace]{Managing Disk Space} for more
+information.
+
+\subsection{Examples}
+
+Remove all unused logfiles from the repository:
+
+\begin{verbatim}
+$ svnadmin list-unused-dblogs /var/svn/repos
+/var/svn/repos/log.0000000031
+/var/svn/repos/log.0000000032
+/var/svn/repos/log.0000000033
+
+$ svnadmin list-unused-dblogs /var/svn/repos | xargs rm
+## disk space reclaimed!
+\end{verbatim}
+
+\section{svnadmin load}\label{svn.ref.svnadmin.c.load}
+
+\emph{Read a repository dump stream from \texttt{stdin}.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ load\ REPOS\_PATH\ {[}-r\ LOWER{[}:UPPER{]}{]}}
+
+\subsection{Description}
+
+Read a repository dump stream from \texttt{stdin}, committing new
+revisions into the repository\textquotesingle s filesystem. Progress
+feedback is sent to \texttt{stdout}. If no revisions are given, read and
+commit all revisions. But if \texttt{-\/-revision} (\texttt{-r}) is
+provided, read and commit revisions \textless LOWER\textgreater{}
+revision through \textless UPPER\textgreater{} revision only. If only
+\textless LOWER\textgreater{} is given, load that one revision.
+
+Prior to Subversion 1.8, \texttt{svnadmin\ load} was limited to reading
+all revisions that the dump stream contains, but now
+\texttt{svnadmin\ load} accepts \texttt{-\/-revision} (\texttt{-r})
+option that acts as a filter for dump stream revisions. This allows you
+to incrementally load only a range of revisions from a single dump
+stream making some repository maintenance and reorganization tasks much
+easier.
+
+\subsection{Options}
+
+\begin{verbatim}
+--bypass-prop-validation
+--force-uuid
+--ignore-uuid
+--memory-cache-size (-M) ARG
+--parent-dir DIR
+--quiet (-q)
+--revision (-r) ARG
+--use-post-commit-hook
+--use-pre-commit-hook
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the beginning of loading a repository from a backup file
+(made, of course, with \texttt{svnadmin\ dump}):
+
+\begin{verbatim}
+$ svnadmin load /var/svn/restored < repos-backup
+<<< Started new txn, based on original revision 1
+     * adding path : test ... done.
+     * adding path : test/a ... done.
+…
+\end{verbatim}
+
+Or if you want to load into a subdirectory:
+
+\begin{verbatim}
+$ svnadmin load --parent-dir new/subdir/for/project \
+                /var/svn/restored < repos-backup
+<<< Started new txn, based on original revision 1
+     * adding path : test ... done.
+     * adding path : test/a ... done.
+…
+\end{verbatim}
+
+Newer versions of Subversion have grown more strict regarding the format
+of the values of Subversion\textquotesingle s own built-in properties.
+Of course, properties created with older versions of Subversion
+wouldn\textquotesingle t have benefitted from that strictness, and as
+such might be improperly formatted. Dump streams carry property values
+as-is, so using Subversion 1.8 to load dump streams created from
+repositories with ill-formatted property values will, by default,
+trigger a validation error. There are several workaround for this
+problem. First, you can manually repair the problematic property values
+in the source repository and recreate the dump stream. Or, you can
+manually tweak the dump stream itself to fix those property values.
+Finally, if you\textquotesingle d rather not deal with the problem right
+now, use the \texttt{-\/-bypass-prop-validation} option with
+\texttt{svnadmin\ load}.
+
+\section{svnadmin lock}\label{svn.ref.svnadmin.c.lock}
+
+\emph{Lock path in the repository directly.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ lock\ REPOS\_PATH\ PATH-IN-REPOS\ USERNAME\ FILE\ {[}TOKEN{]}}
+
+\subsection{Description}
+
+Lock \textless PATH-IN-REPOS\textgreater{} in the repository, assigning
+ownership of the lock to \textless USERNAME\textgreater{} and using the
+contents of \textless FILE\textgreater{} as comments associated with the
+created lock. If provided, use \textless TOKEN\textgreater{} as lock
+token.
+
+\subsection{Options}
+
+\begin{verbatim}
+--bypass-hooks
+\end{verbatim}
+
+\section{svnadmin lslocks}\label{svn.ref.svnadmin.c.lslocks}
+
+\emph{Print descriptions of all locks.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ lslocks\ REPOS\_PATH\ {[}PATH-IN-REPOS{]}}
+
+\subsection{Description}
+
+Print descriptions of all locks in repository
+\textless REPOS\_PATH\textgreater{} underneath the path
+\textless PATH-IN-REPOS\textgreater. If
+\textless PATH-IN-REPOS\textgreater{} is not provided, it defaults to
+the root directory of the repository.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+This lists the one locked file in the repository at
+\texttt{/var/svn/repos}:
+
+\begin{verbatim}
+$ svnadmin lslocks /var/svn/repos
+Path: /tree.jpg
+UUID Token: opaquelocktoken:ab00ddf0-6afb-0310-9cd0-dda813329753
+Owner: harry
+Created: 2005-07-08 17:27:36 -0500 (Fri, 08 Jul 2005)
+Expires: 
+Comment (1 line):
+Rework the uppermost branches on the bald cypress in the foreground.
+\end{verbatim}
+
+\section{svnadmin lstxns}\label{svn.ref.svnadmin.c.lstxns}
+
+\emph{Print the names of all uncommitted transactions.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ lstxns\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the names of all uncommitted transactions. See
+\hyperref[svn.reposadmin.maint.diskspace.deadtxns]{Removing dead
+transactions} for information on how uncommitted transactions are
+created and what you should do with them.
+
+\subsection{Examples}
+
+List all outstanding transactions in a repository:
+
+\begin{verbatim}
+$ svnadmin lstxns /var/svn/repos/ 
+1w
+1x
+\end{verbatim}
+
+\section{svnadmin pack}\label{svn.ref.svnadmin.c.pack}
+
+\emph{Possibly compact the repository into a more efficient storage
+model.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ pack\ REPOS\_PATH}
+
+\subsection{Description}
+
+See \hyperref[svn.reposadmin.maint.diskspace.fsfspacking]{Packing FSFS
+filesystems} for more information.
+
+\subsection{Options}
+
+None
+
+\section{svnadmin recover}\label{svn.ref.svnadmin.c.recover}
+
+\emph{Bring a repository database back into a consistent state (applies
+only to repositories using the \texttt{bdb} backend). In addition, if
+\texttt{repos/conf/passwd} does not exist, it will create a default
+password file .}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ recover\ REPOS\_PATH}
+
+\subsection{Description}
+
+Run this command if you get an error indicating that your repository
+needs to be recovered.
+
+\subsection{Options}
+
+\begin{verbatim}
+--wait
+\end{verbatim}
+
+\subsection{Examples}
+
+Recover a hung repository:
+
+\begin{verbatim}
+$ svnadmin recover /var/svn/repos/ 
+Repository lock acquired.
+Please wait; recovering the repository may take some time...
+
+Recovery completed.
+The latest repos revision is 34.
+\end{verbatim}
+
+Recovering the database requires an exclusive lock on the repository.
+(This is a ``database lock''; see the sidebar
+\hyperref[svn.advanced.locking.meanings]{The Many Meanings of
+``Lock''}.) If another process is accessing the repository, then
+\texttt{svnadmin\ recover} will error:
+
+\begin{verbatim}
+$ svnadmin recover /var/svn/repos
+svn: E165000: Failed to get exclusive repository access; perhaps another proce
+ss such as httpd, svnserve or svn has it open?
+$
+\end{verbatim}
+
+The \texttt{-\/-wait} option, however, will cause
+\texttt{svnadmin\ recover} to wait indefinitely for other processes to
+disconnect:
+
+\begin{verbatim}
+$ svnadmin recover /var/svn/repos --wait
+Waiting on repository lock; perhaps another process has it open?
+
+### time goes by…
+
+Repository lock acquired.
+Please wait; recovering the repository may take some time...
+
+Recovery completed.
+The latest repos revision is 34.
+\end{verbatim}
+
+\section{svnadmin rmlocks}\label{svn.ref.svnadmin.c.rmlocks}
+
+\emph{Unconditionally remove one or more locks from a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ rmlocks\ REPOS\_PATH\ LOCKED\_PATH...}
+
+\subsection{Description}
+
+Remove one or more locks from each \textless LOCKED\_PATH\textgreater.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+This deletes the locks on \texttt{tree.jpg} and \texttt{house.jpg} in
+the repository at \texttt{/var/svn/repos}:
+
+\begin{verbatim}
+$ svnadmin rmlocks /var/svn/repos tree.jpg house.jpg
+Removed lock on '/tree.jpg.
+Removed lock on '/house.jpg.
+\end{verbatim}
+
+\section{svnadmin rmtxns}\label{svn.ref.svnadmin.c.rmtxns}
+
+\emph{Delete transactions from a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ rmtxns\ REPOS\_PATH\ TXN\_NAME...}
+
+\subsection{Description}
+
+Delete outstanding transactions from a repository. This is covered in
+detail in \hyperref[svn.reposadmin.maint.diskspace.deadtxns]{Removing
+dead transactions}.
+
+\subsection{Options}
+
+\begin{verbatim}
+--quiet (-q)
+\end{verbatim}
+
+\subsection{Examples}
+
+Remove named transactions:
+
+\begin{verbatim}
+$ svnadmin rmtxns /var/svn/repos/ 1w 1x
+\end{verbatim}
+
+Fortunately, the output of \texttt{lstxns} works great as the input for
+\texttt{rmtxns}:
+
+\begin{verbatim}
+$ svnadmin rmtxns /var/svn/repos/  `svnadmin lstxns /var/svn/repos/`
+\end{verbatim}
+
+This removes all uncommitted transactions from your repository.
+
+\section{svnadmin setlog}\label{svn.ref.svnadmin.c.setlog}
+
+\emph{Set the log message on a revision.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ setlog\ REPOS\_PATH\ -r\ REVISION\ FILE}
+
+\subsection{Description}
+
+Set the log message on revision \textless REVISION\textgreater{} to the
+contents of \textless FILE\textgreater.
+
+This is similar to using \texttt{svn\ propset} with the
+\texttt{-\/-revprop} option to set the \texttt{svn:log} property on a
+revision, except that you can also use the option
+\texttt{-\/-bypass-hooks} to avoid running any pre- or post-commit
+hooks, which is useful if the modification of revision properties has
+not been enabled in the pre-revprop-change hook.
+
+Revision properties are not under version control, so this command will
+permanently overwrite the previous log message.
+
+\subsection{Options}
+
+\begin{verbatim}
+--bypass-hooks
+--revision (-r) ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Set the log message for revision 19 to the contents of the file
+\texttt{msg}:
+
+\begin{verbatim}
+$ svnadmin setlog /var/svn/repos/ -r 19 msg
+\end{verbatim}
+
+\section{svnadmin setrevprop}\label{svn.ref.svnadmin.c.setrevprop}
+
+\emph{Set a property on a revision.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ setrevprop\ REPOS\_PATH\ -r\ REVISION\ NAME\ FILE}
+
+\subsection{Description}
+
+Set the property \textless NAME\textgreater{} on revision
+\textless REVISION\textgreater{} to the contents of
+\textless FILE\textgreater. Use \texttt{-\/-use-pre-revprop-change-hook}
+or \texttt{-\/-use-post-revprop-change-hook} to trigger the revision
+property-related hooks (e.g., if you want an email notification sent
+from your post-revprop-change hook).
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) ARG
+--use-post-revprop-change-hook
+--use-pre-revprop-change-hook
+\end{verbatim}
+
+\subsection{Examples}
+
+The following sets the revision property \texttt{repository-photo} to
+the contents of the file \texttt{sandwich.png}:
+
+\begin{verbatim}
+$ svnadmin setrevprop /var/svn/repos -r 0 repository-photo sandwich.png
+\end{verbatim}
+
+As you can see, \texttt{svnadmin\ setrevprop} has no output upon
+success.
+
+\section{svnadmin setuuid}\label{svn.ref.svnadmin.c.setuuid}
+
+\emph{Reset the repository UUID.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ setuuid\ REPOS\_PATH\ {[}NEW\_UUID{]}}
+
+\subsection{Description}
+
+Reset the repository UUID for the repository located at
+\textless REPOS\_PATH\textgreater. If \textless NEW\_UUID\textgreater{}
+is provided, use that as the new repository UUID; otherwise, generate a
+brand-new UUID for the repository.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+If you\textquotesingle ve \texttt{svnsync}ed \texttt{/var/svn/repos} to
+\texttt{/var/svn/repos-new} and intend to use \texttt{repos-new} as your
+canonical repository, you may want to change the UUID for
+\texttt{repos-new} to the UUID of \texttt{repos} so that your users
+don\textquotesingle t have to check out a new working copy to
+accommodate the change:
+
+\begin{verbatim}
+$ svnadmin setuuid /var/svn/repos-new 2109a8dd-854f-0410-ad31-d604008985ab
+\end{verbatim}
+
+As you can see, \texttt{svnadmin\ setuuid} has no output upon success.
+
+\section{svnadmin unlock}\label{svn.ref.svnadmin.c.unlock}
+
+\emph{Unlock path in the repository directly.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ unlock\ REPOS\_PATH\ LOCKED\_PATH\ USERNAME\ TOKEN}
+
+\subsection{Description}
+
+Unlock \textless LOCKED\_PATH\textgreater{} in the repository (as
+\textless USERNAME\textgreater) after verifying that the token
+associated with the lock matches \textless TOKEN\textgreater.
+
+\subsection{Options}
+
+\begin{verbatim}
+--bypass-hooks
+\end{verbatim}
+
+\section{svnadmin upgrade}\label{svn.ref.svnadmin.c.upgrade}
+
+\emph{Upgrade a repository to the latest supported schema version.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ upgrade\ REPOS\_PATH}
+
+\subsection{Description}
+
+Upgrade the repository located at \textless REPOS\_PATH\textgreater{} to
+the latest supported schema version.
+
+This functionality is provided as a convenience for repository
+administrators who wish to make use of new Subversion functionality
+without having to undertake a potentially costly full repository dump
+and load operation. As such, the upgrade performs only the minimum
+amount of work needed to accomplish this while still maintaining the
+integrity of the repository. While a dump and subsequent load guarantee
+the most optimized repository state, \texttt{svnadmin\ upgrade} does
+not.
+
+You should \emph{always} back up your repository before upgrading.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+Upgrade the repository at path \texttt{/var/repos/svn}:
+
+\begin{verbatim}
+$ svnadmin upgrade /var/repos/svn
+Repository lock acquired.
+Please wait; upgrading the repository may take some time...
+
+Upgrade completed.
+\end{verbatim}
+
+\section{svnadmin verify}\label{svn.ref.svnadmin.c.verify}
+
+\emph{Verify the data stored in the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnadmin\ verify\ REPOS\_PATH}
+
+\subsection{Description}
+
+Run this command if you wish to verify the integrity of your repository.
+This basically iterates through all revisions in the repository by
+internally dumping all revisions and discarding the
+output---it\textquotesingle s a good idea to run this on a regular basis
+to guard against latent hard disk failures and ``bitrot.'' If this
+command fails---which it will do at the first sign of a problem---that
+means your repository has at least one corrupted revision, and you
+should restore the corrupted revision from a backup (you did make a
+backup, didn\textquotesingle t you?).
+
+\subsection{Options}
+
+\begin{verbatim}
+--memory-cache-size (-M) ARG
+--quiet (-q)
+--revision (-r) ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Verify a hung repository:
+
+\begin{verbatim}
+$ svnadmin verify /var/svn/repos/ 
+* Verified revision 1729.
+\end{verbatim}
+

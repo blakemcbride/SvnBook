@@ -1,0 +1,150 @@
+\chapter{svnserve Reference---Custom Subversion
+Server}\label{svn.ref.svnserve}
+
+\section{svnserve}\label{svn.ref.svnserve.re}
+
+\emph{Serve Subversion repositories via Subversion\textquotesingle s
+custom network protocol}
+
+\textbf{Synopsis}
+
+\texttt{svnserve\ {[}-d\ \textbar{}\ -i\ \textbar{}\ -t\ \textbar{}\ -X{]}\ OPTIONS...}
+
+\subsection{Description}\label{svn.ref.svnserve.re.desc}
+
+\texttt{svnserve} allows access to Subversion repositories using
+Subversion\textquotesingle s custom network protocol.
+
+You can run \texttt{svnserve} as a standalone server process (for
+clients that are using the \texttt{svn://} access method); you can have
+a daemon such as \texttt{inetd} or \texttt{xinetd} launch it for you on
+demand (also for \texttt{svn://}), or you can have \texttt{sshd} launch
+it on demand for the \texttt{svn+ssh://} access method.
+
+Unless the \texttt{-\/-config-file} option was specified on the command
+line, once the client has selected a repository by transmitting its URL,
+\texttt{svnserve} reads a file named \texttt{conf/svnserve.conf} in the
+repository directory to determine repository-specific settings such as
+what authentication database to use and what authorization policies to
+apply. See \hyperref[svn.serverconfig.svnserve]{svnserve, a Custom
+Server} for details of the \texttt{svnserve.conf} file.
+
+\subsection{Options}\label{svn.ref.svnserve.re.options}
+
+Unlike the previous commands we\textquotesingle ve described,
+\texttt{svnserve} has no subcommands---it is controlled exclusively by
+options.
+
+\begin{description}
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.cache_fulltexts}{}\texttt{-\/-cache-fulltexts}
+\textless ARG\textgreater{}]
+Toggles support for fulltext file content caching (in FSFS repositories
+only).
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.cache_txdeltas}{}\texttt{-\/-cache-txdeltas}
+\textless ARG\textgreater{}]
+Toggles support for file content delta caching (in FSFS repositories
+only).
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.compression}{}\texttt{-\/-compression}
+\textless LEVEL\textgreater{}]
+Specifies the level of compression used for wire transmissions as an
+integer beween 0 and 9, inclusive. A value of \texttt{9} offers the best
+compression, \texttt{5} is the default value, and \texttt{0} disables
+compression altogether.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.config_file}{}\texttt{-\/-config-file}
+\textless FILENAME\textgreater{}]
+When specified, \texttt{svnserve} reads \textless FILENAME\textgreater{}
+once at program startup and caches the \texttt{svnserve} configuration.
+The password and authorization configurations referenced from filename
+will be loaded on each connection. \texttt{svnserve} will not read any
+per‐repository \texttt{conf/svnserve.conf} files when this option is
+used. See the \hyperref[svn.serverconfig.svnserve]{svnserve, a Custom
+Server} for details of the file format for this option.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.daemon}{}\texttt{-\/-daemon}
+(\texttt{-d})]
+Causes \texttt{svnserve} to run in daemon mode. \texttt{svnserve}
+backgrounds itself and accepts and serves TCP/IP connections on the
+\texttt{svn} port (3690, by default).
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.foreground}{}\texttt{-\/-foreground}]
+When used together with \texttt{-d}, causes \texttt{svnserve} to stay in
+the foreground. This is mainly useful for debugging.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.inetd}{}\texttt{-\/-inetd}
+(\texttt{-i})]
+Causes \texttt{svnserve} to use the \texttt{stdin} and \texttt{stdout}
+file descriptors, as is appropriate for a daemon running out of
+\texttt{inetd}.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.help}{}\texttt{-\/-help}
+(\texttt{-h})]
+Displays a usage summary and exits.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.listen_host}{}\texttt{-\/-listen-host}
+\textless HOST\textgreater{}]
+Causes \texttt{svnserve} to listen on the interface specified by
+\textless HOST\textgreater, which may be either a hostname or an IP
+address.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.listen_once}{}\texttt{-\/-listen-once}
+(\texttt{-X})]
+Causes \texttt{svnserve} to accept one connection on the \texttt{svn}
+port, serve it, and exit. This option is mainly useful for debugging.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.listen_port}{}\texttt{-\/-listen-port}
+\textless PORT\textgreater{}]
+Causes \texttt{svnserve} to listen on \textless PORT\textgreater{} when
+run in daemon mode. (FreeBSD daemons listen only on tcp6 by
+default---this option tells them to also listen on tcp4.)
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.log_file}{}\texttt{-\/-log-file}
+\textless FILENAME\textgreater{}]
+Instructs \texttt{svnserve} to create (if necessary) and use the file
+located at \textless FILENAME\textgreater{} for Subversion operational
+log output of the same sort that \texttt{mod\_dav\_svn} generates. See
+\hyperref[svn.serverconfig.operational-logging]{High-level Logging} for
+details.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.memory_cache_size}{}\texttt{-\/-memory-cache-size}
+(\texttt{-M}) \textless ARG\textgreater{}]
+Configures the size (in Megabytes) of the extra in-memory cache used to
+minimize redundant operations. The default value is \texttt{16}. (This
+cache is used for FSFS-backed repositories only.)
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.pid_file}{}\texttt{-\/-pid-file}
+\textless FILENAME\textgreater{}]
+Causes \texttt{svnserve} to write its process ID to
+\textless FILENAME\textgreater, which must be writable by the user under
+which \texttt{svnserve} is running.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.prefer_ipv6}{}\texttt{-\/-prefer-ipv6}
+(\texttt{-6})]
+When resolving the listen hostname, prefer an IPv6 answer over an IPv4
+one. IPv4 is preferred by default.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.quiet}{}\texttt{-\/-quiet}]
+Disables progress notifications. Error output will still be printed.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.root}{}\texttt{-\/-root}
+(\texttt{-r}) \textless ROOT\textgreater{}]
+Sets the virtual root for repositories served by \texttt{svnserve}. The
+pathname in URLs provided by the client will be interpreted relative to
+this root and will not be allowed to escape this root.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.threads}{}\texttt{-\/-threads}
+(\texttt{-T})]
+When running in daemon mode, causes \texttt{svnserve} to spawn a thread
+instead of a process for each connection (e.g., for when running on
+Windows). The \texttt{svnserve} process still backgrounds itself at
+startup time.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.tunnel}{}\texttt{-\/-tunnel}
+(\texttt{-t})]
+Causes \texttt{svnserve} to run in tunnel mode, which is just like the
+\texttt{inetd} mode of operation (both modes serve one connection over
+\texttt{stdin}/\texttt{stdout}, and then exit), except that the
+connection is considered to be preauthenticated with the username of the
+current UID. This flag is automatically passed for you by the client
+when running over a tunnel agent such as \texttt{ssh}. That means
+there\textquotesingle s rarely any need for \emph{you} to pass this
+option to \texttt{svnserve}. So, if you find yourself typing
+\texttt{svnserve\ -\/-tunnel} on the command line and wondering what to
+do next, see \hyperref[svn.serverconfig.svnserve.sshauth]{Tunneling over
+SSH}.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.tunnel_user}{}\texttt{-\/-tunnel-user}
+\textless NAME\textgreater{}]
+Used in conjunction with the \texttt{-\/-tunnel} option, tells
+\texttt{svnserve} to assume that \textless NAME\textgreater{} is the
+authenticated user, rather than the UID of the \texttt{svnserve}
+process. This is useful for users wishing to share a single system
+account over SSH, but to maintain separate commit identities.
+\item[\protect\phantomsection\label{svn.ref.svnserve.sw.version}{}\texttt{-\/-version}]
+Displays version information and a list of repository backend modules
+available, and then exits.
+\end{description}
+

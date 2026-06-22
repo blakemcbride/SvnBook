@@ -1,0 +1,256 @@
+\chapter{svnmucc Reference---Subversion Multiple URL Command
+Client}\label{svn.ref.svnmucc}
+
+The Subversion Multiple URL Command Client (\texttt{svnmucc}) is a tool
+that can make arbitrary changes to the repository without the use of a
+working copy. As regards remote commit capabilities, the functionality
+provided by this tool is similar to, but far exceeds, that which is
+offered by the Subversion command-line client itself. For example,
+\texttt{svnmucc} is not limited to performing only a single type of
+change in a given commit. It is also able to modify file content and
+versioned properties without a working copy, which is functionality not
+currently offered by \texttt{svn}.
+
+This reference describes the \texttt{svnmucc} tool, and the various
+remote modification actions you can perform using it.
+
+\section{svnmucc}\label{svn.ref.svnmucc.re}
+
+\emph{Perform one or more Subversion repository URL-based ACTIONs,
+committing the result as a (single) new revision.}
+
+\textbf{Synopsis}
+
+\texttt{svnmucc\ ACTION...}
+
+\subsection{Description}\label{svn.ref.svnmucc.re.desc}
+
+\texttt{svnmucc} is a program for modifying Subversion-versioned data
+without the use of a working copy. It allows operations to be performed
+directly against the repository URLs of the files and directories that
+the user wishes to change. Each invocation of \texttt{svnmucc} attempts
+one or more \textless ACTION\textgreater s, atomically committing the
+results of those combined \textless ACTION\textgreater s as a single new
+revision.
+
+\subsection{Actions}\label{svn.ref.svnmucc.re.actions}
+
+\texttt{svnmucc} supports the following actions (and related arguments),
+which may be combined into ordered sequences on the command line:
+
+\begin{description}
+\item[cp \textless REV\textgreater{} \textless SRC-URL\textgreater{}
+\textless DST-URL\textgreater{}]
+Copy the file or directory located at \textless SRC-URL\textgreater{} in
+revision \textless REV\textgreater{} to \textless DST-URL\textgreater.
+\item[mkdir \textless URL\textgreater{}]
+Create a new directory at \textless URL\textgreater. The parent
+directory of \textless URL\textgreater{} must already exist (or have
+been created by a prior \texttt{svnmucc} action), as this command does
+not offer the ability to automatically create any missing intermediate
+parent directories.
+\item[mv \textless SRC-URL\textgreater{}
+\textless DST-URL\textgreater{}]
+Move the file or directory located at \textless SRC-URL\textgreater{} to
+\textless DST-URL\textgreater.
+\item[rm \textless URL\textgreater{}]
+Delete the file or directory located at \textless URL\textgreater.
+\item[put \textless SRC-FILE\textgreater{} \textless URL\textgreater{}]
+Add a new file---or modify an existing one---located at
+\textless URL\textgreater, copying the contents of the local file
+\textless SRC-FILE\textgreater{} as the new contents of the created or
+modified file. As a special consideration,
+\textless SRC-FILE\textgreater{} may be \texttt{-} to instruct
+\texttt{svnmucc} to read from standard input rather than a local
+filesystem file.
+\item[propset \textless NAME\textgreater{} \textless VALUE\textgreater{}
+\textless URL\textgreater{}]
+Set the value of the property \textless NAME\textgreater{} on the target
+\textless URL\textgreater{} to \textless VALUE\textgreater.
+\item[propsetf \textless NAME\textgreater{} \textless FILE\textgreater{}
+\textless URL\textgreater{}]
+Set the value of the property \textless NAME\textgreater{} on the target
+\textless URL\textgreater{} to the contents of the file
+\textless FILE\textgreater.
+\item[propdel \textless NAME\textgreater{} \textless URL\textgreater{}]
+Delete the property \textless NAME\textgreater{} from the target
+\textless URL\textgreater.
+\end{description}
+
+\subsection{Options}\label{svn.ref.svnmucc.re.sw}
+
+Options specified on the \texttt{svnmucc} command line are global to all
+actions performed by that command line. The following is a list of the
+options supported by this tool:
+
+\begin{description}
+\item[\texttt{-\/-config-dir} \textless DIR\textgreater{}]
+Read configuration information from the specified directory instead of
+the default location (\texttt{.subversion} in the user\textquotesingle s
+home directory).
+\item[\texttt{-\/-config-option} \textless CONFSPEC\textgreater{}]
+Set, for the duration of the command, the value of a runtime
+configuration option. \textless CONFSPEC\textgreater{} is a string which
+specifies the configuration option namespace, name and value that
+you\textquotesingle d like to assign, formatted as
+\textless FILE\textgreater:\textless SECTION\textgreater:\textless OPTION\textgreater={[}\textless VALUE\textgreater{]}.
+In this syntax, \textless FILE\textgreater{} and
+\textless SECTION\textgreater{} are the runtime configuration file
+(either \texttt{config} or \texttt{servers}) and the section thereof,
+respectively, which contain the option whose value you wish to change.
+\textless OPTION\textgreater{} is, of course, the option itself, and
+\textless VALUE\textgreater{} the value (if any) you wish to assign to
+the option. For example, to temporarily disable the use of the
+compression in the HTTP protocol, use
+\texttt{-\/-config-option=servers:global:http-compression=no}. You can
+use this option multiple times to change multiple option values
+simultaneously.
+\item[\texttt{-\/-extra-args} (\texttt{-X})
+\textless ARGFILE\textgreater{}]
+Read additional would-be command-line arguments from
+\textless ARGFILE\textgreater, one argument per line. As a special
+consideration, \textless ARGFILE\textgreater{} may be \texttt{-} to
+indicate that additional arguments should be read instead from standard
+input.
+\item[\texttt{-\/-file} (\texttt{-F}) \textless MSGFILE\textgreater{}]
+Use the contents of the \textless MSGFILE\textgreater{} as the log
+message for the commit.
+\item[\texttt{-\/-help} (\texttt{-h}, \texttt{-?})]
+Show program usage information and exit.
+\item[\texttt{-\/-message} (\texttt{-m}) \textless MSG\textgreater{}]
+Use \textless MSG\textgreater{} as the log message for the commit.
+\item[\texttt{-\/-no-auth-cache}]
+Prevent caching of authentication information (e.g., username and
+password) in the Subversion runtime configuration directories.
+\item[\texttt{-\/-non-interactive}]
+Disable all interactive prompting (e.g., requests for authentication
+credentials).
+\item[\texttt{-\/-revision} (\texttt{-r}) \textless REV\textgreater{}]
+Use revision \textless REV\textgreater{} as the baseline revision for
+all changes made via the \texttt{svnmucc} actions. This is an important
+option which users should habituate to using whenever modifying existing
+versioned items to avoid inadvertently undoing contemporary changes made
+by fellow team members.
+\item[\texttt{-\/-root-url} (\texttt{-U})
+\textless ROOT-URL\textgreater{}]
+Use \textless ROOT-URL\textgreater{} as a base URL to which all other
+URL targets are relative. This URL need not be the
+repository\textquotesingle s root URL (such as might be reported by
+\texttt{svn\ info}). It can be any URL common to the various targets
+which are specified in the \texttt{svnmucc} actions.
+\item[\texttt{-\/-password} (\texttt{-p})
+\textless PASSWD\textgreater{}]
+Use \textless PASSWD\textgreater{} as the password when authenticating
+against a Subversion server. If not provided, or if incorrect,
+Subversion will prompt you for this information as needed.
+\item[\texttt{-\/-username} \textless NAME\textgreater{}]
+Use \textless USERNAME\textgreater{} as the username when authenticating
+against a Subversion server. If not provided, or if incorrect,
+Subversion will prompt you for this information as needed.
+\item[\texttt{-\/-version}]
+Display the program\textquotesingle s version information and exit.
+\item[\texttt{-\/-with-revprop}
+\textless NAME\textgreater=\textless VALUE\textgreater{}]
+Set the value of the revision property \textless NAME\textgreater{} to
+\textless VALUE\textgreater{} on the committed revision.
+\end{description}
+
+\subsection{Examples}\label{svn.ref.svnmucc.re.examples}
+
+To (safely) modify a file\textquotesingle s contents without using a
+working copy, use \texttt{svn\ cat} to fetch the current contents of the
+file, and \texttt{svnmucc\ put} to commit the edited contents thereof.
+
+\begin{verbatim}
+$ # Calculate some convenience variables.
+$ export FILEURL=http://svn.example.com/projects/sandbox/README
+$ export BASEREV=`svn info ${FILEURL} | \
+                  grep '^Last Changed Rev' | cut -d ' ' -f 2`
+$ # Get a copy of the file's current contents.
+$ svn cat ${FILEURL}@${BASEREV} > /tmp/README.tmpfile
+$ # Edit the (copied) file.
+$ vi /tmp/README.tmpfile
+$ # Commit the new content for our file.
+$ svnmucc -r ${BASEREV} put README.tmpfile ${FILEURL} \
+          -m "Tweak the README file."
+r24 committed by harry at 2013-01-21T16:21:23.100133Z
+# Cleanup after ourselves.
+$ rm /tmp/README.tmpfile
+\end{verbatim}
+
+Apply a similar approach to change a file or directory property. Simply
+use \texttt{svn\ propget} and \texttt{svnmucc\ propsetf} instead of
+\texttt{svn\ cat} and \texttt{svnmucc\ put}, respectively.
+
+\begin{verbatim}
+$ # Calculate some convenience variables.
+$ export PROJURL=http://svn.example.com/projects/sandbox
+$ export BASEREV=`svn info ${PROJURL} | \
+                  grep '^Last Changed Rev' | cut -d ' ' -f 2`
+$ # Get a copy of the directory's "license" property value.
+$ svn -r ${BASEREV} propget license ${PROJURL} > /tmp/prop.tmpfile
+$ # Tweak the property.
+$ vi /tmp/prop.tmpfile
+$ # Commit the new property value.
+$ svnmucc -r ${BASEREV} propsetf prop.tmpfile ${PROJURL} \
+          -m "Tweak the project directory 'license' property."
+r25 committed by harry at 2013-01-21T16:24:11.375936Z
+# Cleanup after ourselves.
+$ rm /tmp/prop.tmpfile
+\end{verbatim}
+
+Let\textquotesingle s look now at some multi-operation examples.
+
+To implement a ``moving tag'', where a single tag name is recycled to
+point to different snapshots (for example, the current latest stable
+version) of a codebase, use \texttt{svnmucc\ rm} and
+\texttt{svnmucc\ cp}:
+
+\begin{verbatim}
+$ svnmucc -U http://svn.example.com/projects/doohickey \
+          rm tags/latest-stable \
+          cp HEAD trunk tags/latest-stable \
+          -m "Slide the 'latest-stable' tag forward."
+r134 committed by harry at 2013-01-12T11:02:16.142536Z
+$ 
+\end{verbatim}
+
+In the previous example, we slyly introduced the use of the
+\texttt{-\/-root-url\ (-U)} option. Use this option to specify a base
+URL to which all other operand URLs are treated as relative (and save
+yourself some typing).
+
+The following shows an example of using \texttt{svnmucc} to, in a single
+revision, create a new tag of your project which includes a newly
+created descriptive file and which lacks a directory which
+shouldn\textquotesingle t be included in, say, a release tarball.
+
+\begin{verbatim}
+$ echo "This is the 1.2.0 release." | \
+       svnmucc -U http://svn.example.com/projects/doohickey \
+               -m "Tag the 1.2.0 release." \
+               -- \
+               cp HEAD trunk tags/1.2.0 \
+               rm tags/1.2.0/developer-notes \
+               put - tags/1.2.0/README.tag
+r164 committed by cmpilato at 2013-01-22T05:26:15.563327Z
+$ svn log -c 164 -v http://svn.example.com/projects/doohickey
+------------------------------------------------------------------------
+r164 | cmpilato | 2013-01-22 00:26:15 -0500 (Tue, 22 Jan 2013) | 1 line
+Changed paths:
+   A /tags/1.2.0 (from /trunk:163)
+   A /tags/1.2.0/README.tag
+   D /tags/1.2.0/developer-notes
+
+Tag the 1.2.0 release.
+$ 
+\end{verbatim}
+
+The previous example demonstrates not only how to do several different
+things in a single \texttt{svnmucc} invocation, but also the use of
+standard input as the source of new file contents. Note the presence of
+\texttt{-\/-} to indicate that no more options follow on the command
+line. This is required so that the bare \texttt{-} used in the
+\texttt{svnmucc\ put} action won\textquotesingle t be flagged as a
+malformed option indicator.
+

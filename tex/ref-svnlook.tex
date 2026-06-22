@@ -1,0 +1,864 @@
+\chapter{svnlook Reference---Subversion Repository
+Examination}\label{svn.ref.svnlook}
+
+\texttt{svnlook} is a command-line utility for examining different
+aspects of a Subversion repository. It does not make any changes to the
+repository---it\textquotesingle s just used for ``peeking''.
+\texttt{svnlook} is typically used by the repository hooks, but a
+repository administrator might find it useful for diagnostic purposes.
+
+Since \texttt{svnlook} works via direct repository access (and thus can
+be used only on the machine that holds the repository), it refers to the
+repository with a path, not a URL.
+
+If no revision or transaction is specified, \texttt{svnlook} defaults to
+the youngest (most recent) revision of the repository.
+
+Options in \texttt{svnlook} are global, just as they are in \texttt{svn}
+and \texttt{svnadmin}; however, most options apply to only one
+subcommand since the functionality of \texttt{svnlook} is
+(intentionally) limited in scope:
+
+\protect\phantomsection\label{svn.ref.svnlook.sw}{}
+
+\begin{description}
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.copy_info}{}\texttt{-\/-copy-info}]
+Causes \texttt{svnlook\ changed} to show detailed copy source
+information.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.diff_cmd}{}\texttt{-\/-diff-cmd}
+\textless CMD\textgreater{}]
+Specifies an external program to use to show differences between files.
+When \texttt{svnlook\ diff} is invoked without this option, it uses
+Subversion\textquotesingle s internal differencing engine, which
+provides unified diffs by default. If you want to use an external
+differencing program, use \texttt{-\/-diff-cmd}. You can then pass
+options to the specified program using the \texttt{-\/-extensions}
+(\texttt{-x}) option.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.diff_copy_from}{}\texttt{-\/-diff-copy-from}]
+Print differences for copied items against the copy source.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.extensions}{}\texttt{-\/-extensions}
+(\texttt{-x}) \textless ARG\textgreater{}]
+Specifies customizations which Subversion should make when performing
+difference calculations. Valid extensions include:
+
+\begin{description}
+\item[\texttt{-\/-ignore-space-change} (\texttt{-b})]
+Ignore changes in the amount of white space.
+\item[\texttt{-\/-ignore-all-space} (\texttt{-w})]
+Ignore all white space.
+\item[\texttt{-\/-ignore-eol-style}]
+Ignore changes in EOL (end-of-line) style.
+\item[\texttt{-\/-show-c-function} (\texttt{-p})]
+Show C function names in the diff output.
+\item[\texttt{-\/-unified} (\texttt{-u})]
+Show three lines of unified diff context.
+\end{description}
+
+The default value is \texttt{-u}.
+
+Note that when Subversion is configured to invoke an external diff
+command, the value of the \texttt{-\/-extensions} (\texttt{-x}) option
+isn\textquotesingle t restricted to the previously mentioned options,
+but may be \emph{any} additional arguments which Subversion should pass
+to that command. If you wish to pass multiple arguments, you must
+enclose all of them in quotes.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.full_paths}{}\texttt{-\/-full-paths}]
+Causes \texttt{svnlook\ tree} to display full paths instead of
+hierarchical, indented path components.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.ignore_properties}{}\texttt{-\/-ignore-properties}]
+Instructs \texttt{svnlook\ diff} to suppress output of property changes.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.limit}{}\texttt{-\/-limit}
+(\texttt{-l}) \textless ARG\textgreater{}]
+Limit output to a maximum number of \textless ARG\textgreater{} items.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.no_diff_deleted}{}\texttt{-\/-no-diff-deleted}]
+Prevents \texttt{svnlook\ diff} from printing differences for deleted
+files. The default behavior when a file is deleted in a
+transaction/revision is to print the same differences that you would see
+if you had left the file but removed all the content.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.no_diff_added}{}\texttt{-\/-no-diff-added}]
+Prevents \texttt{svnlook\ diff} from printing differences for added
+files. The default behavior when you add a file is to print the same
+differences that you would see if you had added the entire contents of
+an existing (empty) file.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.non_recursive}{}\texttt{-\/-non-recursive}
+(\texttt{-N})]
+Operate on a single directory only.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.properties_only}{}\texttt{-\/-properties-only}]
+Instructs \texttt{svnlook\ diff} to show only property changes.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.revision}{}\texttt{-\/-revision}
+(\texttt{-r}) \textless REV\textgreater{}]
+Specifies a particular revision number that you wish to examine.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.revprop}{}\texttt{-\/-revprop}]
+Operates on a revision property instead of a property specific to a file
+or directory. This option requires that you also pass a revision with
+the \texttt{-\/-revision} (\texttt{-r}) option.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.show_inherited_props}{}\texttt{-\/-show-inherited-props}]
+Works with \texttt{svnlook\ propget} and \texttt{svnlook\ proplist} to
+display the versioned properties inherited by a path.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.transaction}{}\texttt{-\/-transaction}
+(\texttt{-t}) \textless ID\textgreater{}]
+Specifies a particular transaction ID that you wish to examine.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.show_ids}{}\texttt{-\/-show-ids}]
+Shows the filesystem node revision IDs for each path in the filesystem
+tree.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.verbose}{}\texttt{-\/-verbose}
+(\texttt{-v})]
+Be verbose. When used with \texttt{svnlook\ proplist}, for example, this
+causes Subversion to display not just the list of properties, but their
+values also.
+\item[\protect\phantomsection\label{svn.ref.svnlook.sw.xml}{}\texttt{-\/-xml}]
+Prints output in XML format.
+\end{description}
+
+\section{svnlook author}\label{svn.ref.svnlook.c.author}
+
+\emph{Print the author.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ author\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the author of a revision or transaction in the repository.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+\texttt{svnlook\ author} is handy, but not very exciting:
+
+\begin{verbatim}
+$ svnlook author -r 40 /var/svn/repos 
+sally
+\end{verbatim}
+
+\section{svnlook cat}\label{svn.ref.svnlook.c.cat}
+
+\emph{Print the contents of a file.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ cat\ REPOS\_PATH\ PATH\_IN\_REPOS}
+
+\subsection{Description}
+
+Print the contents of a file.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the contents of a file in transaction \texttt{ax8}, located
+at \texttt{/trunk/README}:
+
+\begin{verbatim}
+$ svnlook cat -t ax8 /var/svn/repos /trunk/README
+
+               Subversion, a version control system.
+               =====================================
+
+$LastChangedDate: 2003-07-17 10:45:25 -0500 (Thu, 17 Jul 2003) $
+
+Contents:
+
+     I. A FEW POINTERS
+    II. DOCUMENTATION
+   III. PARTICIPATING IN THE SUBVERSION COMMUNITY
+…
+\end{verbatim}
+
+\section{svnlook changed}\label{svn.ref.svnlook.c.changed}
+
+\emph{Print the paths that were changed.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ changed\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the paths that were changed in a particular revision or
+transaction, as well as ``svn update-style'' status letters in the first
+two columns:
+
+\begin{description}
+\item[\texttt{\textquotesingle{}A\ \textquotesingle{}}]
+Item added to repository
+\item[\texttt{\textquotesingle{}D\ \textquotesingle{}}]
+Item deleted from repository
+\item[\texttt{\textquotesingle{}U\ \textquotesingle{}}]
+File contents changed
+\item[\texttt{\textquotesingle{}\_U\textquotesingle{}}]
+Properties of item changed; note the leading underscore
+\item[\texttt{\textquotesingle{}UU\textquotesingle{}}]
+File contents and properties changed
+\end{description}
+
+Files and directories can be distinguished, as directory paths are
+displayed with a trailing ``\texttt{/}'' character.
+
+\subsection{Options}
+
+\begin{verbatim}
+--copy-info
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows a list of all the changed files and directories in revision
+39 of a test repository. Note that the first changed item is a
+directory, as evidenced by the trailing \texttt{/}:
+
+\begin{verbatim}
+$ svnlook changed -r 39 /var/svn/repos
+A   trunk/vendors/deli/
+A   trunk/vendors/deli/chips.txt
+A   trunk/vendors/deli/sandwich.txt
+A   trunk/vendors/deli/pickle.txt
+U   trunk/vendors/baker/bagel.txt
+_U  trunk/vendors/baker/croissant.txt
+UU  trunk/vendors/baker/pretzel.txt
+D   trunk/vendors/baker/baguette.txt
+\end{verbatim}
+
+Here\textquotesingle s an example that shows a revision in which a file
+was renamed:
+
+\begin{verbatim}
+$ svnlook changed -r 64 /var/svn/repos
+A   trunk/vendors/baker/toast.txt
+D   trunk/vendors/baker/bread.txt
+\end{verbatim}
+
+Unfortunately, nothing in the preceding output reveals the connection
+between the deleted and added files. Use the \texttt{-\/-copy-info}
+option to make this relationship more apparent:
+
+\begin{verbatim}
+$ svnlook changed -r 64 --copy-info /var/svn/repos
+A + trunk/vendors/baker/toast.txt
+    (from trunk/vendors/baker/bread.txt:r63)
+D   trunk/vendors/baker/bread.txt
+\end{verbatim}
+
+\section{svnlook date}\label{svn.ref.svnlook.c.date}
+
+\emph{Print the datestamp.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ date\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the datestamp of a revision or transaction in a repository.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the date of revision 40 of a test repository:
+
+\begin{verbatim}
+$ svnlook date -r 40 /var/svn/repos/
+2003-02-22 17:44:49 -0600 (Sat, 22 Feb 2003)
+\end{verbatim}
+
+\section{svnlook diff}\label{svn.ref.svnlook.c.diff}
+
+\emph{Print differences of changed files and properties.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ diff\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print GNU-style differences of changed files and properties in a
+repository.
+
+\subsection{Options}
+
+\begin{verbatim}
+--diff-cmd CMD
+--diff-copy-from
+--ignore-properties
+--no-diff-added
+--no-diff-deleted
+--properties-only
+--revision (-r) REV
+--transaction (-t) ID
+--extensions (-x) ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows a newly added (empty) file, a modified binary file, and a
+renamed (that is, copied and deleted) file with modifications:
+
+\begin{verbatim}
+$ svnlook diff -r 40 /var/svn/repos
+Copied: trunk/relish.txt (from rev 39, trunk/vendors/deli/pickle.txt)
+===================================================================
+--- trunk/relish.txt                            (rev 0)
++++ trunk/relish.txt    2013-01-29 20:39:17 UTC (rev 40)
+@@ -0,0 +1 @@
++Pickle relish is mostly made from cucumbers.
+
+Deleted: trunk/vendors/deli/pickle.txt
+===================================================================
+--- trunk/vendors/deli/pickle.txt                           (rev 39)
++++ trunk/vendors/deli/pickle.txt   2013-01-29 20:39:17 UTC (rev 49)
+@@ -1 +0,0 @@
+-Pickles are mostly made from cucumbers.
+
+Modified: trunk/vendors/deli/logo.jpg
+===================================================================
+(Binary files differ)
+
+Added: trunk/vendors/deli/soda.txt
+===================================================================
+$
+\end{verbatim}
+
+By default, \texttt{svnlook\ diff} will treat copied files very much
+like any other added file, displaying in their entirety the contents of
+the new file and merely using a different label to draw the copy/add
+distinction. However, you can use the \texttt{-\/-diff-copy-from} option
+to cause \texttt{svnlook\ diff} to consider a copied file as worthy of
+mention only if it differs from the file from which it was copied, and
+to actually describe those differences.
+
+\begin{verbatim}
+$ svnlook diff -r 40 /var/svn/repos --diff-copy-from
+Copied: trunk/relish.txt (from rev 39, trunk/vendors/deli/pickle.txt)
+===================================================================
+--- trunk/vendors/deli/pickle.txt   2013-01-29 20:39:17 UTC (rev 39)
++++ trunk/relish.txt    2013-01-29 20:47:40 UTC (rev 3)
+@@ -1 +1 @@
+-Pickles are mostly made from cucumbers.
++Pickle relish is mostly made from cucumbers.
+
+Deleted: trunk/vendors/deli/pickle.txt
+===================================================================
+--- trunk/vendors/deli/pickle.txt   (rev 39)
++++ trunk/vendors/deli/pickle.txt   2013-01-29 20:39:17 UTC (rev 40)
+@@ -1 +0,0 @@
+-Pickles are mostly made from cucumbers.
+
+Modified: trunk/vendors/deli/logo.jpg
+===================================================================
+(Binary files differ)
+
+Added: trunk/vendors/deli/soda.txt
+==============================================================================
+$
+\end{verbatim}
+
+Use the \texttt{-\/-no-diff-deleted} option to silence output regarding
+deleted files.
+
+\begin{verbatim}
+$ svnlook diff -r 40 /var/svn/repos --no-diff-deleted
+Copied: trunk/relish.txt (from rev 39, trunk/vendors/deli/pickle.txt)
+===================================================================
+--- trunk/relish.txt                            (rev 0)
++++ trunk/relish.txt    2013-01-29 20:39:17 UTC (rev 40)
+@@ -0,0 +1 @@
++Pickle relish is mostly made from cucumbers.
+
+Modified: trunk/vendors/deli/logo.jpg
+===================================================================
+(Binary files differ)
+
+Added: trunk/vendors/deli/soda.txt
+==============================================================================
+$
+\end{verbatim}
+
+Note that in each of the previous examples, when a file has a nontextual
+\texttt{svn:mime-type} property, the differences are not explicitly
+shown.
+
+\section{svnlook dirs-changed}\label{svn.ref.svnlook.c.dirs-changed}
+
+\emph{Print the directories that were themselves changed.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ dirs-changed\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the directories that were themselves changed (property edits) or
+whose file children were changed.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the directories that changed in revision 40 in our sample
+repository:
+
+\begin{verbatim}
+$ svnlook dirs-changed -r 40 /var/svn/repos
+trunk/vendors/deli/
+\end{verbatim}
+
+\section{svnlook filesize}\label{svn.ref.svnlook.c.filesize}
+
+\emph{Print the size (in bytes) of a versioned file.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ filesize\ REPOS\_PATH\ PATH\_IN\_REPOS}
+
+\subsection{Description}
+
+Print the file size (in bytes) of the file located at
+\textless PATH\_IN\_REPOS\textgreater{} in the \texttt{HEAD} revision of
+the repository identified by \textless REPOS\_PATH\textgreater{} as a
+base-10 integer followed by an end-of-line character. Use the
+\texttt{-\/-revision} (\texttt{-r}) and \texttt{-\/-transaction}
+(\texttt{-t}) options to specify a version of the file other than
+\texttt{HEAD} whose file size you wish to display.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+The following demonstrates how to display the size of the
+\texttt{trunk/vendors/deli/soda.txt} file as it appeared in revision 40
+of our sample repository:
+
+\begin{verbatim}
+$ svnlook filesize -r 40 /var/svn/repos trunk/vendors/deli/soda.txt
+23
+$
+\end{verbatim}
+
+\section{svnlook help (h, ?)}\label{svn.ref.svnlook.c.help}
+
+\emph{Help!}
+
+\textbf{Synopsis}
+
+\texttt{Also\ svnlook\ -h\ and\ svnlook\ -?.}
+
+Also \texttt{svnlook\ -h} and \texttt{svnlook\ -?}.
+
+\subsection{Description}
+
+Displays the help message for \texttt{svnlook}. This command, like its
+brother, \texttt{svn\ help}, is also your friend, even though you never
+call it anymore and forgot to invite it to your last party.
+
+\subsection{Options}
+
+None
+
+\section{svnlook history}\label{svn.ref.svnlook.c.history}
+
+\emph{Print information about the history of a path in the repository
+(or the root directory if no path is supplied).}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ history\ REPOS\_PATH\ {[}PATH\_IN\_REPOS{]}}
+
+\subsection{Description}
+
+Print information about the history of a path in the repository (or the
+root directory if no path is supplied).
+
+\subsection{Options}
+
+\begin{verbatim}
+--limit (-l) ARG
+--revision (-r) REV
+--show-ids
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the history output for the path \texttt{/branches/bookstore}
+as of revision 13 in our sample repository:
+
+\begin{verbatim}
+$ svnlook history -r 13 /var/svn/repos /branches/bookstore --show-ids
+REVISION   PATH <ID>
+--------   ---------
+      13   /branches/bookstore <1.1.r13/390>
+      12   /branches/bookstore <1.1.r12/413>
+      11   /branches/bookstore <1.1.r11/0>
+       9   /trunk <1.0.r9/551>
+       8   /trunk <1.0.r8/131357096>
+       7   /trunk <1.0.r7/294>
+       6   /trunk <1.0.r6/353>
+       5   /trunk <1.0.r5/349>
+       4   /trunk <1.0.r4/332>
+       3   /trunk <1.0.r3/335>
+       2   /trunk <1.0.r2/295>
+       1   /trunk <1.0.r1/532>
+\end{verbatim}
+
+\section{svnlook info}\label{svn.ref.svnlook.c.info}
+
+\emph{Print the author, datestamp, log message size, and log message.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ info\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the author, datestamp, log message size (in bytes), and log
+message, followed by a newline character.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the info output for revision 40 in our sample repository:
+
+\begin{verbatim}
+$ svnlook info -r 40 /var/svn/repos
+sally
+2003-02-22 17:44:49 -0600 (Sat, 22 Feb 2003)
+16
+Rearrange lunch.
+\end{verbatim}
+
+\section{svnlook lock}\label{svn.ref.svnlook.c.lock}
+
+\emph{If a lock exists on a path in the repository, describe it.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ lock\ REPOS\_PATH\ PATH\_IN\_REPOS}
+
+\subsection{Description}
+
+Print all information available for the lock at
+\textless PATH\_IN\_REPOS\textgreater. If
+\textless PATH\_IN\_REPOS\textgreater{} is not locked, print nothing.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+This describes the lock on the file \texttt{tree.jpg}:
+
+\begin{verbatim}
+$ svnlook lock /var/svn/repos tree.jpg
+UUID Token: opaquelocktoken:ab00ddf0-6afb-0310-9cd0-dda813329753
+Owner: harry
+Created: 2005-07-08 17:27:36 -0500 (Fri, 08 Jul 2005)
+Expires: 
+Comment (1 line):
+Rework the uppermost branches on the bald cypress in the foreground.
+\end{verbatim}
+
+\section{svnlook log}\label{svn.ref.svnlook.c.log}
+
+\emph{Print the log message, followed by a newline character.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ log\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the log message.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the log output for revision 40 in our sample repository:
+
+\begin{verbatim}
+$ svnlook log -r 40 /var/svn/repos/
+Rearrange lunch.
+\end{verbatim}
+
+\section{svnlook propget (pget, pg)}\label{svn.ref.svnlook.c.propget}
+
+\emph{Print the raw value of a property on a path in the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ propget\ REPOS\_PATH\ PROPNAME\ {[}PATH\_IN\_REPOS{]}}
+
+\subsection{Description}
+
+List the value of a property on a path in the repository.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--revprop
+--show-inherited-props
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the value of the ``seasonings'' property on the file
+\texttt{/trunk/sandwich} in the \texttt{HEAD} revision:
+
+\begin{verbatim}
+$ svnlook pg /var/svn/repos seasonings /trunk/sandwich
+mustard
+\end{verbatim}
+
+This shows the inherited values of the \texttt{svn:auto-props} property
+on the directory \texttt{/trunk} in revision 14:
+
+\begin{verbatim}
+$ svnlook pg repos svn:auto-props trunk --show-inherited-props -v -r14
+Inherited properties on '/trunk',
+from '/':
+  svn:auto-props
+    *.py = svn:eol-style=native
+    *.c = svn:eol-style=native
+    *.h = svn:eol-style=native
+\end{verbatim}
+
+\section{svnlook proplist (plist, pl)}\label{svn.ref.svnlook.c.proplist}
+
+\emph{Print the names and values of versioned file and directory
+properties.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ proplist\ REPOS\_PATH\ {[}PATH\_IN\_REPOS{]}}
+
+\subsection{Description}
+
+List the properties of a path in the repository. With
+\texttt{-\/-verbose} (\texttt{-v}), show the property values too.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+--revprop
+--show-inherited-props
+--transaction (-t) ID
+--verbose (-v)
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+This shows the names of properties set on the file
+\texttt{/trunk/README} in the \texttt{HEAD} revision:
+
+\begin{verbatim}
+$ svnlook proplist /var/svn/repos /trunk/README
+  original-author
+  svn:mime-type
+\end{verbatim}
+
+This is the same command as in the preceding example, but this time
+showing the property values as well:
+
+\begin{verbatim}
+$ svnlook -v proplist /var/svn/repos /trunk/README
+  original-author : harry
+  svn:mime-type : text/plain
+\end{verbatim}
+
+This shows the properties inherited by a directory:
+
+\begin{verbatim}
+$ svnlook pl /var/svn/repos branches --show-inherited-props -v
+Inherited properties on '/branches',
+from '/':
+  svn:auto-props
+    *.py = svn:eol-style=native
+    *.c = svn:eol-style=native
+    *.h = svn:eol-style=native
+
+  svn:global-ignores
+    *.diff
+    *.patch
+
+Properties on '/branches':
+\end{verbatim}
+
+\section{svnlook tree}\label{svn.ref.svnlook.c.tree}
+
+\emph{Print the tree.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ tree\ REPOS\_PATH\ {[}PATH\_IN\_REPOS{]}}
+
+\subsection{Description}
+
+Print the tree, starting at \textless PATH\_IN\_REPOS\textgreater{} (if
+supplied; at the root of the tree otherwise), optionally showing node
+revision IDs.
+
+\subsection{Options}
+
+\begin{verbatim}
+--full-paths
+--non-recursive (-N)
+--revision (-r) REV
+--show-ids
+--transaction (-t) ID
+\end{verbatim}
+
+\subsection{Example}
+
+This shows the tree output for revision 13 in our sample repository:
+
+\begin{verbatim}
+$ svnlook tree -r 13 /var/svn/repos
+/
+ trunk/
+  button.c
+  Makefile
+  integer.c
+ branches/
+  bookstore/
+   button.c
+   Makefile
+   integer.c
+…
+\end{verbatim}
+
+Use the \texttt{-\/-show-ids} option to include node revision IDs
+(unique internal identifiers for specific nodes in
+Subversion\textquotesingle s versioned filesystem implementation):
+
+\begin{verbatim}
+$ svnlook tree -r 13 /var/svn/repos --show-ids
+/ <0.0.r13/811>
+ trunk/ <1.0.r9/551>
+  button.c <2.0.r9/238>
+  Makefile <3.0.r7/41>
+  integer.c <4.0.r6/98>
+ branches/ <5.0.r13/593>
+  bookstore/ <1.1.r13/390>
+   button.c <2.1.r12/85>
+   Makefile <3.0.r7/41>
+   integer.c <4.1.r13/109>
+…
+\end{verbatim}
+
+For output which lends itself more readily to being parsed by scripts,
+use the \texttt{-\/-full-paths} option, which causes \texttt{svnlook} to
+print the full repository path of each tree item and to not use
+indentation to indicate hierarchy:
+
+\begin{verbatim}
+$ svnlook tree -r 13 /var/svn/repos --show-ids --full-paths
+/ <0.0.r13/811>
+trunk/ <1.0.r9/551>
+trunk/button.c <2.0.r9/238>
+trunk/Makefile <3.0.r7/41>
+trunk/integer.c <4.0.r6/98>
+branches/ <5.0.r13/593>
+branches/bookstore/ <1.1.r13/390>
+branches/bookstore/button.c <2.1.r12/85>
+branches/bookstore/Makefile <3.0.r7/41>
+branches/bookstore/integer.c <4.1.r13/109>
+…
+\end{verbatim}
+
+\section{svnlook uuid}\label{svn.ref.svnlook.c.uuid}
+
+\emph{Print the repository\textquotesingle s UUID.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ uuid\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the UUID for the repository. The UUID is the
+repository\textquotesingle s \emph{u}niversal \emph{u}nique
+\emph{id}entifier. The Subversion client uses this identifier to
+differentiate between one repository and another.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+\begin{verbatim}
+$ svnlook uuid /var/svn/repos
+e7fe1b91-8cd5-0310-98dd-2f12e793c5e8
+\end{verbatim}
+
+\section{svnlook youngest}\label{svn.ref.svnlook.c.youngest}
+
+\emph{Print the youngest revision number.}
+
+\textbf{Synopsis}
+
+\texttt{svnlook\ youngest\ REPOS\_PATH}
+
+\subsection{Description}
+
+Print the youngest revision number of a repository.
+
+\subsection{Options}
+
+None
+
+\subsection{Examples}
+
+This shows the youngest revision of our sample repository:
+
+\begin{verbatim}
+$ svnlook youngest /var/svn/repos/ 
+42
+\end{verbatim}
+

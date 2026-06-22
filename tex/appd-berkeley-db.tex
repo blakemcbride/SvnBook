@@ -1,0 +1,337 @@
+\chapter{The Berkeley DB Legacy Filesystem}\label{svn.berkeleydb}
+
+Long ago, when Subversion first learned to store versioned data, it did
+so using a storage layer implementation based on the Berkeley DB (BDB)
+transactional database system.\footnote{Okay, strictly speaking, it used
+  XML files for starters. But that was never intended for public
+  release.} As the product matured, though, this storage layer
+implementation was joined by---and then outmatched by---another one, the
+FSFS backend which is used by the vast majority of
+Subversion\textquotesingle s repositories today. In Subversion 1.8, the
+Subversion development community announced that the BDB-based storage
+layer was being officially deprecated.
+
+This appendix presents some of the documentation about administering
+BDB-backed repositories featured more prominently in previous versions
+of this book.
+
+\section{Configuring Your Berkeley DB
+Environment}\label{svn.berkeleydb.configuration}
+
+A Berkeley DB environment is an encapsulation of one or more databases,
+logfiles, region files, and configuration files. The Berkeley DB
+environment has its own set of default configuration values for things
+such as the number of database locks allowed to be taken out at any
+given time, the maximum size of the journaling logfiles, and so on.
+Subversion\textquotesingle s filesystem logic additionally chooses
+default values for some of the Berkeley DB configuration options.
+However, sometimes your particular repository, with its unique
+collection of data and access patterns, might require a different set of
+configuration option values.
+
+The producers of Berkeley DB understand that different applications and
+database environments have different requirements, so they have provided
+a mechanism for overriding at runtime many of the configuration values
+for the Berkeley DB environment. BDB checks for the presence of a file
+named \texttt{DB\_CONFIG} in the environment directory (namely, the
+repository\textquotesingle s \texttt{db} subdirectory), and parses the
+options found in that file.
+
+Subversion creates the \texttt{DB\_CONFIG} file when it creates the rest
+of the repository. The file initially contains some default options, as
+well as pointers to the Berkeley DB online documentation so that you can
+read about what those options do.
+
+\begin{verbatim}
+$ svnadmin create --fstype bdb /var/svn/repos
+$ ls /var/svn/repos/db
+changes        __db.003   __db.register  log.0000000001   revisions
+checksum-reps  __db.004   format         miscellaneous    strings
+copies         __db.005   fs-type        node-origins     transactions
+__db.001       __db.006   locks          nodes            uuids
+__db.002       DB_CONFIG  lock-tokens    representations
+$
+\end{verbatim}
+
+Of course, you are free to add any of the supported Berkeley DB options
+to your \texttt{DB\_CONFIG} file. Just be aware that while Subversion
+never attempts to read or interpret the contents of the file and makes
+no direct use of the option settings in it, you\textquotesingle ll want
+to avoid any configuration changes that may cause Berkeley DB to behave
+in a fashion that is at odds with what Subversion might expect. Also,
+changes made to \texttt{DB\_CONFIG} won\textquotesingle t take effect
+until you recover the database environment (using
+\texttt{svnadmin\ recover}).
+
+\section{Limitations of Berkeley DB}\label{svn.berkeleydb.limitations}
+
+The Berkeley DB transactional data store offers all the data integrity
+promises that you\textquotesingle d expect from a world-class database
+system. But every rose has its thorn, and so we must note some known
+limitations of Berkeley DB.
+
+\subsection{Architectural
+Limitations}\label{svn.berkeleydb.limitations.architectural}
+
+Berkeley DB environments are not portable. You cannot simply copy a
+Subversion repository that was created on a Unix system onto a Windows
+system and expect it to work. While much of the Berkeley DB database
+format is architecture-independent, other aspects of the environment are
+not.
+
+Second, Subversion requires the use of Berkeley DB in a way that will
+not operate on Windows 95/98 systems---if you need to house a BDB-backed
+repository on a Windows machine, stick with Windows 2000 or later.
+
+\subsection{Network Share
+Deployment}\label{svn.berkeleydb.limitations.sharedfs}
+
+While Berkeley DB promises to behave correctly on network shares that
+meet a particular set of specifications,\footnote{Berkeley DB requires
+  that the underlying filesystem implement strict POSIX locking
+  semantics, and more importantly, the ability to map files directly
+  into process memory.} most networked filesystem types and appliances
+do \emph{not} actually meet those requirements. And in no case can you
+allow a BDB-backed repository that resides on a network share to be
+accessed by multiple clients of that share at once (which quite often is
+the whole point of having the repository live on a network share in the
+first place).
+
+If you attempt to use Berkeley DB on a noncompliant remote filesystem,
+the results are unpredictable---you may see mysterious errors right
+away, or it may be months before you discover that your repository
+database is subtly corrupted. You should strongly consider using the
+FSFS data store for repositories that need to live on a network share.
+
+\subsection{Fault Tolerance and the Need for
+Recovery}\label{svn.berkeleydb.limitations.faulttolerance}
+
+Because Berkeley DB is a library linked directly into Subversion,
+it\textquotesingle s more sensitive to interruptions than a typical
+relational database system. Most SQL systems, for example, have a
+dedicated server process that mediates all access to tables. If a
+program accessing the database crashes for some reason, the database
+daemon notices the lost connection and cleans up any mess left behind.
+And because the database daemon is the only process accessing the
+tables, applications don\textquotesingle t need to worry about
+permission conflicts.
+
+These things are not the case with Berkeley DB, however. Subversion (and
+programs using Subversion libraries) access the database tables
+directly, which means that a program crash can leave the database in a
+temporarily inconsistent, inaccessible state. When this happens, an
+administrator needs to ask Berkeley DB to restore to a checkpoint, which
+is a bit of an annoyance. Other things can cause a repository to
+``wedge'' besides crashed processes, such as programs conflicting over
+ownership and permissions on the database files.
+
+Berkeley DB 4.4 brings (to Subversion 1.4 and later) the ability for
+Subversion to automatically and transparently recover Berkeley DB
+environments in need of such recovery. When a Subversion process
+attaches to a repository\textquotesingle s Berkeley DB environment, it
+uses some process accounting mechanisms to detect any unclean
+disconnections by previous processes, performs any necessary recovery,
+and then continues on as though nothing happened. This
+doesn\textquotesingle t completely eliminate instances of repository
+wedging, but it does drastically reduce the amount of human interaction
+required to recover from them.
+
+\section{Maintaining Berkeley DB
+Repositories}\label{svn.berkeleydb.maintenance}
+
+In theory, the maintenance of a BDB-backed repository involves
+essentially the same steps used to maintain an FSFS-backed repository.
+Historically, though, Berkeley DB repositories have need a little extra
+TLC\footnote{Tender loving care, Baby.} in order to stay operational.
+This section will cover some of the unique aspects of Berkeley DB
+administration.
+
+\subsection{Berkeley DB
+Recovery}\label{svn.berkeleydb.maintenance.recovery}
+
+As mentioned in
+\hyperref[svn.berkeleydb.limitations.faulttolerance]{Fault Tolerance and
+the Need for Recovery}, a Berkeley DB repository can sometimes be left
+in a frozen state if not closed properly. When this happens, an
+administrator needs to rewind the database back into a consistent state.
+This is unique to BDB-backed repositories, though---if you are using
+FSFS-backed ones instead, this won\textquotesingle t apply to you. And
+for those of you using Subversion 1.4 with Berkeley DB 4.4 or later, you
+should find that Subversion has become much more resilient in these
+types of situations. Still, wedged Berkeley DB repositories do occur,
+and an administrator needs to know how to safely deal with this
+circumstance.
+
+To protect the data in your repository, Berkeley DB uses a locking
+mechanism. This mechanism ensures that portions of the database are not
+simultaneously modified by multiple database accessors, and that each
+process sees the data in the correct state when that data is being read
+from the database. When a process needs to change something in the
+database, it first checks for the existence of a lock on the target
+data. If the data is not locked, the process locks the data, makes the
+change it wants to make, and then unlocks the data. Other processes are
+forced to wait until that lock is removed before they are permitted to
+continue accessing that section of the database. (This has nothing to do
+with the locks that you, as a user, can apply to versioned files within
+the repository; we try to clear up the confusion caused by this
+terminology collision in the sidebar
+\hyperref[svn.advanced.locking.meanings]{The Many Meanings of
+``Lock''}.)
+
+In the course of using your Subversion repository, fatal errors or
+interruptions can prevent a process from having the chance to remove the
+locks it has placed in the database. The result is that the backend
+database system gets ``wedged.'' When this happens, any attempts to
+access the repository hang indefinitely (since each new accessor is
+waiting for a lock to go away---which isn\textquotesingle t going to
+happen).
+
+If this happens to your repository, don\textquotesingle t panic. The
+Berkeley DB filesystem takes advantage of database transactions,
+checkpoints, and prewrite journaling to ensure that only the most
+catastrophic of events\footnote{For example, hard drive + huge
+  electromagnet = disaster.} can permanently destroy a database
+environment. A sufficiently paranoid repository administrator will have
+made off-site backups of the repository data in some fashion, but
+don\textquotesingle t head off to the tape backup storage closet just
+yet.
+
+Instead, use the following recipe to attempt to ``unwedge'' your
+repository:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Make sure no processes are accessing (or attempting to access) the
+  repository. For networked repositories, this also means shutting down
+  the Apache HTTP Server or svnserve daemon.
+\item
+  Become the user who owns and manages the repository. This is
+  important, as recovering a repository while running as the wrong user
+  can tweak the permissions of the repository\textquotesingle s files in
+  such a way that your repository will still be inaccessible even after
+  it is ``unwedged.''
+\item
+  Run the \texttt{svnadmin\ recover} command:
+
+\begin{verbatim}
+$ svnadmin recover /var/svn/repos
+Repository lock acquired.
+Please wait; recovering the repository may take some time...
+
+Recovery completed.
+The latest repos revision is 19.
+$
+\end{verbatim}
+
+  This command may take many minutes to complete.
+\item
+  Restart the server process.
+\end{enumerate}
+
+This procedure fixes almost every case of repository wedging. Make sure
+that you run this command as the user that owns and manages the
+database, not just as \texttt{root}. Part of the recovery process might
+involve re-creating from scratch various database files (shared memory
+regions, e.g.). Recovering as \texttt{root} will create those files such
+that they are owned by \texttt{root}, which means that even after you
+restore connectivity to your repository, regular users will be unable to
+access it.
+
+\subsection{Purging unused Berkeley DB
+logfiles}\label{svn.berkeleydb.maintenance.bdblogs}
+
+Prior to the release of Berkeley DB 4.2, the largest offender of disk
+space usage with respect to BDB-backed Subversion repositories were the
+logfiles in which Berkeley DB performs its prewrites before modifying
+the actual database files. These files capture all the actions taken
+along the route of changing the database from one state to
+another---while the database files, at any given time, reflect a
+particular state, the logfiles contain all of the many changes along the
+way \emph{between} states. Thus, they can grow and accumulate quite
+rapidly.
+
+Fortunately, beginning with the 4.2 release of Berkeley DB, the database
+environment has the ability to remove its own unused logfiles
+automatically. Any repositories created using \texttt{svnadmin} when
+compiled against Berkeley DB version 4.2 or later will be configured for
+this automatic logfile removal. If you don\textquotesingle t want this
+feature enabled, simply pass the \texttt{-\/-bdb-log-keep} option to the
+\texttt{svnadmin\ create} command. If you forget to do this or change
+your mind at a later time, simply edit the \texttt{DB\_CONFIG} file
+found in your repository\textquotesingle s \texttt{db} directory,
+comment out the line that contains the
+\texttt{set\_flags\ DB\_LOG\_AUTOREMOVE} directive, and then run
+\texttt{svnadmin\ recover} on your repository to force the configuration
+changes to take effect.
+
+Without some sort of automatic logfile removal in place, logfiles will
+accumulate as you use your repository. This is actually somewhat of a
+feature of the database system---you should be able to recreate your
+entire database using nothing but the logfiles, so these files can be
+useful for catastrophic database recovery. But typically,
+you\textquotesingle ll want to archive the logfiles that are no longer
+in use by Berkeley DB, and then remove them from disk to conserve space.
+Use the \texttt{svnadmin\ list-unused-dblogs} command to list the unused
+logfiles:
+
+\begin{verbatim}
+$ svnadmin list-unused-dblogs /var/svn/repos
+/var/svn/repos/log.0000000031
+/var/svn/repos/log.0000000032
+/var/svn/repos/log.0000000033
+…
+$ rm `svnadmin list-unused-dblogs /var/svn/repos`
+## disk space reclaimed!
+\end{verbatim}
+
+BDB-backed repositories whose logfiles are used as part of a backup or
+disaster recovery plan should \emph{not} make use of the logfile
+autoremoval feature. Reconstruction of a repository\textquotesingle s
+data from logfiles can only be accomplished only when \emph{all} the
+logfiles are available. If some of the logfiles are removed from disk
+before the backup system has a chance to copy them elsewhere, the
+incomplete set of backed-up logfiles is essentially useless.
+
+\subsection{Berkeley DB
+Utilities}\label{svn.berkeleydb.maintenance.bdbutil}
+
+If you\textquotesingle re using a Berkeley DB repository, all of your
+versioned filesystem\textquotesingle s structure and data live in a set
+of database tables within the \texttt{db/} subdirectory of your
+repository. This subdirectory is a regular Berkeley DB environment
+directory and can therefore be used in conjunction with any of the
+Berkeley database tools, typically provided as part of the Berkeley DB
+distribution.
+
+For day-to-day Subversion use, these tools are unnecessary. Most of the
+functionality typically needed for Subversion repositories has been
+duplicated in the \texttt{svnadmin} tool. For example,
+\texttt{svnadmin\ list-unused-dblogs} and \texttt{svnadmin\ list-dblogs}
+perform a subset of what is provided by the Berkeley
+\texttt{db\_archive} utility, and \texttt{svnadmin\ recover} reflects
+the common use cases of the \texttt{db\_recover} utility.
+
+However, there are still a few Berkeley DB utilities that you might find
+useful. The \texttt{db\_dump} and \texttt{db\_load} programs write and
+read, respectively, a custom file format that describes the keys and
+values in a Berkeley DB database. Since Berkeley databases are not
+portable across machine architectures, this format is a useful way to
+transfer those databases from machine to machine, irrespective of
+architecture or operating system. As we describe later in this chapter,
+you can also use \texttt{svnadmin\ dump} and \texttt{svnadmin\ load} for
+similar purposes, but \texttt{db\_dump} and \texttt{db\_load} can do
+certain jobs just as well and much faster. They can also be useful if
+the experienced Berkeley DB hacker needs to do in-place tweaking of the
+data in a BDB-backed repository for some reason, which is something
+Subversion\textquotesingle s utilities won\textquotesingle t allow.
+Also, the \texttt{db\_stat} utility can provide useful information about
+the status of your Berkeley DB environment, including detailed
+statistics about the locking and storage subsystems.
+
+For more information on the Berkeley DB tool chain, visit the
+documentation section of the Berkeley DB section of
+Oracle\textquotesingle s web site, located at
+\href{https://docs.oracle.com/cd/E17275_01/html/api_reference/C/utilities.html}{}.
+/\textgreater.
+

@@ -1,0 +1,1194 @@
+\chapter{Customizing Your Subversion
+Experience}\label{svn.customization}
+
+Version control can be a complex subject, as much art as science, that
+offers myriad ways of getting stuff done. Throughout this book,
+you\textquotesingle ve read of the various Subversion command-line
+client subcommands and the options that modify their behavior. In this
+chapter, we\textquotesingle ll look into still more ways to customize
+the way Subversion works for you---setting up the Subversion runtime
+configuration, using external helper applications,
+Subversion\textquotesingle s interaction with the operating
+system\textquotesingle s configured locale, and so on.
+
+\section{Runtime Configuration Area}\label{svn.advanced.confarea}
+
+Subversion provides many optional behaviors that the user can control.
+Many of these options are of the kind that a user would wish to apply to
+all Subversion operations. So, rather than forcing users to remember
+command-line arguments for specifying these options and to use them for
+every operation they perform, Subversion uses configuration files,
+segregated into a Subversion configuration area.
+
+The Subversion runtime configuration area is a two-tiered hierarchy of
+option names and their values. Usually, this boils down to a special
+directory that contains configuration files (the first tier), which are
+just text files in standard INI format where ``sections'' provide the
+second tier. You can easily edit these files using your favorite text
+editor (such as Emacs or vi), and they contain directives read by the
+client to determine which of several optional behaviors the user
+prefers.
+
+\subsection{Configuration Area
+Layout}\label{svn.advanced.confarea.layout}
+
+The first time the \texttt{svn} command-line client is executed, it
+creates a per-user configuration area. On Unix-like systems, this area
+appears as a directory named \texttt{.subversion} in the
+user\textquotesingle s home directory. On Win32 systems, Subversion
+creates a folder named \texttt{Subversion}, typically inside the
+\texttt{Application\ Data} area of the user\textquotesingle s profile
+directory (which, by the way, is usually a hidden directory). However,
+on this platform, the exact location differs from system to system and
+is dictated by the Windows Registry.\footnote{The \texttt{APPDATA}
+  environment variable points to the \texttt{Application\ Data} area, so
+  you can always refer to this folder as
+  \texttt{\%APPDATA\%\textbackslash{}Subversion}.} We will refer to the
+per-user configuration area using its Unix name, \texttt{.subversion}.
+
+In addition to the per-user configuration area, Subversion also
+recognizes the existence of a system-wide configuration area. This gives
+system administrators the ability to establish defaults for all users on
+a given machine. Note that the system-wide configuration area alone does
+not dictate mandatory policy---the settings in the per-user
+configuration area override those in the system-wide one, and
+command-line arguments supplied to the \texttt{svn} program have the
+final word on behavior. On Unix-like platforms, the system-wide
+configuration area is expected to be the \texttt{/etc/subversion}
+directory; on Windows machines, it looks for a \texttt{Subversion}
+directory inside the common \texttt{Application\ Data} location (again,
+as specified by the Windows Registry). Unlike the per-user case, the
+\texttt{svn} program does not attempt to create the system-wide
+configuration area.
+
+The per-user configuration area currently contains three files---two
+configuration files (\texttt{config} and \texttt{servers}), and a
+\texttt{README.txt} file, which describes the INI format. At the time of
+their creation, the files contain default values for each of the
+supported Subversion options, mostly commented out and grouped with
+textual descriptions about how the values for the key affect
+Subversion\textquotesingle s behavior. To change a certain behavior, you
+need only to load the appropriate configuration file into a text editor,
+and to modify the desired option\textquotesingle s value. If at any time
+you wish to have the default configuration settings restored, you can
+simply remove (or rename) your configuration directory and then run some
+innocuous \texttt{svn} command, such as \texttt{svn\ -\/-version}. A new
+configuration directory with the default contents will be created.
+
+Subversion also allows you to override individual configuration option
+values at the command line via the \texttt{-\/-config-option} option,
+which is especially useful if you need to make a (very) temporary change
+in behavior. For more about this option\textquotesingle s proper usage,
+see \hyperref[svn.ref.svn.sw]{svn Options}.
+
+The per-user configuration area also contains a cache of authentication
+data. The \texttt{auth} directory holds a set of subdirectories that
+contain pieces of cached information used by
+Subversion\textquotesingle s various supported authentication methods.
+This directory is created in such a way that only the user herself has
+permission to read its contents.
+
+\subsection{Configuration and the Windows
+Registry}\label{svn.advanced.confarea.windows-registry}
+
+In addition to the usual INI-based configuration area, Subversion
+clients running on Windows platforms may also use the Windows Registry
+to hold the configuration data. The option names and their values are
+the same as in the INI files. The ``file/section'' hierarchy is
+preserved as well, though addressed in a slightly different fashion---in
+this schema, files and sections are just levels in the Registry key
+tree.
+
+Subversion looks for system-wide configuration values under the
+\texttt{HKEY\_LOCAL\_MACHINE\textbackslash{}Software\textbackslash{}Tigris.org\textbackslash{}Subversion}
+key. For example, the \texttt{global-ignores} option, which is in the
+\texttt{miscellany} section of the \texttt{config} file, would be found
+at
+\texttt{HKEY\_LOCAL\_MACHINE\textbackslash{}Software\textbackslash{}Tigris.org\textbackslash{}Subversion\textbackslash{}Config\textbackslash{}Miscellany\textbackslash{}global-ignores}.
+Per-user configuration values should be stored under
+\texttt{HKEY\_CURRENT\_USER\textbackslash{}Software\textbackslash{}Tigris.org\textbackslash{}Subversion}.
+
+Registry-based configuration options are parsed \emph{before} their
+file-based counterparts, so they are overridden by values found in the
+configuration files. In other words, Subversion looks for configuration
+information in the following locations on a Windows system;
+lower-numbered locations take precedence over higher-numbered locations:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Command-line options
+\item
+  The per-user INI files
+\item
+  The per-user Registry values
+\item
+  The system-wide INI files
+\item
+  The system-wide Registry values
+\end{enumerate}
+
+Also, the Windows Registry doesn\textquotesingle t really support the
+notion of something being ``commented out.'' However, Subversion will
+ignore any option key whose name begins with a hash (\texttt{\#})
+character. This allows you to effectively comment out a Subversion
+option without deleting the entire key from the Registry, obviously
+simplifying the process of restoring that option.
+
+The \texttt{svn} command-line client never attempts to write to the
+Windows Registry and will not attempt to create a default configuration
+area there. You can create the keys you need using the \texttt{REGEDIT}
+program. Alternatively, you can create a \texttt{.reg} file (such as the
+one in \hyperref[svn.advanced.confarea.windows-registry.ex-1]{Sample
+registration entries (.reg) file}), and then double-click on that
+file\textquotesingle s icon in the Explorer shell, which will cause the
+data to be merged into your Registry.
+
+\protect\phantomsection\label{svn.advanced.confarea.windows-registry.ex-1}
+Sample registration entries (.reg) file
+
+\begin{verbatim}
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\Software\Tigris.org\Subversion\Servers\groups]
+
+[HKEY_LOCAL_MACHINE\Software\Tigris.org\Subversion\Servers\global]
+"#http-auth-types"="basic;digest;negotiate"
+"#http-compression"="yes"
+"#http-library"=""
+"#http-proxy-exceptions"=""
+"#http-proxy-host"=""
+"#http-proxy-password"=""
+"#http-proxy-port"=""
+"#http-proxy-username"=""
+"#http-timeout"="0"
+"#neon-debug-mask"=""
+"#ssl-authority-files"=""
+"#ssl-client-cert-file"=""
+"#ssl-client-cert-password"=""
+"#ssl-pkcs11-provider"=""
+"#ssl-trust-default-ca"=""
+"#store-auth-creds"="yes"
+"#store-passwords"="yes"
+"#store-plaintext-passwords"="ask"
+"#store-ssl-client-cert-pp"="yes"
+"#store-ssl-client-cert-pp-plaintext"="ask"
+"#username"=""
+
+[HKEY_CURRENT_USER\Software\Tigris.org\Subversion\Config\auth]
+"#password-stores"="windows-cryptoapi"
+
+[HKEY_CURRENT_USER\Software\Tigris.org\Subversion\Config\helpers]
+"#diff-cmd"=""
+"#diff-extensions"="-u"
+"#diff3-cmd"=""
+"#diff3-has-program-arg"=""
+"#editor-cmd"="notepad"
+"#merge-tool-cmd"=""
+
+[HKEY_CURRENT_USER\Software\Tigris.org\Subversion\Config\tunnels]
+
+[HKEY_CURRENT_USER\Software\Tigris.org\Subversion\Config\miscellany]
+"#enable-auto-props"="no"
+"#global-ignores"="*.o *.lo *.la *.al .libs *.so *.so.[0-9]* *.a *.pyc *.pyo *.rej *~ #*# .#* .*.swp .DS_Store"
+"#interactive-conflicts"="yes"
+"#log-encoding"=""
+"#mime-types-file"=""
+"#no-unlock"="no"
+"#preserved-conflict-file-exts"="doc ppt xls od?"
+"#use-commit-times"="no"
+
+[HKEY_CURRENT_USER\Software\Tigris.org\Subversion\Config\auto-props]
+\end{verbatim}
+
+\hyperref[svn.advanced.confarea.windows-registry.ex-1]{Sample
+registration entries (.reg) file} shows the contents of a \texttt{.reg}
+file, which contains some of the most commonly used configuration
+options and their default values. Note the presence of both system-wide
+(for network proxy-related options) and per-user settings (editor
+programs and password storage, among others). Also note that all the
+options are effectively commented out. You need only to remove the hash
+(\texttt{\#}) character from the beginning of the option names and set
+the values as you desire.
+
+\subsection{Runtime Configuration
+Options}\label{svn.advanced.confarea.opts}
+
+In this section, we will discuss the specific runtime configuration
+options that Subversion currently supports.
+
+\subsubsection{General
+configuration}\label{svn.advanced.confarea.opts.config}
+
+The \texttt{config} file contains the rest of the currently available
+Subversion runtime options---those not related to networking. There are
+only a few options in use as of this writing, but they are again grouped
+into sections in expectation of future additions.
+
+The \texttt{{[}auth{]}} section contains settings related to
+Subversion\textquotesingle s authentication and authorization against
+the repository. It contains the following:
+
+\begin{description}
+\item[\texttt{password-stores}]
+This comma-delimited list specifies which (if any) system-provided
+password stores Subversion should attempt to use when saving and
+retrieving cached authentication credentials, and in what order
+Subversion should prefer them. The default value is
+\texttt{gnome-keyring,\ kwallet,\ keychain,\ gpg-agent,\ windows-crypto-api},
+representing the GNOME Keyring, KDE Wallet, Mac OS X Keychain, GnuPG
+Agent, and Microsoft Windows cryptography API, respectively. Listed
+stores which are not available on the system are ignored.
+\item[\texttt{store-passwords}]
+This option has been deprecated from the \texttt{config} file. It now
+lives as a per-server configuration item in the \texttt{servers}
+configuration area. See
+\hyperref[svn.advanced.confarea.opts.servers]{Per-server configuration}
+for details.
+\item[\texttt{store-auth-creds}]
+This option has been deprecated from the \texttt{config} file. It now
+lives as a per-server configuration item in the \texttt{servers}
+configuration area. See
+\hyperref[svn.advanced.confarea.opts.servers]{Per-server configuration}
+for details.
+\end{description}
+
+The \texttt{{[}helpers{]}} section controls which external applications
+Subversion uses to accomplish its tasks. Valid options in this section
+are:
+
+\begin{description}
+\item[\texttt{diff-cmd}]
+This specifies the absolute path of a differencing program, used when
+Subversion generates ``diff'' output (such as when using the
+\texttt{svn\ diff} command). By default, Subversion uses an internal
+differencing library---setting this option will cause it to perform this
+task using an external program. See
+\hyperref[svn.advanced.externaldifftools]{Using External Differencing
+and Merge Tools} for more details on using such programs.
+\item[\texttt{diff-extensions}]
+Like the \texttt{-\/-extensions} (\texttt{-x}) command-line option, this
+specifies additional options passed to the file content differencing
+engine. The set of meaningful extension options differs depending on
+whether the client is using Subversion\textquotesingle s internal
+differencing engine or an external mechanism. See the output of
+\texttt{svn\ help\ diff} for details. The default value for this option
+is \texttt{-u}.
+\item[\texttt{diff3-cmd}]
+This specifies the absolute path of a three-way differencing program.
+Subversion uses this program to merge changes made by the user with
+those received from the repository. By default, Subversion uses an
+internal differencing library---setting this option will cause it to
+perform this task using an external program. See
+\hyperref[svn.advanced.externaldifftools]{Using External Differencing
+and Merge Tools} for more details on using such programs.
+\item[\texttt{diff3-has-program-arg}]
+This flag should be set to \texttt{true} if the program specified by the
+\texttt{diff3-cmd} option accepts a \texttt{-\/-diff-program}
+command-line parameter.
+\item[\texttt{editor-cmd}]
+This specifies the program Subversion will use to query the user for
+certain types of textual metadata or when interactively resolving
+conflicts. See \hyperref[svn.advanced.externaleditors]{Using External
+Editors} for more details on using external text editors with
+Subversion.
+\item[\texttt{merge-tool-cmd}]
+This specifies the program that Subversion will use to perform three-way
+merge operations on your versioned files. See
+\hyperref[svn.advanced.externaldifftools]{Using External Differencing
+and Merge Tools} for more details on using such programs.
+\end{description}
+
+The \texttt{{[}tunnels{]}} section allows you to define new tunnel
+schemes for use with \texttt{svnserve} and \texttt{svn://} client
+connections. For more details, see
+\hyperref[svn.serverconfig.svnserve.sshauth]{Tunneling over SSH}.
+
+The \texttt{{[}miscellany{]}} section is where everything that
+doesn\textquotesingle t belong elsewhere winds up.\footnote{Anyone for
+  potluck dinner?} In this section, you can find:
+
+\begin{description}
+\item[\texttt{enable-auto-props}]
+This instructs Subversion to automatically set properties on newly added
+or imported files. The default value is \texttt{no}, so set this to
+\texttt{yes} to enable this feature. The \texttt{{[}auto-props{]}}
+section of this file specifies which properties are to be set on which
+files.
+\item[\texttt{global-ignores}]
+When running the \texttt{svn\ status} command, Subversion lists
+unversioned files and directories along with the versioned ones,
+annotating them with a \texttt{?} character (see
+\hyperref[svn.tour.cycle.examine.status]{See an overview of your
+changes}). Sometimes it can be annoying to see uninteresting,
+unversioned items---for example, object files that result from a
+program\textquotesingle s compilation---in this display. The
+\texttt{global-ignores} option is a list of whitespace-delimited globs
+that describe the names of files and directories that Subversion should
+not display unless they are versioned. The default value is
+\texttt{*.o\ *.lo\ *.la\ *.al\ .libs\ *.so\ *.so.{[}0-9{]}*\ *.a\ *.pyc\ *.pyo\ *.rej\ *\textasciitilde{}\ \#*\#\ .\#*\ .*.swp\ .DS\_Store}.
+
+As well as \texttt{svn\ status}, the \texttt{svn\ add} and
+\texttt{svn\ import} commands also ignore files that match the list when
+they are scanning a directory. You can override this behavior for a
+single instance of any of these commands by explicitly specifying the
+filename, or by using the \texttt{-\/-no-ignore} command-line flag.
+
+For information on finer-grained control of ignored items, see
+\hyperref[svn.advanced.props.special.ignore]{Ignoring Unversioned
+Items}.
+\item[\texttt{interactive-conflicts}]
+This is a Boolean option that specifies whether Subversion should try to
+resolve conflicts interactively. If its value is \texttt{yes} (which is
+the default value), Subversion will prompt the user for how to handle
+conflicts in the manner demonstrated in
+\hyperref[svn.tour.cycle.resolve]{Resolve Any Conflicts}. Otherwise, it
+will simply flag the conflict and continue its operation, postponing
+resolution to a later time.
+\item[\texttt{log-encoding}]
+This variable sets the default character set encoding for commit log
+messages. It\textquotesingle s a permanent form of the
+\texttt{-\/-encoding} option (see \hyperref[svn.ref.svn.sw]{svn
+Options}). The Subversion repository stores log messages in UTF-8 and
+assumes that your log message is written using your operating
+system\textquotesingle s native locale. You should specify a different
+encoding if your commit messages are written in any other encoding.
+\item[\texttt{mime-types-file}]
+This option, new to Subversion 1.5, specifies the path of a MIME types
+mapping file, such as the \texttt{mime.types} file provided by the
+Apache HTTP Server. Subversion uses this file to assign MIME types to
+newly added or imported files. See
+\hyperref[svn.advanced.props.auto]{Automatic Property Setting} and
+\hyperref[svn.advanced.props.special.mime-type]{File Content Type} for
+more about Subversion\textquotesingle s detection and use of file
+content types.
+\item[\texttt{no-unlock}]
+This Boolean option corresponds to
+\texttt{svn\ commit}\textquotesingle s \texttt{-\/-no-unlock} option,
+which tells Subversion not to release locks on files
+you\textquotesingle ve just committed. If this runtime option is set to
+\texttt{yes}, Subversion will never release locks automatically, leaving
+you to run \texttt{svn\ unlock} explicitly. It defaults to \texttt{no}.
+\item[\texttt{preserved-conflict-file-exts}]
+The value of this option is a space-delimited list of file extensions
+that Subversion should preserve when generating conflict filenames. By
+default, the list is empty. This option is new to Subversion 1.5.
+
+When Subversion detects conflicting file content changes, it defers
+resolution of those conflicts to the user. To assist in the resolution,
+Subversion keeps pristine copies of the various competing versions of
+the file in the working copy. By default, those conflict files have
+names constructed by appending to the original filename a custom
+extension such as \texttt{.mine} or \texttt{.REV} (where
+\textless REV\textgreater{} is a revision number). A mild annoyance with
+this naming scheme is that on operating systems where a
+file\textquotesingle s extension determines the default application used
+to open and edit that file, appending a custom extension prevents the
+file from being easily opened by its native application. For example, if
+the file \texttt{ReleaseNotes.pdf} was conflicted, the conflict files
+might be named \texttt{ReleaseNotes.pdf.mine} or
+\texttt{ReleaseNotes.pdf.r4231}. While your system might be configured
+to use Adobe\textquotesingle s Acrobat Reader to open files whose
+extensions are \texttt{.pdf}, there probably isn\textquotesingle t an
+application configured on your system to open all files whose extensions
+are \texttt{.r4231}.
+
+You can fix this annoyance by using this configuration option, though.
+For files with one of the specified extensions, Subversion will append
+to the conflict file names the custom extension just as before, but then
+also reappend the file\textquotesingle s original extension. Using the
+previous example, and assuming that \texttt{pdf} is one of the
+extensions configured in this list thereof, the conflict files generated
+for \texttt{ReleaseNotes.pdf} would instead be named
+\texttt{ReleaseNotes.pdf.mine.pdf} and
+\texttt{ReleaseNotes.pdf.r4231.pdf}. Because each file ends in
+\texttt{.pdf}, the correct default application will be used to view
+them.
+\item[\texttt{use-commit-times}]
+Normally your working copy files have timestamps that reflect the last
+time they were touched by any process, whether your own editor or some
+\texttt{svn} subcommand. This is generally convenient for people
+developing software, because build systems often look at timestamps as a
+way of deciding which files need to be recompiled.
+
+In other situations, however, it\textquotesingle s sometimes nice for
+the working copy files to have timestamps that reflect the last time
+they were changed in the repository. The \texttt{svn\ export} command
+always places these ``last-commit timestamps'' on trees that it
+produces. By setting this config variable to \texttt{yes}, the
+\texttt{svn\ checkout}, \texttt{svn\ update}, \texttt{svn\ switch}, and
+\texttt{svn\ revert} commands will also set last-commit timestamps on
+files that they touch.
+\end{description}
+
+The \texttt{{[}auto-props{]}} section controls the Subversion
+client\textquotesingle s ability to automatically set properties on
+files when they are added or imported. It contains any number of
+key-value pairs in the format
+\texttt{PATTERN\ =\ PROPNAME=VALUE{[};PROPNAME=VALUE\ ...{]}}, where
+\textless PATTERN\textgreater{} is a file pattern that matches one or
+more filenames and the rest of the line is a semicolon-delimited set of
+property assignments. (If you need to use a semicolon in your
+property\textquotesingle s name or value, you can escape it by doubling
+it.)
+
+\begin{verbatim}
+$ cat ~/.subversion/config
+…
+[auto-props]
+*.c = svn:eol-style=native
+*.html = svn:eol-style=native;svn:mime-type=text/html;; charset=UTF8
+*.sh = svn:eol-style=native;svn:executable
+…
+$ cd projects/myproject
+$ svn status
+?       www/index.html
+$ svn add www/index.html
+A         www/index.html
+$ svn diff www/index.html
+…
+
+Property changes on: www/index.html
+___________________________________________________________________
+Added: svn:mime-type
+## -0,0 +1 ##
++text/html; charset=UTF8
+Added: svn:eol-style
+## -0,0 +1 ##
++native
+$
+\end{verbatim}
+
+Multiple matches on a file will result in multiple propsets for that
+file; however, there is no guarantee that auto-props will be applied in
+the order in which they are listed in the config file, so you
+can\textquotesingle t have one rule ``override'' another. You can find
+several examples of auto-props usage in the \texttt{config} file.
+Lastly, don\textquotesingle t forget to set \texttt{enable-auto-props}
+to \texttt{yes} in the \texttt{{[}miscellany{]}} section if you want to
+enable auto-props.
+
+New to Subversion 1.8, the \texttt{{[}working-copy{]}} section is used
+for configuring working copies. Valid options in this section are:
+
+\begin{description}
+\item[\texttt{exclusive-locking-clients}]
+Enables exclusive SQLite locking of working copies for the client, hence
+improving performance for working copies located on network disks. By
+setting this config variable to \texttt{svn}, you instruct Subversion
+command-line client to use exclusive locking. This reduces the locking
+overhead but does mean that only one Subversion client will be able to
+access the working copy at a time. A second client attempting to access
+a locked working copy will block for 10 seconds and then get an error.
+In most cases shared locking is preferred but if the working copy is on
+a network disk rather than a local disk the locking overhead is more
+significant. When dealing with large working copies on network disks
+exclusive locking may give a significant performance gain, two or three
+times faster in some cases. This option is new to Subversion 1.8.
+\item[\texttt{exclusive-locking}]
+Setting this config variable to \texttt{true} enables exclusive SQLite
+locking of working copies for all Subversion 1.8 clients. Enabling this
+may cause some clients to fail to work properly. The default value for
+this option is \texttt{false}. This option is new to Subversion 1.8.
+\end{description}
+
+\subsubsection{Per-server
+configuration}\label{svn.advanced.confarea.opts.servers}
+
+The \texttt{servers} file contains Subversion configuration options
+related to the network layers. There are two special sections in this
+file---\texttt{{[}groups{]}} and \texttt{{[}global{]}}. The
+\texttt{{[}groups{]}} section is essentially a cross-reference table.
+The keys in this section are the names of other sections in the file;
+their values are globs---textual tokens that possibly contain wildcard
+characters---that are compared against the hostnames of the machine to
+which Subversion requests are sent.
+
+\begin{verbatim}
+[groups]
+beanie-babies = *.red-bean.com
+collabnet = svn.collab.net
+
+[beanie-babies]
+…
+
+[collabnet]
+…
+\end{verbatim}
+
+When Subversion is used over a network, it attempts to match the name of
+the server it is trying to reach with a group name under the
+\texttt{{[}groups{]}} section. If a match is made, Subversion then looks
+for a section in the \texttt{servers} file whose name is the matched
+group\textquotesingle s name. From that section, it reads the actual
+network configuration settings.
+
+The \texttt{{[}global{]}} section contains the settings that are meant
+for all of the servers not matched by one of the globs under the
+\texttt{{[}groups{]}} section. The options available in this section are
+exactly the same as those that are valid for the other server sections
+in the file (except, of course, the special \texttt{{[}groups{]}}
+section), and are as follows:
+
+\begin{description}
+\item[\texttt{http-auth-types}]
+This is a semicolon-delimited list of HTTP authentication types which
+the client will deem acceptable. Valid types are \texttt{basic},
+\texttt{digest}, and \texttt{negotiate}, with the default behavior being
+acceptance of any these authentication types. A client which insists on
+not transmitting authentication credentials in cleartext might, for
+example, be configured such that the value of this option is
+\texttt{digest;negotiate}---omitting \texttt{basic} from the list. (Note
+that this setting is only honored by Subversion\textquotesingle s
+Neon-based HTTP provider module.)
+\item[\texttt{http-compression}]
+This specifies whether Subversion should attempt to compress network
+requests made to DAV-ready servers. The default value is \texttt{yes}
+(though compression will occur only if that capability is compiled into
+the network layer). Set this to \texttt{no} to disable compression, such
+as when debugging network transmissions.
+\item[\texttt{http-library}]
+The \texttt{http-library} runtime configuration option allows users to
+specify (generally, or in a per-server-group fashion) which of the
+available WebDAV access modules they\textquotesingle d prefer to use.
+Prior to version 1.8, Subversion offered a pair of such modules: its
+original implementiation \texttt{libsvn\_ra\_neon} (selected by using
+the value \texttt{neon} for this option) and the newer
+\texttt{libsvn\_ra\_serf} (selected using the value \texttt{serf}). As
+of Subversion 1.8, only \texttt{libsvn\_ra\_serf} is supported. This
+configuration option remains, though, because the runtime configuration
+area is version-agnostic. Users with multiple versions of Subversion
+installed may still wish to enable the use of \texttt{libsvn\_ra\_neon}
+for sites which they access with an older version of Subversion.
+\item[\texttt{http-proxy-exceptions}]
+This specifies a comma-separated list of patterns for repository
+hostnames that should be accessed directly, without using the proxy
+machine. The pattern syntax is the same as is used in the Unix shell for
+filenames. A repository hostname matching any of these patterns will not
+be proxied.
+\item[\texttt{http-proxy-host}]
+This specifies the hostname of the proxy computer through which your
+HTTP-based Subversion requests must pass. It defaults to an empty value,
+which means that Subversion will not attempt to route HTTP requests
+through a proxy computer, and will instead attempt to contact the
+destination machine directly.
+\item[\texttt{http-proxy-password}]
+This specifies the password to supply to the proxy machine. It defaults
+to an empty value.
+\item[\texttt{http-proxy-port}]
+This specifies the port number on the proxy host to use. It defaults to
+an empty value.
+\item[\texttt{http-proxy-username}]
+This specifies the username to supply to the proxy machine. It defaults
+to an empty value.
+\item[\texttt{http-timeout}]
+This specifies the amount of time, in seconds, to wait for a server
+response. If you experience problems with a slow network connection
+causing Subversion operations to time out, you should increase the value
+of this option. In Subversion 1.8 (or older versions employing the
+Serf-based HTTP provider), use the value \texttt{0} to disable the
+timeout altogether.
+\item[\texttt{neon-debug-mask}]
+This is an integer mask that the Neon HTTP library uses for choosing
+what type of debugging output to yield. The default value is \texttt{0},
+which will silence all debugging output. Prior to version 1.8, most
+Subversion clients used Neon (via the \texttt{libsvn\_ra\_neon}
+repository access module) for WebDAV/HTTP communications between the
+Subversion client and server. Support for \texttt{libsvn\_ra\_neon} was
+dropped in Subversion 1.8, though, making this option obsolete for newer
+Subversion installations.
+\item[\texttt{ssl-authority-files}]
+This is a semicolon-delimited list of paths to files containing
+certificates of the certificate authorities (or CAs) that are accepted
+by the Subversion client when accessing the repository over HTTPS.
+\item[\texttt{ssl-client-cert-file}]
+If a host (or set of hosts) requires an SSL client certificate,
+you\textquotesingle ll normally be prompted for a path to your
+certificate. By setting this variable to that same path, Subversion will
+be able to find your client certificate automatically without prompting
+you. There\textquotesingle s no standard place to store your certificate
+on disk; Subversion will grab it from any path you specify.
+\item[\texttt{ssl-client-cert-password}]
+If your SSL client certificate file is encrypted by a passphrase,
+Subversion will prompt you for the passphrase whenever the certificate
+is used. If you find this annoying (and don\textquotesingle t mind
+storing the password in the \texttt{servers} file), you can set this
+variable to the certificate\textquotesingle s passphrase. You
+won\textquotesingle t be prompted anymore.
+\item[\texttt{ssl-pkcs11-provider}]
+The value of this option is the name of the PKCS\#11 provider from which
+an SSL client certificate will be drawn (if the server asks for one).
+This setting is only honored by Subversion\textquotesingle s Neon-based
+HTTP provider module, which was removed in Subversion 1.8.
+\item[\texttt{ssl-trust-default-ca}]
+Set this variable to \texttt{yes} if you want Subversion to
+automatically trust the set of default CAs that ship with OpenSSL.
+\item[\texttt{store-auth-creds}]
+This setting is the same as \texttt{store-passwords}, except that it
+enables or disables on-disk caching of \emph{all} authentication
+information: usernames, passwords, server certificates, and any other
+types of cacheable credentials.
+\item[\texttt{store-passwords}]
+This instructs Subversion to cache, or not to cache, passwords that are
+supplied by the user in response to server authentication challenges.
+The default value is \texttt{yes}. Set this to \texttt{no} to disable
+this on-disk password caching. You can override this option for a single
+instance of the \texttt{svn} command using the
+\texttt{-\/-no-auth-cache} command-line parameter (for those subcommands
+that support it). For more information regarding that, see
+\hyperref[svn.serverconfig.netmodel.credcache]{Caching credentials}.
+Note that regardless of how this option is configured, Subversion will
+not store passwords in plaintext unless the
+\texttt{store-plaintext-passwords} option is also set to \texttt{yes}.
+\item[\texttt{store-plaintext-passwords}]
+This variable is only important on UNIX-like systems. It controls what
+the Subversion client does in case the password for the current
+authentication realm can only be cached on disk in unencrypted form, in
+the \texttt{\textasciitilde{}/.subversion/auth/} caching area. You can
+set it to \texttt{yes} or \texttt{no} to enable or disable caching of
+passwords in unencrypted form, respectively. The default setting is
+\texttt{ask}, which causes the Subversion client to ask you each time a
+\emph{new} password is about to be added to the
+\texttt{\textasciitilde{}/.subversion/auth/} caching area.
+\item[\texttt{store-ssl-client-cert-pp}]
+This option controls whether Subversion will cache SSL client
+certificate passphrases provided by the user. Its value defaults to
+\texttt{yes}. Set this to \texttt{no} to disable this passphrase
+caching.
+\item[\texttt{store-ssl-client-cert-pp-plaintext}]
+This option controls whether Subversion, when attempting to cache an SSL
+client certificate passphrase, will be allowed to do so using its
+on-disk plaintext storage mechanism. The default value of this option is
+\texttt{ask}, which causes the Subversion client to ask you each time a
+\emph{new} client certificate passphrase is about to be added to the
+\texttt{\textasciitilde{}/.subversion/auth/} caching area. Set this
+option\textquotesingle s value to \texttt{yes} or \texttt{no} to
+indicate your preference and avoid related prompts.
+\end{description}
+
+\section{Localization}\label{svn.advanced.l10n}
+
+Localization is the act of making programs behave in a region-specific
+way. When a program formats numbers or dates in a way specific to your
+part of the world or prints messages (or accepts input) in your native
+language, the program is said to be localized. This section describes
+steps Subversion has made toward localization.
+
+\subsection{Understanding
+Locales}\label{svn.advanced.l10n.understanding}
+
+Most modern operating systems have a notion of the ``current
+locale''---that is, the region or country whose localization conventions
+are honored. These conventions---typically chosen by some runtime
+configuration mechanism on the computer---affect the way in which
+programs present data to the user, as well as the way in which they
+accept user input.
+
+On most Unix-like systems, you can check the values of the
+locale-related runtime configuration options by running the
+\texttt{locale} command:
+
+\begin{verbatim}
+$ locale
+LANG=
+LC_COLLATE="C"
+LC_CTYPE="C"
+LC_MESSAGES="C"
+LC_MONETARY="C"
+LC_NUMERIC="C"
+LC_TIME="C"
+LC_ALL="C"
+$
+\end{verbatim}
+
+The output is a list of locale-related environment variables and their
+current values. In this example, the variables are all set to the
+default \texttt{C} locale, but users can set these variables to specific
+country/language code combinations. For example, if one were to set the
+\texttt{LC\_TIME} variable to \texttt{fr\_CA}, programs would know to
+present time and date information formatted according to a
+French-speaking Canadian\textquotesingle s expectations. And if one were
+to set the \texttt{LC\_MESSAGES} variable to \texttt{zh\_TW}, programs
+would know to present human-readable messages in Traditional Chinese.
+Setting the \texttt{LC\_ALL} variable has the effect of changing every
+locale variable to the same value. The value of \texttt{LANG} is used as
+a default value for any locale variable that is unset. To see the list
+of available locales on a Unix system, run the command
+\texttt{locale\ -a}.
+
+On Windows, locale configuration is done via the ``Regional and Language
+Options'' control panel item. There you can view and select the values
+of individual settings from the available locales, and even customize
+(at a sickening level of detail) several of the display formatting
+conventions.
+
+\subsection{Subversion\textquotesingle s Use of
+Locales}\label{svn.advanced.l10n.svnuse}
+
+The Subversion client, \texttt{svn}, honors the current locale
+configuration in two ways. First, it notices the value of the
+\texttt{LC\_MESSAGES} variable and attempts to print all messages in the
+specified language. For example:
+
+\begin{verbatim}
+$ export LC_MESSAGES=de_DE
+$ svn help cat
+cat: Gibt den Inhalt der angegebenen Dateien oder URLs aus.
+Aufruf: cat ZIEL[@REV]...
+…
+\end{verbatim}
+
+This behavior works identically on both Unix and Windows systems. Note,
+though, that while your operating system might have support for a
+certain locale, the Subversion client still may not be able to speak the
+particular language. In order to produce localized messages, human
+volunteers must provide translations for each language. The translations
+are written using the GNU gettext package, which results in translation
+modules that end with the \texttt{.mo} filename extension. For example,
+the German translation file is named \texttt{de.mo}. These translation
+files are installed somewhere on your system. On Unix, they typically
+live in \texttt{/usr/share/locale/}, while on Windows
+they\textquotesingle re often found in the
+\texttt{share\textbackslash{}locale\textbackslash{}} folder in
+Subversion\textquotesingle s installation area. Once installed, a module
+is named after the program for which it provides translations. For
+example, the \texttt{de.mo} file may ultimately end up installed as
+\texttt{/usr/share/locale/de/LC\_MESSAGES/subversion.mo}. By browsing
+the installed \texttt{.mo} files, you can see which languages the
+Subversion client is able to speak.
+
+The second way in which the locale is honored involves how \texttt{svn}
+interprets your input. The repository stores all paths, filenames, and
+log messages in Unicode, encoded as UTF-8. In that sense, the repository
+is internationalized---that is, the repository is ready to accept input
+in any human language. This means, however, that the Subversion client
+is responsible for sending only UTF-8 filenames and log messages into
+the repository. To do this, it must convert the data from the native
+locale into UTF-8.
+
+For example, suppose you create a file named \texttt{caffè.txt}, and
+then when committing the file, you write the log message as ``Adesso il
+caffè è più forte.'' Both the filename and the log message contain
+non-ASCII characters, but because your locale is set to \texttt{it\_IT},
+the Subversion client knows to interpret them as Italian. It uses an
+Italian character set to convert the data to UTF-8 before sending it off
+to the repository.
+
+Note that while the repository demands UTF-8 filenames and log messages,
+it \emph{does not} pay attention to file contents. Subversion treats
+file contents as opaque strings of bytes, and neither client nor server
+makes an attempt to understand the character set or encoding of the
+contents.
+
+Character Set Conversion Errors
+
+While using Subversion, you might get hit with an error related to
+character set conversions:
+
+\begin{verbatim}
+svn: E000022: Can't convert string from native encoding to 'UTF-8':
+…
+svn: E000022: Can't convert string from 'UTF-8' to native encoding:
+…
+\end{verbatim}
+
+Errors such as this typically occur when the Subversion client has
+received a UTF-8 string from the repository, but not all of the
+characters in that string can be represented using the encoding of the
+current locale. For example, if your locale is \texttt{en\_US} but a
+collaborator has committed a Japanese filename, you\textquotesingle re
+likely to see this error when you receive the file during an
+\texttt{svn\ update}.
+
+The solution is either to set your locale to something that \emph{can}
+represent the incoming UTF-8 data, or to change the filename or log
+message in the repository. (And don\textquotesingle t forget to slap
+your collaborator\textquotesingle s hand---projects should decide on
+common languages ahead of time so that all participants are using the
+same locale.)
+
+\section{Using External Editors}\label{svn.advanced.externaleditors}
+
+The most obvious way to get data into Subversion is through the addition
+of files to version control, committing changes to those files, and so
+on. But other pieces of information besides merely versioned file data
+live in your Subversion repository. Some of these bits of
+information---commit log messages, lock comments, and some property
+values---tend to be textual in nature and are provided explicitly by
+users. Most of this information can be provided to the Subversion
+command-line client using the \texttt{-\/-message} (\texttt{-m}) and
+\texttt{-\/-file} (\texttt{-F}) options with the appropriate
+subcommands.
+
+Each of these options has its pros and cons. For example, when
+performing a commit, \texttt{-\/-file} (\texttt{-F}) works well if
+you\textquotesingle ve already prepared a text file that holds your
+commit log message. If you didn\textquotesingle t, though, you can use
+\texttt{-\/-message} (\texttt{-m}) to provide a log message on the
+command line. Unfortunately, it can be tricky to compose anything more
+than a simple one-line message on the command line. Users want more
+flexibility---multiline, free-form log message editing on demand.
+
+Subversion supports this by allowing you to specify an external text
+editor that it will launch as necessary to give you a more powerful
+input mechanism for this textual metadata. There are several ways to
+tell Subversion which editor you\textquotesingle d like use. Subversion
+checks the following things, in the order specified, when it wants to
+launch such an editor:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \texttt{-\/-editor-cmd} command-line option
+\item
+  \texttt{SVN\_EDITOR} environment variable
+\item
+  \texttt{editor-cmd} runtime configuration option
+\item
+  \texttt{VISUAL} environment variable
+\item
+  \texttt{EDITOR} environment variable
+\item
+  Possibly, a fallback value built into the Subversion libraries (not
+  present in the official builds)
+\end{enumerate}
+
+The value of any of these options or variables is the beginning of a
+command line to be executed by the shell. Subversion appends to that
+command line a space and the pathname of a temporary file to be edited.
+So, to be used with Subversion, the configured or specified editor needs
+to support an invocation in which its last command-line parameter is a
+file to be edited, and it should be able to save the file in place and
+return a zero exit code to indicate success.
+
+As noted, external editors can be used to provide commit log messages to
+any of the committing subcommands (such as \texttt{svn\ commit} or
+\texttt{import}, \texttt{svn\ mkdir} or \texttt{delete} when provided a
+URL target, etc.), and Subversion will try to launch the editor
+automatically if you don\textquotesingle t specify either of the
+\texttt{-\/-message} (\texttt{-m}) or \texttt{-\/-file} (\texttt{-F})
+options. The \texttt{svn\ propedit} command is built almost entirely
+around the use of an external editor. And beginning in version 1.5,
+Subversion will also use the configured external text editor when the
+user asks it to launch an editor during interactive conflict resolution.
+Oddly, there doesn\textquotesingle t appear to be a way to use external
+editors to interactively provide lock comments.
+
+\section{Using External Differencing and Merge
+Tools}\label{svn.advanced.externaldifftools}
+
+The interface between Subversion and external two- and three-way
+differencing tools harkens back to a time when
+Subversion\textquotesingle s only contextual differencing capabilities
+were built around invocations of the GNU diffutils toolchain,
+specifically the \texttt{diff} and \texttt{diff3} utilities. To get the
+kind of behavior Subversion needed, it called these utilities with more
+than a handful of options and parameters, most of which were quite
+specific to the utilities. Some time later, Subversion grew its own
+internal differencing library, and as a failover mechanism, the
+\texttt{-\/-diff-cmd} and \texttt{-\/-diff3-cmd} options were added to
+the Subversion command-line client so that users could more easily
+indicate that they preferred to use the GNU diff and diff3 utilities
+instead of the newfangled internal diff library. If those options were
+used, Subversion would simply ignore the internal diff library, and fall
+back to running those external programs, lengthy argument lists and all.
+And that\textquotesingle s where things remain today.
+
+It didn\textquotesingle t take long for folks to realize that having
+such easy configuration mechanisms for specifying that Subversion should
+use the external GNU diff and diff3 utilities located at a particular
+place on the system could be applied toward the use of other
+differencing tools, too. After all, Subversion didn\textquotesingle t
+actually verify that the things it was being told to run were members of
+the GNU diffutils toolchain. But the only configurable aspect of using
+those external tools is their location on the system---not the option
+set, parameter order, and so on. Subversion continues to throw all those
+GNU utility options at your external diff tool regardless of whether
+that program can understand those options. And that\textquotesingle s
+where things get unintuitive for most users.
+
+The decision on when to fire off a contextual two- or three-way diff as
+part of a larger Subversion operation is made internally by Subversion
+and is affected by, among other things, whether the files being operated
+on are human-readable as determined by their \texttt{svn:mime-type}
+property. This means, for example, that even if you had the niftiest
+Microsoft Word-aware differencing or merging tool in the universe, it
+would typically not be invoked by Subversion if your versioned Word
+documents had a configured MIME type that denoted that they were not
+human-readable (such as \texttt{application/msword}). Fortunately, you
+can pass the \texttt{-\/-force} option to \texttt{svn\ diff} to
+short-circuit this MIME-related sanity check and force the difference to
+be calculated. For more about MIME type settings, see
+\hyperref[svn.advanced.props.special.mime-type]{File Content Type}
+
+Much later, Subversion 1.5 introduced interactive resolution of
+conflicts (described in \hyperref[svn.tour.cycle.resolve]{Resolve Any
+Conflicts}). One of the options that this feature provides to users is
+the ability to interactively launch a third-party merge tool. If this
+action is taken, Subversion will check to see if the user has specified
+such a tool for use in this way. Subversion will first check the
+\texttt{SVN\_MERGE} environment variable for the name of an external
+merge tool. If that variable is not set, it will look for the same
+information in the value of the \texttt{merge-tool-cmd} runtime
+configuration option. Upon finding a configured external merge tool, it
+will invoke that tool.
+
+While the general purposes of the three-way differencing and merge tools
+are roughly the same (finding a way to make separate-but-overlapping
+file changes live in harmony), Subversion exercises each of these
+options at different times and for different reasons. The internal
+three-way differencing engine and its optional external replacement are
+used when interaction with the user is \emph{not} expected. In fact,
+significant delay introduced by such a tool can actually result in the
+failure of some time-sensitive Subversion operations.
+It\textquotesingle s the external merge tool that is intended to be
+invoked interactively.
+
+Now, while the interface between Subversion and an external merge tool
+is significantly less convoluted than that between Subversion and the
+diff and diff3 tools, the likelihood of finding such a tool whose
+calling conventions exactly match what Subversion expects is still quite
+low. The key to using external differencing and merge tools with
+Subversion is to use wrapper scripts, which convert the input from
+Subversion into something that your specific differencing tool can
+understand, and then convert the output of your tool back into a format
+that Subversion expects. The following sections cover the specifics of
+those expectations.
+
+\subsection{External diff}\label{svn.advanced.externaldifftools.diff}
+
+Subversion calls external diff programs with parameters suitable for the
+GNU diff utility, and expects only that the external program will return
+with a successful error code per the GNU diff definition thereof. For
+most alternative diff programs, only the sixth and seventh
+arguments---the paths of the files that represent the left and right
+sides of the diff, respectively---are of interest. Note that Subversion
+runs the diff program once per modified file covered by the Subversion
+operation, so if your program runs in an asynchronous fashion (or is
+``backgrounded''), you might have several instances of it all running
+simultaneously. Finally, Subversion expects that your program return an
+error code of 1 if your program detected differences, or 0 if it did
+not---any other error code is considered a fatal error.\footnote{The GNU
+  diff manual page puts it this way: ``An exit status of 0 means no
+  differences were found, 1 means some differences were found, and 2
+  means trouble.''}
+
+\hyperref[svn.advanced.externaldifftools.diff.ex-1]{diffwrap.py} and
+\hyperref[svn.advanced.externaldifftools.diff.ex-2]{diffwrap.bat} are
+templates for external diff tool wrappers in the Python and Windows
+batch scripting languages, respectively.
+
+\protect\phantomsection\label{svn.advanced.externaldifftools.diff.ex-1}
+diffwrap.py
+
+\begin{verbatim}
+#!/usr/bin/env python
+import sys
+import os
+
+# Configure your favorite diff program here.
+DIFF = "/usr/local/bin/my-diff-tool"
+
+# Subversion provides the paths we need as the last two parameters.
+LEFT  = sys.argv[-2]
+RIGHT = sys.argv[-1]
+
+# Call the diff command (change the following line to make sense for
+# your diff program).
+cmd = [DIFF, '--left', LEFT, '--right', RIGHT]
+os.execv(cmd[0], cmd)
+
+# Return an errorcode of 0 if no differences were detected, 1 if some were.
+# Any other errorcode will be treated as fatal.
+\end{verbatim}
+
+\protect\phantomsection\label{svn.advanced.externaldifftools.diff.ex-2}
+diffwrap.bat
+
+\begin{verbatim}
+@ECHO OFF
+
+REM Configure your favorite diff program here.
+SET DIFF="C:\Program Files\Funky Stuff\My Diff Tool.exe"
+
+REM Subversion provides the paths we need as the last two parameters.
+REM These are parameters 6 and 7 (unless you use svn diff -x, in
+REM which case, all bets are off).
+SET LEFT=%6
+SET RIGHT=%7
+
+REM Call the diff command (change the following line to make sense for
+REM your diff program).
+%DIFF% --left %LEFT% --right %RIGHT%
+
+REM Return an errorcode of 0 if no differences were detected, 1 if some were.
+REM Any other errorcode will be treated as fatal.
+\end{verbatim}
+
+\subsection{External diff3}\label{svn.advanced.externaldifftools.diff3}
+
+Subversion invokes three-way differencing programs to perform
+non-interactive merges. When configured to use an external three-way
+differencing program, it executes that program with parameters suitable
+for the GNU diff3 utility, expecting that the external program will
+return with a successful error code and that the full file contents that
+result from the completed merge operation are printed on the standard
+output stream (so that Subversion can redirect them into the appropriate
+version-controlled file). For most alternative merge programs, only the
+ninth, tenth, and eleventh arguments, the paths of the files which
+represent the ``mine'', ``older'', and ``yours'' inputs, respectively,
+are of interest. Note that because Subversion depends on the output of
+your merge program, your wrapper script must not exit before that output
+has been delivered to Subversion. When it finally does exit, it should
+return an error code of 0 if the merge was successful, or 1 if
+unresolved conflicts remain in the output---any other error code is
+considered a fatal error.
+
+\hyperref[svn.advanced.externaldifftools.diff3.ex-1]{diff3wrap.py} and
+\hyperref[svn.advanced.externaldifftools.diff3.ex-2]{diff3wrap.bat} are
+templates for external three-way differencing tool wrappers in the
+Python and Windows batch scripting languages, respectively.
+
+\protect\phantomsection\label{svn.advanced.externaldifftools.diff3.ex-1}
+diff3wrap.py
+
+\begin{verbatim}
+#!/usr/bin/env python
+import sys
+import os
+
+# Configure your favorite three-way diff program here.
+DIFF3 = "/usr/local/bin/my-diff3-tool"
+
+# Subversion provides the paths we need as the last three parameters.
+MINE  = sys.argv[-3]
+OLDER = sys.argv[-2]
+YOURS = sys.argv[-1]
+
+# Call the three-way diff command (change the following line to make
+# sense for your three-way diff program).
+cmd = [DIFF3, '--older', OLDER, '--mine', MINE, '--yours', YOURS]
+os.execv(cmd[0], cmd)
+
+# After performing the merge, this script needs to print the contents
+# of the merged file to stdout.  Do that in whatever way you see fit.
+# Return an errorcode of 0 on successful merge, 1 if unresolved conflicts
+# remain in the result.  Any other errorcode will be treated as fatal.
+\end{verbatim}
+
+\protect\phantomsection\label{svn.advanced.externaldifftools.diff3.ex-2}
+diff3wrap.bat
+
+\begin{verbatim}
+@ECHO OFF
+
+REM Configure your favorite three-way diff program here.
+SET DIFF3="C:\Program Files\Funky Stuff\My Diff3 Tool.exe"
+
+REM Subversion provides the paths we need as the last three parameters.
+REM These are parameters 9, 10, and 11.  But we have access to only
+REM nine parameters at a time, so we shift our nine-parameter window
+REM twice to let us get to what we need.
+SHIFT
+SHIFT
+SET MINE=%7
+SET OLDER=%8
+SET YOURS=%9
+
+REM Call the three-way diff command (change the following line to make
+REM sense for your three-way diff program).
+%DIFF3% --older %OLDER% --mine %MINE% --yours %YOURS%
+
+REM After performing the merge, this script needs to print the contents
+REM of the merged file to stdout.  Do that in whatever way you see fit.
+REM Return an errorcode of 0 on successful merge, 1 if unresolved conflicts
+REM remain in the result.  Any other errorcode will be treated as fatal.
+\end{verbatim}
+
+\subsection{External merge}\label{svn.advanced.externaldifftools.merge}
+
+Subversion optionally invokes an external merge tool as part of its
+support for interactive conflict resolution. It provides as arguments to
+the merge tool the following: the path of the unmodified base file, the
+path of the ``theirs'' file (which contains upstream changes), the path
+of the ``mine'' file (which contains local modifications), the path of
+the file into which the final resolved contents should be stored by the
+merge tool, and the working copy path of the conflicted file (relative
+to the original target of the merge operation). The merge tool is
+expected to return an error code of 0 to indicate success, or 1 to
+indicate failure.
+
+\hyperref[svn.advanced.externaldifftools.merge.ex-1]{mergewrap.py} and
+\hyperref[svn.advanced.externaldifftools.merge.ex-2]{mergewrap.bat} are
+templates for external merge tool wrappers in the Python and Windows
+batch scripting languages, respectively.
+
+\protect\phantomsection\label{svn.advanced.externaldifftools.merge.ex-1}
+mergewrap.py
+
+\begin{verbatim}
+#!/usr/bin/env python
+import sys
+import os
+
+# Configure your favorite merge program here.
+MERGE = "/usr/local/bin/my-merge-tool"
+
+# Get the paths provided by Subversion.
+BASE   = sys.argv[1]
+THEIRS = sys.argv[2]
+MINE   = sys.argv[3]
+MERGED = sys.argv[4]
+WCPATH = sys.argv[5]
+
+# Call the merge command (change the following line to make sense for
+# your merge program).
+cmd = [MERGE, '--base', BASE, '--mine', MINE, '--theirs', THEIRS,
+              '--outfile', MERGED]
+os.execv(cmd[0], cmd)
+
+# Return an errorcode of 0 if the conflict was resolved; 1 otherwise.
+# Any other errorcode will be treated as fatal.
+\end{verbatim}
+
+\protect\phantomsection\label{svn.advanced.externaldifftools.merge.ex-2}
+mergewrap.bat
+
+\begin{verbatim}
+@ECHO OFF
+
+REM Configure your favorite merge program here.
+SET MERGE="C:\Program Files\Funky Stuff\My Merge Tool.exe"
+
+REM Get the paths provided by Subversion.
+SET BASE=%1
+SET THEIRS=%2
+SET MINE=%3
+SET MERGED=%4
+SET WCPATH=%5
+
+REM Call the merge command (change the following line to make sense for
+REM your merge program).
+%MERGE% --base %BASE% --mine %MINE% --theirs %THEIRS% --outfile %MERGED%
+
+REM Return an errorcode of 0 if the conflict was resolved; 1 otherwise.
+REM Any other errorcode will be treated as fatal.
+\end{verbatim}
+
+\section{Summary}\label{svn.customization.summary}
+
+Sometimes there\textquotesingle s a single right way to do things;
+sometimes there are many. Subversion\textquotesingle s developers
+understand that while the majority of its exact behaviors are acceptable
+to most of its users, there are some corners of its functionality where
+such a universally pleasing approach doesn\textquotesingle t exist. In
+those places, Subversion offers users the opportunity to tell it how
+\emph{they} want it to behave.
+
+In this chapter, we explored Subversion\textquotesingle s runtime
+configuration system and other mechanisms by which users can control
+those configurable behaviors. If you are a developer, though, the next
+chapter will take you one step further. It describes how you can further
+customize your Subversion experience by writing your own software
+against Subversion\textquotesingle s libraries.
+

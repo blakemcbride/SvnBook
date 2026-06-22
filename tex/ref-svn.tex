@@ -1,0 +1,4457 @@
+\chapter{svn Reference---Subversion Command-Line
+Client}\label{svn.ref.svn}
+
+\texttt{svn} is the official command-line client of Subversion. Its
+functionality is offered via a collection of task-specific subcommands,
+most of which accept a number of options for fine-grained control of the
+program\textquotesingle s behavior.
+
+When using the \texttt{svn} program, subcommands and other non-option
+arguments must appear in a specified order on the command line. Options,
+on the other hand, may appear anywhere on the command line (after the
+program name, of course), and in general, their order is irrelevant. For
+example, all of the following are valid ways to use
+\texttt{svn\ status}, and are interpreted in exactly the same way:
+
+\begin{verbatim}
+$ svn -vq status myfile
+$ svn status -v -q myfile
+$ svn -q status -v myfile
+$ svn status -vq myfile
+$ svn status myfile -qv
+\end{verbatim}
+
+The following sections describe each of the various subcommands and
+options provided by the \texttt{svn} command-line client program,
+including some examples of each subcommand\textquotesingle s typical
+uses.
+
+While Subversion has different options for its subcommands, all options
+exist in a single namespace---that is, each option is guaranteed to mean
+the roughly same thing regardless of the subcommand you use it with. For
+example, \texttt{-\/-verbose} (\texttt{-v}) always means ``verbose
+output,'' regardless of the subcommand you use it with.
+
+The \texttt{svn} command-line client usually exits quickly with an error
+if you pass it an option which does not apply to the specified
+subcommand. But as of Subversion 1.5, several of the options which apply
+to all---or nearly all---of the subcommands have been deemed acceptable
+by all subcommands, even if they have no effect on some of them. (This
+change was made primarily to improve the client\textquotesingle s
+ability to called from custom wrapping scripts.) These options appear
+grouped together in the command-line client\textquotesingle s usage
+messages as global options, as can be seen in the following bit of
+output:
+
+\begin{verbatim}
+$ svn help upgrade
+upgrade: Upgrade the metadata storage format for a working copy.
+usage: upgrade [WCPATH...]
+
+  Local modifications are preserved.
+
+Valid options:
+  -q [--quiet]             : print nothing, or only summary information
+
+Global options:
+  --username ARG           : specify a username ARG
+  --password ARG           : specify a password ARG
+  --no-auth-cache          : do not cache authentication tokens
+  --non-interactive        : do no interactive prompting (default is to prompt
+                             only if standard input is a terminal device)
+  --force-interactive      : do interactive prompting even if standard input
+                             is not a terminal device
+  --trust-server-cert      : accept SSL server certificates from unknown
+                             certificate authorities without prompting (but only
+                             with '--non-interactive')
+  --config-dir ARG         : read user configuration files from directory ARG
+  --config-option ARG      : set user configuration option in the format:
+                                 FILE:SECTION:OPTION=[VALUE]
+                             For example:
+                                 servers:global:http-library=serf
+$
+\end{verbatim}
+
+\texttt{svn} subcommands recognize the following options:
+
+\protect\phantomsection\label{svn.ref.svn.sw}{}
+
+\begin{description}
+\item[\protect\phantomsection\label{svn.ref.svn.sw.accept}{}\texttt{-\/-accept}
+\textless ACTION\textgreater{}]
+Specifies an action for automatic conflict resolution, disabling the
+interactive prompts which ask the user how to handle each conflict as it
+is noticed. Though which of the specific actions are applicable differs
+depending on which subcommand is in use, Subversion supports the
+following long (and short) values for \textless ACTION\textgreater:
+
+\begin{description}
+\item[\texttt{postpone} (\texttt{p})]
+Take no resolution action at all and instead allow the conflicts to be
+recorded for future resolution.
+\item[\texttt{edit} (\texttt{e})]
+Open each conflicted file in a text editor for manual resolution of
+line-based conflicts.
+\item[\texttt{launch} (\texttt{l})]
+Launch an interactive merge conflict resolution tool for each conflicted
+file.
+\item[\texttt{base}]
+Choose the file that was the (unmodified) \texttt{BASE} revision before
+you tried to integrate changes from the server into your working copy.
+\item[\texttt{working}]
+Assuming that you\textquotesingle ve manually handled the conflict
+resolution, choose the version of the file as it currently stands in
+your working copy.
+\item[\texttt{mine-full} (\texttt{mf})]
+Resolve conflicted files by preserving all local modifications and
+discarding all changes fetched from the server during the operation
+which caused the conflict.
+\item[\texttt{theirs-full} (\texttt{tf})]
+Resolve conflicted files by discarding all local modifications and
+integrating all changes fetched from the server during the operation
+which caused the conflict.
+\item[\texttt{mine-conflict} (\texttt{mc})]
+Resolve conflicted files by preferring local modifications over the
+changes fetched from the server in conflicting regions of each
+file\textquotesingle s content.
+\item[\texttt{theirs-conflict} (\texttt{tc})]
+Resolve conflicted files by preferring the changes fetched from the
+server over local modifications in conflicting regions of each
+file\textquotesingle s content.
+\end{description}
+
+Consult the output of \texttt{svn\ help\ SUBCOMMAND} to see exactly
+which actions are supported by the specific subcommand of interest.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.allow_mixed_revisions}{}\texttt{-\/-allow-mixed-revisions}]
+Disables the verification---performed by default by \texttt{svn\ merge}
+as of Subversion 1.7---that the target of a merge operation and all of
+its children are at a uniform revision. While merging into a
+single-revision working copy target is the recommended best practice,
+this option may be used to permit merges into mixed-revision working
+copies as necessary.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.auto_props}{}\texttt{-\/-auto-props}]
+Enables automatic property assignment (per runtime configuration rules),
+overriding the \texttt{enable-auto-props} runtime configuration
+directive.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.change}{}\texttt{-\/-change}
+(\texttt{-c}) \textless ARG\textgreater{}]
+Perform the requested operation using a specific ``change''. Generally
+speaking, this option is syntactic sugar for \texttt{-r\ ARG-1:ARG}.
+Some subcommands permit a comma-separated list of revision number
+arguments (e.g., \texttt{-c\ ARG1,ARG2,ARG3}). Alternatively, you can
+provide two arguments separated by a dash (as in \texttt{-c\ ARG1-ARG2})
+to identify the range of revisions between \textless ARG1\textgreater{}
+and \textless ARG2\textgreater, inclusive. Finally, if the revision
+argument is negated, the implied revision range is reversed:
+\texttt{-c\ -45} is equivalent to \texttt{-r\ 45:44}.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.changelist}{}\texttt{-\/-changelist}
+(\texttt{-\/-cl}) \textless ARG\textgreater{}]
+Instructs Subversion to operate only on members of the changelist named
+\textless ARG\textgreater. You can use this option multiple times to
+specify sets of changelists.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.config_dir}{}\texttt{-\/-config-dir}
+\textless DIR\textgreater{}]
+Instructs Subversion to read configuration information from the
+specified directory instead of the default location
+(\texttt{.subversion} in the user\textquotesingle s home directory).
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.config_option}{}\texttt{-\/-config-option}
+\textless CONFSPEC\textgreater{}]
+Sets, for the duration of the command, the value of a runtime
+configuration option. \textless CONFSPEC\textgreater{} is a string which
+specifies the configuration option namespace, name and value that
+you\textquotesingle d like to assign, formatted as
+\textless FILE\textgreater:\textless SECTION\textgreater:\textless OPTION\textgreater={[}\textless VALUE\textgreater{]}.
+In this syntax, \textless FILE\textgreater{} and
+\textless SECTION\textgreater{} are the runtime configuration file
+(either \texttt{config} or \texttt{servers}) and the section thereof,
+respectively, which contain the option whose value you wish to change.
+\textless OPTION\textgreater{} is, of course, the option itself, and
+\textless VALUE\textgreater{} the value (if any) you wish to assign to
+the option. For example, to temporarily disable the use of the
+compression in the HTTP protocol, use
+\texttt{-\/-config-option=servers:global:http-compression=no}. You can
+use this option multiple times to change multiple option values
+simultaneously.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.depth}{}\texttt{-\/-depth}
+\textless ARG\textgreater{}]
+Instructs Subversion to limit the scope of an operation to a particular
+tree depth. \textless ARG\textgreater{} is one of \texttt{empty} (only
+the target itself), \texttt{files} (the target and any immediate file
+children thereof), \texttt{immediates} (the target and any immediate
+children thereof), or \texttt{infinity} (the target and all of its
+descendants---full recursion).
+\item[\protect\phantomsection\label{svn.ref.svn.sw.diff}{}\texttt{-\/-diff}]
+Enables a special output mode for \texttt{svn\ log} which includes a
+difference report (a la \texttt{svn\ diff}) as part of each
+revision\textquotesingle s information.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.diff_cmd}{}\texttt{-\/-diff-cmd}
+\textless CMD\textgreater{}]
+Specifies an external program to use to show differences between files.
+When \texttt{svn\ diff} is invoked without this option, it uses
+Subversion\textquotesingle s internal differencing engine, which
+provides unified diffs by default. If you want to use an external
+differencing program, use \texttt{-\/-diff-cmd}. You can then pass
+options to the specified program using the \texttt{-\/-extensions}
+(\texttt{-x}) option.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.diff3_cmd}{}\texttt{-\/-diff3-cmd}
+\textless CMD\textgreater{}]
+Specifies an external 3-way differencing program (used to merge
+line-based changes into files).
+\item[\protect\phantomsection\label{svn.ref.svn.sw.dry_run}{}\texttt{-\/-dry-run}]
+Goes through all the motions of running a command, but makes no actual
+changes---either on disk or in the repository.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.editor_cmd}{}\texttt{-\/-editor-cmd}
+\textless CMD\textgreater{}]
+Specifies an external program to use to edit a log message or a property
+value. See the \texttt{editor-cmd} section in
+\hyperref[svn.advanced.confarea.opts.config]{General configuration} for
+ways to specify a default editor.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.encoding}{}\texttt{-\/-encoding}
+\textless ENC\textgreater{}]
+Tells Subversion that your commit message is composed using the
+character encoding provided. The default character encoding is derived
+from your operating system\textquotesingle s native locale; use this
+option if your commit message is composed using any other encoding.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.extensions}{}\texttt{-\/-extensions}
+(\texttt{-x}) \textless ARG\textgreater{}]
+Specifies customizations which Subversion should make when performing
+difference calculations. Valid extensions include:
+
+\begin{description}
+\item[\texttt{-\/-ignore-space-change} (\texttt{-b})]
+Ignore changes in the amount of white space.
+\item[\texttt{-\/-ignore-all-space} (\texttt{-w})]
+Ignore all white space.
+\item[\texttt{-\/-ignore-eol-style}]
+Ignore changes in EOL (end-of-line) style.
+\item[\texttt{-\/-show-c-function} (\texttt{-p})]
+Show C function names in the diff output.
+\item[\texttt{-\/-unified} (\texttt{-u})]
+Show three lines of unified diff context.
+\end{description}
+
+The default value of \textless ARG\textgreater{} is \texttt{-u}. If you
+wish to pass multiple arguments, you must enclose all of them in quotes.
+
+Note that when Subversion is configured to invoke an external diff
+command, the value of the \texttt{-\/-extensions} (\texttt{-x}) option
+isn\textquotesingle t restricted to the previously mentioned options,
+but may be \emph{any} additional arguments which Subversion should pass
+to that command.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.file}{}\texttt{-\/-file}
+(\texttt{-F}) \textless FILENAME\textgreater{}]
+Uses the contents of the named file for the specified subcommand.
+Different subcommands do different things with this content. For
+example, \texttt{svn\ commit} uses the content as a commit log message,
+whereas \texttt{svn\ propset} uses it as a property value.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.force}{}\texttt{-\/-force}]
+Forces a particular command or operation to run. Subversion will prevent
+you from performing some operations in normal usage, but you can pass
+this option to tell Subversion ``I know what I\textquotesingle m doing
+as well as the possible repercussions of doing it, so let me at
+\textquotesingle em.'' This option is the programmatic equivalent of
+doing your own electrical work with the power on---if you
+don\textquotesingle t know what you\textquotesingle re doing,
+you\textquotesingle re likely to get a nasty shock.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.force_log}{}\texttt{-\/-force-log}]
+Forces a suspicious parameter passed to the \texttt{-\/-message}
+(\texttt{-m}) or \texttt{-\/-file} (\texttt{-F}) option to be accepted
+as valid. By default, Subversion will produce an error if parameters to
+these options look like they might instead be targets of the subcommand.
+For example, if you pass a versioned file\textquotesingle s path to the
+\texttt{-\/-file} (\texttt{-F}) option, Subversion will assume
+you\textquotesingle ve made a mistake, that the path was instead
+intended as the target of the operation, and that you simply failed to
+provide some other---unversioned---file as the source of your log
+message. To assert your intent and override these types of errors, pass
+the \texttt{-\/-force-log} option to subcommands that accept log
+messages.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.force_interactive}{}\texttt{-\/-force-interactive}]
+Forces the \texttt{svn} command-line client to run in interactive mode
+when standard input is not a terminal device.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.git}{}\texttt{-\/-git}]
+Enables a special output mode for \texttt{svn\ diff} designed for
+cross-compatibility with the popular Git distributed version control
+system.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.help}{}\texttt{-\/-help}
+(\texttt{-h}, \texttt{-?})]
+If used with one or more subcommands, shows the built-in help text for
+each. If used alone, it displays the general client help text.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_ancestry}{}\texttt{-\/-ignore-ancestry}]
+Tells Subversion to ignore ancestry when calculating differences (rely
+on path contents alone). Also disables
+\hyperref[svn.branchmerge.basicmerging.mergetracking]{Merge Tracking}
+when used with the \texttt{svn\ merge} subcommand.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_externals}{}\texttt{-\/-ignore-externals}]
+Tells Subversion to ignore externals definitions and the external
+working copies managed by them.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_keywords}{}\texttt{-\/-ignore-keywords}]
+Disables keyword expansion.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_properties}{}\texttt{-\/-ignore-properties}]
+Instructs \texttt{svn\ diff} to suppress output of property changes.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.ignore_whitespace}{}\texttt{-\/-ignore-whitespace}]
+Instructs \texttt{svn\ patch} to ignore whitespace when attempting to
+identify patch context.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.incremental}{}\texttt{-\/-incremental}]
+Prints output in a format suitable for concatenation to prior similar
+output.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.internal_diff}{}\texttt{-\/-internal-diff}]
+Instructs Subversion to use its built-in differencing engine despite any
+external differencing mechanism that may be specified for use in the
+user\textquotesingle s runtime configuration.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.keep_changelists}{}\texttt{-\/-keep-changelists}]
+Tells Subversion not to remove the changelist assigments from working
+copy items after committing.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.keep_local}{}\texttt{-\/-keep-local}]
+Keeps the local copy of a file or directory (used with the
+\texttt{svn\ delete} command).
+\item[\protect\phantomsection\label{svn.ref.svn.sw.limit}{}\texttt{-\/-limit}
+(\texttt{-l}) \textless NUM\textgreater{}]
+Shows only the first \textless NUM\textgreater{} log messages.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.message}{}\texttt{-\/-message}
+(\texttt{-m}) \textless MESSAGE\textgreater{}]
+Indicates that you will specify either a log message or a lock comment
+on the command line, following this option. For example:
+
+\begin{verbatim}
+$ svn commit -m "They don't make Sunday."
+\end{verbatim}
+\item[\protect\phantomsection\label{svn.ref.svn.sw.native_eol}{}\texttt{-\/-native-eol}
+\textless ARG\textgreater{}]
+Causes \texttt{svn\ export} to use a specific end-of-line sequence as if
+it was the native sequence for the client platform.
+\textless ARG\textgreater{} may be one of \texttt{CR}, \texttt{LF}, or
+\texttt{CRLF}.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.new}{}\texttt{-\/-new}
+\textless ARG\textgreater{}]
+Uses \textless ARG\textgreater{} as the newer target (for use with
+\texttt{svn\ diff}).
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_auth_cache}{}\texttt{-\/-no-auth-cache}]
+Prevents caching of authentication information (e.g., username and
+password) in the Subversion runtime configuration directories.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_auto_props}{}\texttt{-\/-no-auto-props}]
+Disables automatic property setting, overriding the
+\texttt{enable-auto-props} runtime configuration directive.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_diff_added}{}\texttt{-\/-no-diff-added}]
+Prevents Subversion from printing differences for added files. The
+default behavior when you add a file is to print the same differences
+that you would see if you had added the entire contents of an existing
+(empty) file.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_diff_deleted}{}\texttt{-\/-no-diff-deleted}]
+Prevents Subversion from printing differences for deleted files. The
+default behavior when you remove a file is for \texttt{svn\ diff} to
+print the same differences that you would see if you had kept the file
+but removed all of its content.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_ignore}{}\texttt{-\/-no-ignore}]
+Shows files in the status listing or adds/imports files that would
+normally be omitted since they match a pattern in the
+\texttt{global-ignores} configuration option or the \texttt{svn:ignore}
+or \texttt{svn:global-ignores}properties. See
+\hyperref[svn.advanced.confarea.opts.config]{General configuration} and
+\hyperref[svn.advanced.props.special.ignore]{Ignoring Unversioned Items}
+for more information.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.no_unlock}{}\texttt{-\/-no-unlock}]
+Tells Subversion not to automatically unlock files. (The default commit
+behavior is to unlock all files listed as part of the commit.) See
+\hyperref[svn.advanced.locking]{Locking} for more information.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.non_interactive}{}\texttt{-\/-non-interactive}]
+Disables all interactive prompting. Some examples of interactive
+prompting include requests for authentication credentials and conflict
+resolution decisions. This is useful if you\textquotesingle re running
+Subversion inside an automated script and it\textquotesingle s more
+appropriate to have Subversion fail than to prompt for more information.
+
+Beginning with Subversion 1.8, the \texttt{svn} command-line client, by
+default, is non-interactive when standard input is not a terminal
+device. Pass the \texttt{-\/-force-interactive} option to make the
+client run in interactive mode.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.non_recursive}{}\texttt{-\/-non-recursive}
+(\texttt{-N})]
+\emph{Deprecated}. Stops a subcommand from recursing into
+subdirectories. Most subcommands recurse by default, but some do not.
+Users should avoid this option and use the more precise
+\texttt{-\/-depth} option instead. For most subcommands, specifying
+\texttt{-\/-non-recursive} produces behavior which is the same as if
+you\textquotesingle d specified \texttt{-\/-depth=files}, but there are
+exceptions: non-recursive \texttt{svn\ status} operates at the
+\texttt{immediates} depth, and the non-recursive forms of
+\texttt{svn\ revert}, \texttt{svn\ add}, and \texttt{svn\ commit}
+operate at an \texttt{empty} depth.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.notice_ancestry}{}\texttt{-\/-notice-ancestry}]
+Pays attention to ancestry when calculating differences.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.old}{}\texttt{-\/-old}
+\textless ARG\textgreater{}]
+Uses \textless ARG\textgreater{} as the older target (for use with
+\texttt{svn\ diff}).
+\item[\protect\phantomsection\label{svn.ref.svn.sw.parents}{}\texttt{-\/-parents}]
+Creates and adds nonexistent or nonversioned parent directories to the
+working copy or repository as part of an operation. This is useful for
+automatically creating multiple subdirectories where none currently
+exist. If performed on a URL, all the directories will be created in a
+single commit.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.password}{}\texttt{-\/-password}
+\textless PASSWD\textgreater{}]
+Specifies the password to use when authenticating against a Subversion
+server. If not provided, or if incorrect, Subversion will prompt you for
+this information as needed.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.patch_compatible}{}\texttt{-\/-patch-compatible}]
+Instructs \texttt{svn\ diff} to produce output compatible with generic
+third-party patch tools. The result of using this option is the same as
+running \texttt{svn\ diff} with
+\texttt{-\/-show-copies-as-adds\ -\/-ignore-properties} options.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.properties_only}{}\texttt{-\/-properties-only}]
+Instructs \texttt{svn\ diff} to show only property changes.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.quiet}{}\texttt{-\/-quiet}
+(\texttt{-q})]
+Requests that the client print only essential information while
+performing an operation.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.record_only}{}\texttt{-\/-record-only}]
+Enables a special mode of \texttt{svn\ merge} in which the specified
+merge operation is recorded in the local merge tracking information, but
+is not actually performed.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.recursive}{}\texttt{-\/-recursive}
+(\texttt{-R})]
+Makes a subcommand recurse into subdirectories. (Most subcommands
+recurse by default.)
+\item[\protect\phantomsection\label{svn.ref.svn.sw.reintegrate}{}\texttt{-\/-reintegrate}]
+\emph{Deprecated}. Used with the \texttt{svn\ merge} subcommand to merge
+changes from a feature branch back into the feature
+branch\textquotesingle s ancestor branch. Since Subversion 1.8 the
+\texttt{svn\ merge} subcommand automatically detects this scenario and
+performs the appropriate merge. See
+\hyperref[svn.branchmerge.basicmerging.reintegrate]{Reintegrating a
+Branch} for details.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.relocate}{}\texttt{-\/-relocate}]
+\emph{Deprecated}. When used with the \texttt{svn\ switch} subcommand,
+changes the location of the repository that your working copy
+references. The preferred approach as of Subversion 1.7, however, is to
+use the \texttt{svn\ relocate} subcommand. See
+\hyperref[svn.ref.svn.c.relocate]{svn relocate} for more details and an
+example.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.remove}{}\texttt{-\/-remove}]
+Used with \texttt{svn\ changelist} to disassociate---rather than
+associate (which is the default operation)---the target(s) from a
+changelist.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.reverse_diff}{}\texttt{-\/-reverse-diff}]
+Causes \texttt{svn\ patch} to interpret the input patch instructions in
+reverse---treating added lines as removed ones and vice-versa.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.revision}{}\texttt{-\/-revision}
+(\texttt{-r}) \textless REV\textgreater{}]
+Specifies a revision (or range of revisions) on with which to operate.
+You can provide revision numbers, keywords, or dates (in curly braces)
+as arguments to the revision option. If you wish to offer a range of
+revisions, you can provide two revisions separated by a colon. For
+example:
+
+\begin{verbatim}
+$ svn log -r 1729
+$ svn log -r 1729:HEAD
+$ svn log -r 1729:1744
+$ svn log -r {2001-12-04}:{2002-02-17}
+$ svn log -r 1729:{2002-02-17}
+\end{verbatim}
+
+See \hyperref[svn.tour.revs.keywords]{Revision Keywords} for more
+information.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.revprop}{}\texttt{-\/-revprop}]
+Operates on a revision property instead of a property specific to a file
+or directory. This option requires that you also pass a revision with
+the \texttt{-\/-revision} (\texttt{-r}) option.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.search}{}\texttt{-\/-search}
+\textless ARG\textgreater{}]
+Filters log messages to show only those that match the search pattern
+\textless ARG\textgreater. Log messages are displayed only if the
+provided search pattern matches any of the author, date, log message
+text (unless \texttt{-\/-quiet} is used), or, if the
+\texttt{-\/-verbose} option is also provided, a changed path. If
+multiple \texttt{-\/-search} options are provided, a log message is
+shown if it matches any of the provided search patterns. If
+\texttt{-\/-limit} is used, it restricts the number of log messages
+searched, rather than restricting the output to a particular number of
+matching log messages.
+
+The search pattern (also called glob or shell wildcard pattern) can
+contain regular characters and the following wildcard characters:
+
+\begin{description}
+\item[\texttt{?}]
+Matches any single character.
+\item[\texttt{*}]
+Matches a sequence of arbitrary characters.
+\item[\texttt{{[}ABC{]}}]
+Matches any of the characters listed inside the brackets.
+\end{description}
+\item[\protect\phantomsection\label{svn.ref.svn.sw.search_and}{}\texttt{-\/-search-and}
+\textless ARG\textgreater{}]
+The option\textquotesingle s argument is combined with the pattern from
+the previous \texttt{-\/-search} or \texttt{-\/-search-and} option on
+the command line. Log message is shown only if it matches the combined
+search pattern.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.set_depth}{}\texttt{-\/-set-depth}
+\textless ARG\textgreater{}]
+Sets the sticky depth on a directory in a working copy to one of
+\texttt{exclude}, \texttt{empty}, \texttt{files}, \texttt{immediates},
+or \texttt{infinity}. For detailed coverage of what these mean and how
+to use this option, see \hyperref[svn.advanced.sparsedirs]{Sparse
+Directories}.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.show_copies_as_adds}{}\texttt{-\/-show-copies-as-adds}]
+Enables a special output mode for \texttt{svn\ diff} in which the
+content difference for a file created via a copy operation appears as it
+would for a brand new file (with each line therein appearing as an
+addition to an empty file) rather than as a delta against the original
+file from which the copy was created.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.show_inherited_props}{}\texttt{-\/-show-inherited-props}]
+Causes \texttt{svn\ propget} and \texttt{svn\ proplist} to display the
+versioned properties inherited by the target file or directory.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.show_revs}{}\texttt{-\/-show-revs}
+\textless ARG\textgreater{}]
+Used to make \texttt{svn\ mergeinfo} display certain classes of merge
+tracking information. \textless ARG\textgreater{} may be either
+\texttt{merged} or \texttt{eligible}, indicating a desire to see
+revisions either already merged or eligible for future merge from the
+specified source URL, respectively.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.show_updates}{}\texttt{-\/-show-updates}
+(\texttt{-u})]
+Causes the client to display information about which files in your
+working copy are out of date. This doesn\textquotesingle t actually
+update any of your files---it just shows you which files will be updated
+if you then use \texttt{svn\ update}.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.stop_on_copy}{}\texttt{-\/-stop-on-copy}]
+Causes a Subversion subcommand that traverses the history of a versioned
+resource to stop harvesting that historical information when a
+copy---that is, a location in history where that resource was copied
+from another location in the repository---is encountered.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.strict}{}\texttt{-\/-strict}]
+Causes Subversion to use strict semantics, a notion that is rather vague
+unless talking about specific subcommands (namely,
+\texttt{svn\ propget}).
+\item[\protect\phantomsection\label{svn.ref.svn.sw.strip}{}\texttt{-\/-strip}
+\textless NUM\textgreater{}]
+Used by \texttt{svn\ patch} to ignore \textless NUM\textgreater{}
+leading path components found on paths specified in the patch input
+file.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.summarize}{}\texttt{-\/-summarize}]
+Display only high-level summary notifications about the operation
+instead of its detailed output.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.targets}{}\texttt{-\/-targets}
+\textless FILENAME\textgreater{}]
+Tells Subversion to read additional target paths for the operation from
+\textless FILENAME\textgreater. \textless FILENAME\textgreater{} should
+contain one path per line, with each path expected to use the same
+encoding and formatting that it would if you had specified it directly
+as an argument on the command line.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.trust_server_cert}{}\texttt{-\/-trust-server-cert}]
+When used with \texttt{-\/-non-interactive}, instructs Subversion to
+accept SSL server certificates issued by unknown certificate authorities
+without first prompting the user. For security\textquotesingle s sake,
+you should use this option only when the integrity of the remote server
+and the network path between it and your client is known to be
+trustworthy.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.use_merge_history}{}\texttt{-\/-use-merge-history}
+(\texttt{-g})]
+Uses or displays additional information from merge history.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.username}{}\texttt{-\/-username}
+\textless NAME\textgreater{}]
+Specifies the username to use when authenticating against a Subversion
+server. If not provided, or if incorrect, Subversion will prompt you for
+this information as needed.
+
+This option is accepted by all \texttt{svn} subcommands.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.verbose}{}\texttt{-\/-verbose}
+(\texttt{-v})]
+Requests that the client print out as much information as it can while
+running any subcommand. This may result in Subversion printing out
+additional fields, detailed information about every file, or additional
+information regarding its actions.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.version}{}\texttt{-\/-version}]
+Prints the client version info. This information includes not only the
+version number of the client, but also a listing of all repository
+access modules that the client can use to access a Subversion
+repository. With \texttt{-\/-quiet} (\texttt{-q}) it prints only the
+version number in a compact form.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.with_all_revprops}{}\texttt{-\/-with-all-revprops}]
+Used with the \texttt{-\/-xml} option to \texttt{svn\ log}, instructs
+Subversion to retrieve and display all revision properties---the
+standard ones used internally by Subversion as well as any user-defined
+ones---in the log output.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.with_no_revprops}{}\texttt{-\/-with-no-revprops}]
+Used with the \texttt{-\/-xml} option to \texttt{svn\ log}, instructs
+Subversion to omit all revision properties---including the standard log
+message, author, and revision datestamp---from the log output.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.with_revprop}{}\texttt{-\/-with-revprop}
+\textless ARG\textgreater{}]
+When used with any command that writes to the repository, sets the
+revision property, using the \textless NAME=VALUE\textgreater{} format,
+\textless NAME\textgreater{} to \textless VALUE\textgreater. When used
+with \texttt{svn\ log} in \texttt{-\/-xml} mode, this displays the value
+of \textless ARG\textgreater{} in the log output.
+\item[\protect\phantomsection\label{svn.ref.svn.sw.xml}{}\texttt{-\/-xml}]
+Prints output in XML format. XML schemas for the output (in RELAX NG
+format) are maintained in the \texttt{subversion/svn/schema/} directory
+of the Subversion source tree.
+\end{description}
+
+\section{svn add}\label{svn.ref.svn.c.add}
+
+\emph{Add files, directories, or symbolic links.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ add\ PATH...}
+
+\subsection{Description}
+
+Schedule files, directories, or symbolic links in your working copy for
+addition to the repository. They will be uploaded and added to the
+repository on your next commit. If you add something and change your
+mind before committing, you can unschedule the addition using
+\texttt{svn\ revert}.
+
+\subsection{Options}
+
+\begin{verbatim}
+--auto-props
+--depth ARG
+--force
+--no-auto-props
+--no-ignore
+--parents
+--quiet (-q)
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+To add a file to your working copy:
+
+\begin{verbatim}
+$ svn add foo.c 
+A         foo.c
+\end{verbatim}
+
+When adding a directory, the default behavior of \texttt{svn\ add} is to
+recurse:
+
+\begin{verbatim}
+$ svn add testdir
+A         testdir
+A         testdir/a
+A         testdir/b
+A         testdir/c
+A         testdir/d
+\end{verbatim}
+
+You can add a directory without adding its contents:
+
+\begin{verbatim}
+$ svn add --depth=empty otherdir
+A         otherdir
+\end{verbatim}
+
+Attempts to schedule the addition of an item which is already versioned
+will fail by default. This behavior foils the most common scenario under
+which users attempt this: when trying to get to Subversion to
+recursively examine a versioned directory and add any unversioned items
+inside of it. To override the default behavior and force Subversion to
+recurse into already-versioned directories, pass the \texttt{-\/-force}
+option:
+
+\begin{verbatim}
+$ svn add versioned-dir
+svn: warning: W150002: '/home/cmpilato/projects/subversion/site' is already un\
+der version control
+$ svn add versioned-dir --force
+A         versioned-dir/foo.c
+A         versioned-dir/somedir/bar.c
+A  (bin)  versioned-dir/otherdir/docs/baz.doc
+…
+\end{verbatim}
+
+\section{svn blame (praise, annotate, ann)}\label{svn.ref.svn.c.blame}
+
+\emph{Show author and revision information inline for the specified
+files or URLs.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ blame\ TARGET{[}@REV{]}...}
+
+\subsection{Description}
+
+Show author and revision information inline for the specified files or
+URLs. Each line of text is annotated at the beginning with the author
+(username) and the revision number for the last change to that line.
+
+\subsection{Options}
+
+\begin{verbatim}
+--extensions (-x) ARG
+--force
+--incremental
+--revision (-r) REV
+--use-merge-history (-g)
+--verbose (-v)
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+If you want to see blame-annotated source for \texttt{readme.txt} in
+your test repository:
+
+\begin{verbatim}
+$ svn blame http://svn.red-bean.com/repos/test/readme.txt
+     3      sally This is a README file.
+     5      harry Don't bother reading it.  The boss is a knucklehead.
+     3      sally 
+…
+\end{verbatim}
+
+Now, just because \texttt{svn\ blame} says that Harry last modified
+\texttt{readme.txt} in revision 5, understand that this subcommand is by
+default very picky about what constitutes a change. Before clubbing
+Harry over the head for what appears to be insubordination, first
+consider that perhaps the change he made to the file might have been
+only to its specific character content, not to its overall semantic
+meaning. Perhaps his changes were the result of blindly running a
+whitespace cleanup script on this file. You might need to examine the
+specific differences and related log message to understand exactly what
+Harry did to this file in revision 5.
+
+\begin{verbatim}
+$ svn log -c 5 http://svn.red-bean.com/repos/test/readme.txt
+------------------------------------------------------------------------
+r5 | harry | 2008-05-29 07:26:12 -0600 (Thu, 29 May 2008) | 1 line
+
+Commit the results of 'double-space-after-period.sh'.
+
+------------------------------------------------------------------------
+$ svn diff -c 5 http://svn.red-bean.com/repos/test/readme.txt
+Index: http://svn.red-bean.com/repos/test/readme.txt
+===================================================================
+--- http://svn.red-bean.com/repos/test/readme.txt   (revision 4)
++++ http://svn.red-bean.com/repos/test/readme.txt   (revision 5)
+@@ -1,5 +1,5 @@
+ This is a README file.
+-Don't bother reading it. The boss is a knucklehead.
++Don't bother reading it.  The boss is a knucklehead.
+  
+ INSTRUCTIONS
+ ============
+$
+\end{verbatim}
+
+Sure enough, Harry only changed the whitespace in that line.
+Fortunately, the \texttt{-\/-extensions} (\texttt{-x}) option can help
+you better determine the last time that a \emph{meaningful} change was
+made to a given line of text. For example, here\textquotesingle s how
+you can see the annotation information while disregarding mere
+whitespace changes:
+
+\begin{verbatim}
+$ svn blame -x -b http://svn.red-bean.com/repos/test/readme.txt
+     3      sally This is a README file.
+     4       jess Don't bother reading it.  The boss is a knucklehead.
+     3      sally 
+…
+\end{verbatim}
+
+If you use the \texttt{-\/-xml} option, you can get XML output
+describing the blame annotations, but not the contents of the lines
+themselves:
+
+\begin{verbatim}
+$ svn blame --xml http://svn.red-bean.com/repos/test/readme.txt
+<?xml version="1.0"?>
+<blame>
+<target
+   path="readme.txt">
+<entry
+   line-number="1">
+<commit
+   revision="3">
+<author>sally</author>
+<date>2008-05-25T19:12:31.428953Z</date>
+</commit>
+</entry>
+<entry
+   line-number="2">
+<commit
+   revision="5">
+<author>harry</author>
+<date>2008-05-29T13:26:12.293121Z</date>
+</commit>
+</entry>
+<entry
+   line-number="3">
+…
+</entry>
+</target>
+</blame>
+$
+\end{verbatim}
+
+\section{svn cat}\label{svn.ref.svn.c.cat}
+
+\emph{Output the contents of the specified files or URLs.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ cat\ TARGET{[}@REV{]}...}
+
+\subsection{Description}
+
+Output the contents of the specified files or URLs. For listing the
+contents of directories, see \texttt{svn\ list} later in this chapter.
+
+\subsection{Options}
+
+\begin{verbatim}
+--revision (-r) REV
+\end{verbatim}
+
+\subsection{Examples}
+
+If you want to view \texttt{readme.txt} in your repository without
+checking it out:
+
+\begin{verbatim}
+$ svn cat http://svn.red-bean.com/repos/test/readme.txt
+This is a README file.
+Don't bother reading it.  The boss is a knucklehead.
+ 
+INSTRUCTIONS
+============
+
+Step 1:  Do this.
+
+Step 2:  Do that.
+$
+\end{verbatim}
+
+You can view specific versions of files, too.
+
+\begin{verbatim}
+$ svn cat -r 3 http://svn.red-bean.com/repos/test/readme.txt
+This is a README file.
+ 
+INSTRUCTIONS
+============
+
+Step 1:  Do this.
+
+Step 2:  Do that.
+$
+\end{verbatim}
+
+You might develop a reflex action of using \texttt{svn\ cat} to view
+your working file contents. But keep in mind that the default peg
+revision for \texttt{svn\ cat} when used on a working copy file target
+is \texttt{BASE}, the unmodified base revision of that file.
+Don\textquotesingle t be surprised when a simple
+\texttt{svn\ cat\ /path/to/file} invocation fails to display your local
+modifications to that file!
+
+If your working copy is out of date (or you have local modifications)
+and you want to see the \texttt{HEAD} revision of a file in your working
+copy, use the \texttt{-\/-revision} (\texttt{-r}) option:
+\texttt{svn\ cat\ -r\ HEAD\ FILENAME}
+
+\section{svn changelist (cl)}\label{svn.ref.svn.c.changelist}
+
+\emph{Associate (or deassociate) local paths with a changelist.}
+
+\textbf{Synopsis}
+
+\texttt{changelist\ CLNAME\ TARGET...}
+
+\texttt{changelist\ -\/-remove\ TARGET...}
+
+\subsection{Description}
+
+Used for dividing files in a working copy into a changelist (logical
+named grouping) in order to allow users to easily work on multiple file
+collections within a single working copy.
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--quiet (-q)
+--recursive (-R)
+--remove
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Example}
+
+Edit three files, add them to a changelist, then commit only files in
+that changelist:
+
+\begin{verbatim}
+$ svn changelist issue1729 foo.c bar.c baz.c
+A [issue1729] foo.c
+A [issue1729] bar.c
+A [issue1729] baz.c
+$ svn status
+A       someotherfile.c
+A       test/sometest.c
+
+--- Changelist 'issue1729':
+A       foo.c
+A       bar.c
+A       baz.c
+$ svn commit --changelist issue1729 -m "Fixing Issue 1729."
+Adding         bar.c
+Adding         baz.c
+Adding         foo.c
+Transmitting file data ...
+Committed revision 2.
+$ svn status
+A       someotherfile.c
+A       test/sometest.c
+$
+\end{verbatim}
+
+Note that in the previous example, only the files in changelist
+\texttt{issue1729} were committed.
+
+\section{svn checkout (co)}\label{svn.ref.svn.c.checkout}
+
+\emph{Check out a working copy from a repository.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ checkout\ URL{[}@REV{]}...\ {[}PATH{]}}
+
+\subsection{Description}
+
+Check out a working copy from a repository. If
+\textless PATH\textgreater{} is omitted, the basename of the URL will be
+used as the destination. If multiple URLs are given, each will be
+checked out into a subdirectory of \textless PATH\textgreater, with the
+name of the subdirectory being the basename of the URL.
+
+\subsection{Options}
+
+\begin{verbatim}
+--depth ARG
+--force
+--ignore-externals
+--quiet (-q)
+--revision (-r) REV
+\end{verbatim}
+
+\subsection{Examples}
+
+Check out a working copy into a directory called \texttt{mine}:
+
+\begin{verbatim}
+$ svn checkout file:///var/svn/repos/test mine
+A    mine/a
+A    mine/b
+A    mine/c
+A    mine/d
+Checked out revision 20.
+$ ls
+mine
+$
+\end{verbatim}
+
+Check out two different directories into two separate working copies:
+
+\begin{verbatim}
+$ svn checkout file:///var/svn/repos/test \
+               file:///var/svn/repos/quiz
+A    test/a
+A    test/b
+A    test/c
+A    test/d
+Checked out revision 20.
+A    quiz/l
+A    quiz/m
+Checked out revision 13.
+$ ls
+quiz  test
+$
+\end{verbatim}
+
+Check out two different directories into two separate working copies,
+but place both into a directory called \texttt{working-copies}:
+
+\begin{verbatim}
+$ svn checkout file:///var/svn/repos/test \
+               file:///var/svn/repos/quiz \
+               working-copies
+A    working-copies/test/a
+A    working-copies/test/b
+A    working-copies/test/c
+A    working-copies/test/d
+Checked out revision 20.
+A    working-copies/quiz/l
+A    working-copies/quiz/m
+Checked out revision 13.
+$ ls
+working-copies
+\end{verbatim}
+
+If you interrupt a checkout (or something else interrupts your checkout,
+such as loss of connectivity, etc.), you can restart it either by
+issuing the identical checkout command again or by updating the
+incomplete working copy:
+
+\begin{verbatim}
+$ svn checkout file:///var/svn/repos/test mine
+A    mine/a
+A    mine/b
+^C
+svn: E200015: Caught signal
+$ svn checkout file:///var/svn/repos/test mine
+A    mine/c
+^C
+svn: E200015: Caught signal
+$ svn update mine
+Updating 'mine':
+A    mine/d
+Updated to revision 20.
+$
+\end{verbatim}
+
+If you wish to check out some revision other than the most recent one,
+you can do so by providing the \texttt{-\/-revision} (\texttt{-r})
+option to the \texttt{svn\ checkout} command:
+
+\begin{verbatim}
+$ svn checkout -r 2 file:///var/svn/repos/test mine
+A    mine/a
+Checked out revision 2.
+$
+\end{verbatim}
+
+Prior to version 1.7, Subversion would complain by default if you try to
+check out a directory atop an existing directory which contains files or
+subdirectories that the checkout itself would have created. Subversion
+1.7 handles this situation differently, allowing the checkout to proceed
+but marking any obstructing objects as tree conflicts. Use the
+\texttt{-\/-force} option to override this safeguard. When you check out
+with the \texttt{-\/-force} option, any unversioned file in the checkout
+target tree which ordinarily would obstruct the checkout will still
+become versioned, but Subversion will preserve its contents as-is. If
+those contents differ from the repository file at that path (which was
+downloaded as part of the checkout), the file will appear to have local
+modifications---the changes required to transform the versioned file you
+checked out into the unversioned file you had before checking out---when
+the checkout completes.
+
+\begin{verbatim}
+$ mkdir project
+$ mkdir project/lib
+$ touch project/lib/file.c
+$ svn checkout file:///var/svn/repos/project/trunk project --force
+E    project/lib
+A    project/lib/subdir
+E    project/lib/file.c
+A    project/lib/anotherfile.c
+A    project/include/header.h
+Checked out revision 21.
+$ svn status wc
+M       project/lib/file.c
+$ svn diff wc
+Index: project/lib/file.c
+===================================================================
+--- project/lib/file.c  (revision 1)
++++ project/lib/file.c  (working copy)
+@@ -3 +0,0 @@
+-/* file.c: Code for acting file-ishly. */
+-#include <stdio.h>
+-/* Not feeling particularly creative today. */
+
+$
+\end{verbatim}
+
+As in any other working copy, you have the choices typically available:
+reverting some or all of those local ``modifications'', committing them,
+or continuing to modify your working copy.
+
+This feature is especially useful for performing in-place imports of
+unversioned directory trees. By first importing the tree into the
+repository, and then checking out new repository location atop the
+unversioned tree with the \texttt{-\/-force} option, you effectively
+transform the unversioned tree into a working copy.
+
+\begin{verbatim}
+$ svn mkdir -m "Create newproject project root." \
+      file://var/svn/repos/newproject
+$ svn import -m "Import initial newproject codebase." newproject \
+      file://var/svn/repos/newproject/trunk
+Adding         newproject/include
+Adding         newproject/include/newproject.h
+Adding         newproject/lib
+Adding         newproject/lib/helpers.c
+Adding         newproject/lib/base.c
+Adding         newproject/notes
+Adding         newproject/notes/README
+
+Committed revision 22.
+$ svn checkout file://`pwd`/repos-1.6/newproject/trunk newproject --force
+E    newproject/include
+E    newproject/include/newproject.h
+E    newproject/lib
+E    newproject/lib/helpers.c
+E    newproject/lib/base.c
+E    newproject/notes
+E    newproject/notes/README
+Checked out revision 2.
+$ svn status newproject
+$
+\end{verbatim}
+
+\section{svn cleanup}\label{svn.ref.svn.c.cleanup}
+
+\emph{Recursively clean up the working copy}
+
+\textbf{Synopsis}
+
+\texttt{svn\ cleanup\ {[}PATH...{]}}
+
+\subsection{Description}
+
+Recursively clean up the working copy, removing working copy locks and
+resuming unfinished operations. If you ever get a
+\texttt{working\ copy\ locked} error, run this command to remove stale
+locks and get your working copy into a usable state again.
+
+If, for some reason, an \texttt{svn\ update} fails due to a problem
+running an external diff program (e.g., user input or network failure),
+pass the \texttt{-\/-diff3-cmd} to allow the cleanup process to complete
+any required merging using your external diff program. You can also
+specify any configuration directory with the \texttt{-\/-config-dir}
+option, but you should need these options extremely infrequently.
+
+\subsection{Options}
+
+\begin{verbatim}
+--diff3-cmd CMD
+\end{verbatim}
+
+\subsection{Examples}
+
+Well, there\textquotesingle s not much to the examples here, as
+\texttt{svn\ cleanup} generates no output. If you pass no
+\textless PATH\textgreater, then ``\texttt{.}'' is used:
+
+\begin{verbatim}
+$ svn cleanup
+$ svn cleanup /var/svn/working-copy
+\end{verbatim}
+
+\section{svn commit (ci)}\label{svn.ref.svn.c.commit}
+
+\emph{Send changes from your working copy to the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ commit\ {[}PATH...{]}}
+
+\subsection{Description}
+
+Send changes from your working copy to the repository. If you do not
+supply a log message with your commit by using either the
+\texttt{-\/-file} (\texttt{-F}) or \texttt{-\/-message} (\texttt{-m})
+option, \texttt{svn} will launch your editor for you to compose a commit
+message. See the \texttt{editor-cmd} list entry in
+\hyperref[svn.advanced.confarea.opts.config]{General configuration}.
+
+\texttt{svn\ commit} will send any lock tokens that it finds and will
+release locks on all \textless PATH\textgreater s committed
+(recursively) unless \texttt{-\/-no-unlock} is passed.
+
+If you begin a commit and Subversion launches your editor to compose the
+commit message, you can still abort without committing your changes. If
+you want to cancel your commit, just quit your editor without saving
+your commit message and Subversion will prompt you to either abort the
+commit, continue with no message, or edit the message again.
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force-log
+--keep-changelists
+--message (-m) MESSAGE
+--no-unlock
+--quiet (-q)
+--targets FILENAME
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Commit a simple modification to a file with the commit message on the
+command line and an implicit target of your current directory
+(``\texttt{.}''):
+
+\begin{verbatim}
+$ svn commit -m "added howto section."
+Sending        a
+Transmitting file data .
+Committed revision 3.
+\end{verbatim}
+
+Commit a modification to the file \texttt{foo.c} (explicitly specified
+on the command line) with the commit message in a file named
+\texttt{msg}:
+
+\begin{verbatim}
+$ svn commit -F msg foo.c
+Sending        foo.c
+Transmitting file data .
+Committed revision 5.
+\end{verbatim}
+
+If you want to use a file that\textquotesingle s under version control
+for your commit message with \texttt{-\/-file} (\texttt{-F}), you need
+to pass the \texttt{-\/-force-log} option:
+
+\begin{verbatim}
+$ svn commit -F file_under_vc.txt foo.c
+svn: E205004: Log message file is a versioned file; use '--force-log' to override
+
+$ svn commit --force-log -F file_under_vc.txt foo.c
+Sending        foo.c
+Transmitting file data .
+Committed revision 6.
+\end{verbatim}
+
+To commit a file scheduled for deletion:
+
+\begin{verbatim}
+$ svn commit -m "removed file 'c'."
+Deleting       c
+
+Committed revision 7.
+\end{verbatim}
+
+\section{svn copy (cp)}\label{svn.ref.svn.c.copy}
+
+\emph{Copy a file or directory in a working copy or in the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ copy\ SRC{[}@REV{]}...\ DST}
+
+\subsection{Description}
+
+Copy one or more files in a working copy or in the repository.
+\textless SRC\textgreater{} and \textless DST\textgreater{} can each be
+either a working copy (WC) path or URL. When copying multiple sources,
+add the copies as immediate children of \textless DST\textgreater{}
+(which, of course, must be an existing directory).
+
+\begin{description}
+\item[WC → WC]
+Copy and schedule an item for addition (with history).
+\item[WC → URL]
+Immediately commit a copy of WC to URL.
+\item[URL → WC]
+Check out URL into WC and schedule it for addition.
+\item[URL → URL]
+Complete server-side copy. This is usually used to branch and tag.
+\end{description}
+
+If no peg revision (i.e., \texttt{@REV}) is supplied, by default the
+\texttt{BASE} revision will be used for files copied from the working
+copy, while the \texttt{HEAD} revision will be used for files copied
+from a URL.
+
+You can only copy files within a single repository. Subversion does not
+support cross-repository copying.
+
+\subsection{Options}
+
+\begin{verbatim}
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force-log
+--ignore-externals
+--message (-m) MESSAGE
+--parents
+--quiet (-q)
+--revision (-r) REV
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Copy an item within your working copy (this schedules the copy---nothing
+goes into the repository until you commit):
+
+\begin{verbatim}
+$ svn copy foo.txt bar.txt
+A         bar.txt
+$ svn status
+A  +    bar.txt
+\end{verbatim}
+
+Copy several files in a working copy into a directory:
+
+\begin{verbatim}
+$ svn copy bat.c baz.c qux.c src
+A         src/bat.c
+A         src/baz.c
+A         src/qux.c
+\end{verbatim}
+
+Copy revision 8 of \texttt{bat.c} into your working copy under a
+different name:
+
+\begin{verbatim}
+$ svn copy -r 8 bat.c ya-old-bat.c
+A         ya-old-bat.c
+\end{verbatim}
+
+Copy an item in your working copy to a URL in the repository (this is an
+immediate commit, so you must supply a commit message):
+
+\begin{verbatim}
+$ svn copy near.txt file:///var/svn/repos/test/far-away.txt -m "Remote copy."
+
+Committed revision 8.
+\end{verbatim}
+
+Copy an item from the repository to your working copy (this just
+schedules the copy---nothing goes into the repository until you commit):
+
+\begin{verbatim}
+$ svn copy file:///var/svn/repos/test/far-away -r 6 near-here
+A         near-here
+\end{verbatim}
+
+This is the recommended way to resurrect a dead file in your repository!
+
+And finally, copy between two URLs:
+
+\begin{verbatim}
+$ svn copy file:///var/svn/repos/test/far-away \
+           file:///var/svn/repos/test/over-there -m "remote copy."
+
+Committed revision 9.
+\end{verbatim}
+
+\begin{verbatim}
+$ svn copy file:///var/svn/repos/test/trunk \
+           file:///var/svn/repos/test/tags/0.6.32-prerelease -m "tag tree"
+
+Committed revision 12.
+\end{verbatim}
+
+This is the easiest way to ``tag'' a revision in your repository---just
+\texttt{svn\ copy} that revision (usually \texttt{HEAD}) into your
+\texttt{tags} directory.
+
+And don\textquotesingle t worry if you forgot to tag---you can always
+specify an older revision and tag anytime:
+
+\begin{verbatim}
+$ svn copy -r 11 file:///var/svn/repos/test/trunk \
+           file:///var/svn/repos/test/tags/0.6.32-prerelease \
+           -m "Forgot to tag at rev 11"
+
+Committed revision 13.
+\end{verbatim}
+
+\section{svn delete (del, remove, rm)}\label{svn.ref.svn.c.delete}
+
+\emph{Delete an item from a working copy or the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ delete\ PATH...}
+
+\texttt{svn\ delete\ URL...}
+
+\subsection{Description}
+
+Items specified by \textless PATH\textgreater{} are scheduled for
+deletion upon the next commit. Files (and directories that have not been
+committed) are immediately removed from the working copy unless the
+\texttt{-\/-keep-local} option is given. The command will not remove any
+unversioned or modified items; use the \texttt{-\/-force} option to
+override this behavior. A directory that contains unversioned or
+modified items will not be deleted, unless the \texttt{-\/-force} is
+used.
+
+Items specified by URL are deleted from the repository via an immediate
+commit. Multiple URLs are committed atomically.
+
+\subsection{Options}
+
+\begin{verbatim}
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force
+--force-log
+--keep-local
+--message (-m) MESSAGE
+--quiet (-q)
+--targets FILENAME
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Using \texttt{svn} to delete a file from your working copy deletes your
+local copy of the file, but it merely schedules the file to be deleted
+from the repository. When you commit, the file is deleted in the
+repository.
+
+\begin{verbatim}
+$ svn delete myfile
+D         myfile
+
+$ svn commit -m "Deleted file 'myfile'."
+Deleting       myfile
+Transmitting file data .
+Committed revision 14.
+\end{verbatim}
+
+Deleting a URL, however, is immediate, so you have to supply a log
+message:
+
+\begin{verbatim}
+$ svn delete -m "Deleting file 'yourfile'" \
+             file:///var/svn/repos/test/yourfile
+
+Committed revision 15.
+\end{verbatim}
+
+Here\textquotesingle s an example of how to force deletion of a file
+that has local modifications:
+
+\begin{verbatim}
+$ svn delete over-there 
+svn: E195006: Use --force to override this restriction (local modifications m\
+ay be lost)
+svn: E195006: '/home/sally/project/over-there' has local modifications -- com\
+mit or revert them first
+$ svn delete --force over-there 
+D         over-there
+$
+\end{verbatim}
+
+Use the \texttt{-\/-keep-local} option to override the default
+\texttt{svn\ delete} behavior of also removing the target file that was
+scheduled for versioned deletion. This is helpful when you realize that
+you\textquotesingle ve accidentally committed the addition of a file
+that you need to keep around in your working copy, but which
+shouldn\textquotesingle t have been added to version control.
+
+\begin{verbatim}
+$ svn delete --keep-local conf/program.conf
+D         conf/program.conf
+
+$ svn commit -m "Remove accidentally-added configuration file."
+Deleting       conf/program.conf
+Transmitting file data .
+Committed revision 21.
+$ svn status
+?       conf/program.conf
+$
+\end{verbatim}
+
+The behavior of the \texttt{-\/-keep-local} option does not propagate to
+other working copies which contain the items you\textquotesingle ve
+scheduled for deletion. If you commit the deletion of those items they
+will remain in your working copy, but they will be deleted from other
+working copies which contain them when those working copies are then
+updated.
+
+\section{svn diff (di)}\label{svn.ref.svn.c.diff}
+
+\emph{This displays the differences between two revisions or paths.}
+
+\textbf{Synopsis}
+
+\texttt{diff\ {[}-c\ M\ \textbar{}\ -r\ N{[}:M{]}{]}\ {[}TARGET{[}@REV{]}...{]}}
+
+\texttt{diff\ {[}-r\ N{[}:M{]}{]}\ -\/-old=OLD-TGT{[}@OLDREV{]}\ {[}-\/-new=NEW-TGT{[}@NEWREV{]}{]}\ {[}PATH...{]}}
+
+\texttt{diff\ OLD-URL{[}@OLDREV{]}\ NEW-URL{[}@NEWREV{]}}
+
+\subsection{Description}
+
+Display the differences between two paths. You can use
+\texttt{svn\ diff} in the following ways:
+
+\begin{itemize}
+\item
+  Use just \texttt{svn\ diff} to display local modifications in a
+  working copy.
+\item
+  Display the changes made to \textless TARGET\textgreater s as they are
+  seen in \textless REV\textgreater{} between two revisions.
+  \textless TARGET\textgreater s may be all working copy paths or all
+  \textless URL\textgreater s. If \textless TARGET\textgreater s are
+  working copy paths, \textless N\textgreater{} defaults to
+  \texttt{BASE} and \textless M\textgreater{} to the working copy; if
+  \textless TARGET\textgreater s are \textless URL\textgreater s,
+  \textless N\textgreater{} must be specified and
+  \textless M\textgreater{} defaults to \texttt{HEAD}. The
+  \texttt{-c\ M} option is equivalent to \texttt{-r\ N:M} where
+  \texttt{N\ =\ M-1}. Using \texttt{-c\ -M} does the reverse:
+  \texttt{-r\ M:N} where \texttt{N\ =\ M-1}.
+\item
+  Display the differences between \textless OLD-TGT\textgreater{} as it
+  was seen in \textless OLDREV\textgreater{} and
+  \textless NEW-TGT\textgreater{} as it was seen in
+  \textless NEWREV\textgreater. \textless PATH\textgreater s, if given,
+  are relative to \textless OLD-TGT\textgreater{} and
+  \textless NEW-TGT\textgreater{} and restrict the output to differences
+  for those paths. \textless OLD-TGT\textgreater{} and
+  \textless NEW-TGT\textgreater{} may be working copy paths or
+  \textless URL{[}@REV{]}\textgreater. \textless NEW-TGT\textgreater{}
+  defaults to \textless OLD-TGT\textgreater{} if not specified.
+  \texttt{-r\ N} makes \textless OLDREV\textgreater{} default to
+  \texttt{N}; \texttt{-r\ N:M} makes \textless OLDREV\textgreater{}
+  default to \textless N\textgreater{} and
+  \textless NEWREV\textgreater{} default to \textless M\textgreater.
+\end{itemize}
+
+\texttt{svn\ diff\ OLD-URL{[}@OLDREV{]}\ NEW-URL{[}@NEWREV{]}} is
+shorthand for
+\texttt{svn\ diff\ -\/-old=OLD-URL{[}@OLDREV{]}\ -\/-new=NEW-URL{[}@NEWREV{]}}.
+
+\texttt{svn\ diff\ -r\ N:M\ URL} is shorthand for
+\texttt{svn\ diff\ -r\ N:M\ -\/-old=URL\ -\/-new=URL}.
+
+\texttt{svn\ diff\ {[}-r\ N{[}:M{]}{]}\ URL1{[}@N{]}\ URL2{[}@M{]}} is
+shorthand for
+\texttt{svn\ diff\ {[}-r\ N{[}:M{]}{]}\ -\/-old=URL1\ -\/-new=URL2}.
+
+If \textless TARGET\textgreater{} is a URL, then revisions
+\textless N\textgreater{} and \textless M\textgreater{} can be given
+either via the \texttt{-\/-revision} (\texttt{-r}) option or by using
+the ``@'' notation as described earlier.
+
+If \textless TARGET\textgreater{} is a working copy path, the default
+behavior (when no \texttt{-\/-revision} (\texttt{-r}) option is
+provided) is to display the differences between the base and working
+copies of \textless TARGET\textgreater. If a \texttt{-\/-revision}
+(\texttt{-r}) option is specified in this scenario, though, it means:
+
+\begin{description}
+\item[\texttt{-\/-revision\ N:M}]
+The server compares \textless TARGET@N\textgreater{} and
+\textless TARGET@M\textgreater.
+\item[\texttt{-\/-revision\ N}]
+The client compares \textless TARGET@N\textgreater{} against the working
+copy.
+\end{description}
+
+If the alternate syntax is used, the server compares
+\textless URL1\textgreater{} and \textless URL2\textgreater{} at
+revisions \textless N\textgreater{} and \textless M\textgreater,
+respectively. If either \textless N\textgreater{} or
+\textless M\textgreater{} is omitted, a value of \texttt{HEAD} is
+assumed.
+
+By default, \texttt{svn\ diff} ignores the ancestry of files and merely
+compares the contents of the two files being compared. If you use
+\texttt{-\/-notice-ancestry}, the ancestry of the paths in question will
+be taken into consideration when comparing revisions (i.e., if you run
+\texttt{svn\ diff} on two files with identical contents but different
+ancestry, you will see the entire contents of the file as having been
+removed and added again).
+
+\subsection{Options}
+
+\begin{verbatim}
+--change (-c) ARG
+--changelist (--cl) ARG
+--depth ARG
+--diff-cmd CMD
+--extensions (-x) ARG
+--force
+--git
+--ignore-properties
+--internal-diff
+--new ARG
+--no-diff-added
+--no-diff-deleted
+--notice-ancestry
+--old ARG
+--patch-compatible
+--properties-only
+--revision (-r) REV
+--show-copies-as-adds
+--summarize
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+Compare \texttt{BASE} and your working copy (one of the most popular
+uses of \texttt{svn\ diff}):
+
+\begin{verbatim}
+$ svn diff COMMITTERS 
+Index: COMMITTERS
+===================================================================
+--- COMMITTERS  (revision 4404)
++++ COMMITTERS  (working copy)
+…
+\end{verbatim}
+
+See what changed in the file \texttt{COMMITTERS} revision 9115:
+
+\begin{verbatim}
+$ svn diff -c 9115 COMMITTERS 
+Index: COMMITTERS
+===================================================================
+--- COMMITTERS  (revision 3900)
++++ COMMITTERS  (working copy)
+…
+\end{verbatim}
+
+See how your working copy\textquotesingle s modifications compare
+against an older revision:
+
+\begin{verbatim}
+$ svn diff -r 3900 COMMITTERS 
+Index: COMMITTERS
+===================================================================
+--- COMMITTERS  (revision 3900)
++++ COMMITTERS  (working copy)
+…
+\end{verbatim}
+
+Compare revision 3000 to revision 3500 using ``@'' syntax:
+
+\begin{verbatim}
+$ svn diff http://svn.collab.net/repos/svn/trunk/COMMITTERS@3000 \
+           http://svn.collab.net/repos/svn/trunk/COMMITTERS@3500
+Index: COMMITTERS
+===================================================================
+--- COMMITTERS  (revision 3000)
++++ COMMITTERS  (revision 3500)
+…
+\end{verbatim}
+
+Compare revision 3000 to revision 3500 using range notation (pass only
+the one URL in this case):
+
+\begin{verbatim}
+$ svn diff -r 3000:3500 http://svn.collab.net/repos/svn/trunk/COMMITTERS
+Index: COMMITTERS
+===================================================================
+--- COMMITTERS  (revision 3000)
++++ COMMITTERS  (revision 3500)
+…
+\end{verbatim}
+
+Compare revision 3000 to revision 3500 of all the files in
+\texttt{trunk} using range notation:
+
+\begin{verbatim}
+$ svn diff -r 3000:3500 http://svn.collab.net/repos/svn/trunk
+\end{verbatim}
+
+Compare revision 3000 to revision 3500 of only three files in
+\texttt{trunk} using range notation:
+
+\begin{verbatim}
+$ svn diff -r 3000:3500 --old http://svn.collab.net/repos/svn/trunk \
+       COMMITTERS README HACKING
+\end{verbatim}
+
+If you have a working copy, you can obtain the differences without
+typing in the long URLs:
+
+\begin{verbatim}
+$ svn diff -r 3000:3500 COMMITTERS 
+Index: COMMITTERS
+===================================================================
+--- COMMITTERS  (revision 3000)
++++ COMMITTERS  (revision 3500)
+…
+\end{verbatim}
+
+Use \texttt{-\/-diff-cmd} \textless CMD\textgreater{}
+\texttt{-\/-extensions} (\texttt{-x}) to pass arguments directly to the
+external diff program:
+
+\begin{verbatim}
+$ svn diff --diff-cmd /usr/bin/diff -x "-i -b" COMMITTERS 
+Index: COMMITTERS
+===================================================================
+0a1,2
+> This is a test
+> 
+$
+\end{verbatim}
+
+Lastly, you can use the \texttt{-\/-xml} option along with the
+\texttt{-\/-summarize} option to view XML describing the changes that
+occurred between revisions, but not the contents of the diff itself:
+
+\begin{verbatim}
+$ svn diff --summarize --xml http://svn.red-bean.com/repos/test@r2 \
+           http://svn.red-bean.com/repos/test
+<?xml version="1.0"?>
+<diff>
+<paths>
+<path
+   props="none"
+   kind="file"
+   item="modified">http://svn.red-bean.com/repos/test/sandwich.txt</path>
+<path
+   props="none"
+   kind="file"
+   item="deleted">http://svn.red-bean.com/repos/test/burrito.txt</path>
+<path
+   props="none"
+   kind="dir"
+   item="added">http://svn.red-bean.com/repos/test/snacks</path>
+</paths>
+</diff>
+\end{verbatim}
+
+\section{svn export}\label{svn.ref.svn.c.export}
+
+\emph{Export a clean directory tree.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ export\ {[}-r\ REV{]}\ URL{[}@PEGREV{]}\ {[}PATH{]}}
+
+\texttt{svn\ export\ {[}-r\ REV{]}\ PATH1{[}@PEGREV{]}\ {[}PATH2{]}}
+
+\subsection{Description}
+
+The first form exports a clean directory tree from the repository
+specified by \textless URL\textgreater---at revision
+\textless REV\textgreater{} if it is given; otherwise, at \texttt{HEAD},
+into \textless PATH\textgreater. If \textless PATH\textgreater{} is
+omitted, the last component of the \textless URL\textgreater{} is used
+for the local directory name.
+
+The second form exports a clean directory tree from the working copy
+specified by \textless PATH1\textgreater{} into
+\textless PATH2\textgreater. All local changes will be preserved, but
+files not under version control will not be copied.
+
+\subsection{Options}
+
+\begin{verbatim}
+--depth ARG
+--force
+--ignore-externals
+--ignore-keywords
+--native-eol ARG
+--quiet (-q)
+--revision (-r) REV
+\end{verbatim}
+
+\subsection{Examples}
+
+Export from your working copy (doesn\textquotesingle t print every file
+and directory):
+
+\begin{verbatim}
+$ svn export a-wc my-export
+Export complete.
+\end{verbatim}
+
+Export directly from the repository (prints every file and directory):
+
+\begin{verbatim}
+$ svn export file:///var/svn/repos my-export
+A    my-export/test
+A    my-export/quiz
+…
+Exported revision 15.
+\end{verbatim}
+
+When rolling operating-system-specific release packages, it can be
+useful to export a tree that uses a specific EOL character for line
+endings. The \texttt{-\/-native-eol} option will do this, but it affects
+only files that have \texttt{svn:eol-style\ =\ native} properties
+attached to them. For example, to export a tree with all CRLF line
+endings (possibly for a Windows \texttt{.zip} file distribution):
+
+\begin{verbatim}
+$ svn export file:///var/svn/repos my-export --native-eol CRLF
+A    my-export/test
+A    my-export/quiz
+…
+Exported revision 15.
+\end{verbatim}
+
+You can specify \texttt{LR}, \texttt{CR}, or \texttt{CRLF} as a
+line-ending type with the \texttt{-\/-native-eol} option.
+
+\section{svn help (h, ?)}\label{svn.ref.svn.c.help}
+
+\emph{Help!}
+
+\textbf{Synopsis}
+
+\texttt{svn\ help\ {[}SUBCOMMAND...{]}}
+
+\subsection{Description}
+
+This is your best friend when you\textquotesingle re using Subversion
+and this book isn\textquotesingle t within reach!
+
+\subsection{Options}
+
+None
+
+\section{svn import}\label{svn.ref.svn.c.import}
+
+\emph{Commit an unversioned file or tree into the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ import\ {[}PATH{]}\ URL}
+
+\subsection{Description}
+
+Recursively commit a copy of \textless PATH\textgreater{} to
+\textless URL\textgreater. If \textless PATH\textgreater{} is omitted,
+``\texttt{.}'' is assumed. Parent directories are created in the
+repository as necessary. Unversionable items such as device files and
+pipes are ignored even if \texttt{-\/-force} is specified.
+
+\subsection{Options}
+
+\begin{verbatim}
+--auto-props
+--depth ARG
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force
+--force-log
+--message (-m) MESSAGE
+--no-auto-props
+--no-ignore
+--quiet (-q)
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+This imports the local directory \texttt{myproj} into
+\texttt{trunk/misc} in your repository. The directory
+\texttt{trunk/misc} need not exist before you import into
+it---\texttt{svn\ import} will recursively create directories for you.
+
+\begin{verbatim}
+$ svn import -m "New import" myproj \
+             http://svn.red-bean.com/repos/trunk/misc
+Adding         myproj/sample.txt
+…
+Transmitting file data .........
+Committed revision 16.
+\end{verbatim}
+
+Be aware that this will \emph{not} create a directory named
+\texttt{myproj} in the repository. If that\textquotesingle s what you
+want, simply add \texttt{myproj} to the end of the URL:
+
+\begin{verbatim}
+$ svn import -m "New import" myproj \
+            http://svn.red-bean.com/repos/trunk/misc/myproj
+Adding         myproj/sample.txt
+…
+Transmitting file data .........
+Committed revision 16.
+\end{verbatim}
+
+After importing data, note that the original tree is \emph{not} under
+version control. To start working, you still need to
+\texttt{svn\ checkout} a fresh working copy of the tree.
+
+\section{svn info}\label{svn.ref.svn.c.info}
+
+\emph{Display information about a local or remote item.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ info\ {[}TARGET{[}@REV{]}...{]}}
+
+\subsection{Description}
+
+Print information about the working copy paths or URLs specified. The
+information displayed for each path may include (as pertinent to the
+object at that path):
+
+\begin{itemize}
+\item
+  information about the repository in which the object is versioned
+\item
+  the most recent commit made to the specified version of the object
+\item
+  any user-level locks held on the object
+\item
+  local scheduling information (added, deleted, copied, etc.)
+\item
+  local conflict information
+\end{itemize}
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--incremental
+--recursive (-R)
+--revision (-r) REV
+--targets FILENAME
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+\texttt{svn\ info} will show you all the useful information that it has
+for items in your working copy. It will show information for files:
+
+\begin{verbatim}
+$ svn info foo.c
+Path: foo.c
+Name: foo.c
+Working Copy Root Path: /home/sally/projects/test
+URL: http://svn.red-bean.com/repos/test/foo.c
+Relative URL: ^/foo.c
+Repository Root: http://svn.red-bean.com/repos/test
+Repository UUID: 5e7d134a-54fb-0310-bd04-b611643e5c25
+Revision: 4417
+Node Kind: file
+Schedule: normal
+Last Changed Author: sally
+Last Changed Rev: 20
+Last Changed Date: 2003-01-13 16:43:13 -0600 (Mon, 13 Jan 2003)
+Text Last Updated: 2003-01-16 21:18:16 -0600 (Thu, 16 Jan 2003)
+Properties Last Updated: 2003-01-13 21:50:19 -0600 (Mon, 13 Jan 2003)
+Checksum: d6aeb60b0662ccceb6bce4bac344cb66
+\end{verbatim}
+
+It will also show information for directories:
+
+\begin{verbatim}
+$ svn info vendors
+Path: vendors
+Working Copy Root Path: /home/sally/projects/test
+URL: http://svn.red-bean.com/repos/test/vendors
+Relative URL: ^/vendors
+Repository Root: http://svn.red-bean.com/repos/test
+Repository UUID: 5e7d134a-54fb-0310-bd04-b611643e5c25
+Revision: 19
+Node Kind: directory
+Schedule: normal
+Last Changed Author: harry
+Last Changed Rev: 19
+Last Changed Date: 2003-01-16 23:21:19 -0600 (Thu, 16 Jan 2003)
+Properties Last Updated: 2003-01-16 23:39:02 -0600 (Thu, 16 Jan 2003)
+\end{verbatim}
+
+\texttt{svn\ info} also acts on URLs (also note that the file
+\texttt{readme.doc} in this example is locked, so lock information is
+also provided):
+
+\begin{verbatim}
+$ svn info http://svn.red-bean.com/repos/test/readme.doc
+Path: readme.doc
+Name: readme.doc
+URL: http://svn.red-bean.com/repos/test/readme.doc
+Relative URL: ^/readme.doc
+Repository Root: http://svn.red-bean.com/repos/test
+Repository UUID: 5e7d134a-54fb-0310-bd04-b611643e5c25
+Revision: 1
+Node Kind: file
+Schedule: normal
+Last Changed Author: sally
+Last Changed Rev: 42
+Last Changed Date: 2003-01-14 23:21:19 -0600 (Tue, 14 Jan 2003)
+Lock Token: opaquelocktoken:14011d4b-54fb-0310-8541-dbd16bd471b2
+Lock Owner: harry
+Lock Created: 2003-01-15 17:35:12 -0600 (Wed, 15 Jan 2003)
+Lock Comment (1 line):
+My test lock comment
+\end{verbatim}
+
+Lastly, \texttt{svn\ info} output is available in XML format by passing
+the \texttt{-\/-xml} option:
+
+\begin{verbatim}
+$ svn info --xml http://svn.red-bean.com/repos/test
+<?xml version="1.0"?>
+<info>
+<entry
+   kind="dir"
+   path="."
+   revision="1">
+<url>http://svn.red-bean.com/repos/test</url>
+<relative-url>^/</relative-url>
+<repository>
+<root>http://svn.red-bean.com/repos/test</root>
+<uuid>5e7d134a-54fb-0310-bd04-b611643e5c25</uuid>
+</repository>
+<wc-info>
+<schedule>normal</schedule>
+<depth>infinity</depth>
+</wc-info>
+<commit
+   revision="1">
+<author>sally</author>
+<date>2003-01-15T23:35:12.847647Z</date>
+</commit>
+</entry>
+</info>
+\end{verbatim}
+
+\section{svn list (ls)}\label{svn.ref.svn.c.list}
+
+\emph{List directory entries in the repository.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ list\ {[}TARGET{[}@REV{]}...{]}}
+
+\subsection{Description}
+
+List each \textless TARGET\textgreater{} file and the contents of each
+\textless TARGET\textgreater{} directory as they exist in the
+repository. If \textless TARGET\textgreater{} is a working copy path,
+the corresponding repository URL will be used.
+
+The default \textless TARGET\textgreater{} is ``\texttt{.}'', meaning
+the repository URL of the current working copy directory.
+
+With \texttt{-\/-verbose} (\texttt{-v}), \texttt{svn\ list} shows the
+following fields for each item:
+
+\begin{itemize}
+\item
+  Revision number of the last commit
+\item
+  Author of the last commit
+\item
+  If locked, the letter ``O'' (see the preceding section on
+  \hyperref[svn.ref.svn.c.info]{svn info} for details).
+\item
+  Size (in bytes)
+\item
+  Date and time of the last commit
+\end{itemize}
+
+With \texttt{-\/-xml}, output is in XML format (with a header and an
+enclosing document element unless \texttt{-\/-incremental} is also
+specified). All of the information is present; the \texttt{-\/-verbose}
+(\texttt{-v}) option is not accepted.
+
+\subsection{Options}
+
+\begin{verbatim}
+--depth ARG
+--incremental
+--recursive (-R)
+--revision (-r) REV
+--verbose (-v)
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+\texttt{svn\ list} is most useful if you want to see what files a
+repository has without downloading a working copy:
+
+\begin{verbatim}
+$ svn list http://svn.red-bean.com/repos/test/support
+README.txt
+INSTALL
+examples/
+…
+\end{verbatim}
+
+You can pass the \texttt{-\/-verbose} (\texttt{-v}) option for
+additional information, rather like the Unix command \texttt{ls\ -l}:
+
+\begin{verbatim}
+$ svn list -v file:///var/svn/repos
+     16 sally         28361 Jan 16 23:18 README.txt
+     27 sally             0 Jan 18 15:27 INSTALL
+     24 harry               Jan 18 11:27 examples/
+\end{verbatim}
+
+You can also get \texttt{svn\ list} output in XML format with the
+\texttt{-\/-xml} option:
+
+\begin{verbatim}
+$ svn list --xml http://svn.red-bean.com/repos/test
+<?xml version="1.0"?>
+<lists>
+<list
+   path="http://svn.red-bean.com/repos/test">
+<entry
+   kind="dir">
+<name>examples</name>
+<size>0</size>
+<commit
+   revision="24">
+<author>harry</author>
+<date>2008-01-18T06:35:53.048870Z</date>
+</commit>
+</entry>
+...
+</list>
+</lists>
+\end{verbatim}
+
+For further details, see the earlier section
+\hyperref[svn.tour.history.browsing.list]{Listing versioned
+directories}.
+
+\section{svn lock}\label{svn.ref.svn.c.lock}
+
+\emph{Lock working copy paths or URLs in the repository so that no other
+user can commit changes to them.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ lock\ TARGET...}
+
+\subsection{Description}
+
+Lock each \textless TARGET\textgreater. If any
+\textless TARGET\textgreater{} is already locked by another user, print
+a warning and continue locking the rest of the
+\textless TARGET\textgreater s. Use \texttt{-\/-force} to steal a lock
+from another user or working copy.
+
+\subsection{Options}
+
+\begin{verbatim}
+--encoding ENC
+--file (-F) FILENAME
+--force
+--force-log
+--message (-m) MESSAGE
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Lock two files in your working copy:
+
+\begin{verbatim}
+$ svn lock tree.jpg house.jpg
+'tree.jpg' locked by user 'harry'.
+'house.jpg' locked by user 'harry'.
+\end{verbatim}
+
+Lock a file in your working copy that is currently locked by another
+user:
+
+\begin{verbatim}
+$ svn lock tree.jpg
+svn: warning: W160035: Path '/tree.jpg is already locked by user 'sally' in fi
+lesystem '/var/svn/repos/db'
+$ svn lock --force tree.jpg
+'tree.jpg' locked by user 'harry'.
+\end{verbatim}
+
+Lock a file without a working copy:
+
+\begin{verbatim}
+$ svn lock http://svn.red-bean.com/repos/test/tree.jpg
+'tree.jpg' locked by user 'harry'.
+\end{verbatim}
+
+For further details, see \hyperref[svn.advanced.locking]{Locking}.
+
+\section{svn log}\label{svn.ref.svn.c.log}
+
+\emph{Display commit log messages.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ log\ {[}PATH{]}}
+
+\texttt{svn\ log\ URL{[}@REV{]}\ {[}PATH...{]}}
+
+\subsection{Description}
+
+Shows log messages from the repository. If no arguments are supplied,
+\texttt{svn\ log} shows the log messages for all files and directories
+inside (and including) the current working directory of your working
+copy. You can refine the results by specifying a path, one or more
+revisions, or any combination of the two. The default revision range for
+a local path is \texttt{BASE:1}.
+
+If you specify a URL alone, it prints log messages for everything the
+URL contains. If you add paths past the URL, only messages for those
+paths under that URL will be printed. The default revision range for a
+URL is \texttt{HEAD:1}.
+
+With \texttt{-\/-verbose} (\texttt{-v}), \texttt{svn\ log} will also
+print all affected paths with each log message. With \texttt{-\/-quiet}
+(\texttt{-q}), \texttt{svn\ log} will not print the log message body
+itself, this is compatible with \texttt{-\/-verbose} (\texttt{-v}).
+
+Each log message is printed just once, even if more than one of the
+affected paths for that revision were explicitly requested. Logs follow
+copy history by default. Use \texttt{-\/-stop-on-copy} to disable this
+behavior, which can be useful for determining branch points.
+
+\subsection{Options}
+
+\begin{verbatim}
+--change (-c) ARG
+--depth ARG
+--diff
+--diff-cmd CMD
+--extensions (-x) ARG
+--incremental
+--internal-diff
+--limit (-l) NUM
+--quiet (-q)
+--revision (-r) REV
+--search ARG
+--search-and ARG
+--stop-on-copy
+--targets FILENAME
+--use-merge-history (-g)
+--verbose (-v)
+--with-all-revprops
+--with-no-revprops
+--with-revprop ARG
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+You can see the log messages for all the paths that changed in your
+working copy by running \texttt{svn\ log} from the top:
+
+\begin{verbatim}
+$ svn log
+------------------------------------------------------------------------
+r20 | harry | 2003-01-17 22:56:19 -0600 (Fri, 17 Jan 2003) | 1 line
+
+Tweak.
+------------------------------------------------------------------------
+r17 | sally | 2003-01-16 23:21:19 -0600 (Thu, 16 Jan 2003) | 2 lines
+…
+\end{verbatim}
+
+Examine all log messages for a particular file in your working copy:
+
+\begin{verbatim}
+$ svn log foo.c
+------------------------------------------------------------------------
+r32 | sally | 2003-01-13 00:43:13 -0600 (Mon, 13 Jan 2003) | 1 line
+
+Added defines.
+------------------------------------------------------------------------
+r28 | sally | 2003-01-07 21:48:33 -0600 (Tue, 07 Jan 2003) | 3 lines
+…
+\end{verbatim}
+
+If you don\textquotesingle t have a working copy handy, you can log a
+URL:
+
+\begin{verbatim}
+$ svn log http://svn.red-bean.com/repos/test/foo.c
+------------------------------------------------------------------------
+r32 | sally | 2003-01-13 00:43:13 -0600 (Mon, 13 Jan 2003) | 1 line
+
+Added defines.
+------------------------------------------------------------------------
+r28 | sally | 2003-01-07 21:48:33 -0600 (Tue, 07 Jan 2003) | 3 lines
+…
+\end{verbatim}
+
+If you want several distinct paths underneath the same URL, you can use
+the \texttt{URL\ {[}PATH...{]}} syntax:
+
+\begin{verbatim}
+$ svn log http://svn.red-bean.com/repos/test/ foo.c bar.c
+------------------------------------------------------------------------
+r32 | sally | 2003-01-13 00:43:13 -0600 (Mon, 13 Jan 2003) | 1 line
+
+Added defines.
+------------------------------------------------------------------------
+r31 | harry | 2003-01-10 12:25:08 -0600 (Fri, 10 Jan 2003) | 1 line
+
+Added new file bar.c
+------------------------------------------------------------------------
+r28 | sally | 2003-01-07 21:48:33 -0600 (Tue, 07 Jan 2003) | 3 lines
+…
+\end{verbatim}
+
+The \texttt{-\/-verbose} (\texttt{-v}) option causes \texttt{svn\ log}
+to include information about the paths that were changed in each
+displayed revision. These paths appear, one path per line of output,
+with action codes that indicate what type of change was made to the
+path.
+
+\begin{verbatim}
+$ svn log -v http://svn.red-bean.com/repos/test/ foo.c bar.c
+------------------------------------------------------------------------
+r32 | sally | 2003-01-13 00:43:13 -0600 (Mon, 13 Jan 2003) | 1 line
+Changed paths:
+   M /foo.c
+
+Added defines.
+------------------------------------------------------------------------
+r31 | harry | 2003-01-10 12:25:08 -0600 (Fri, 10 Jan 2003) | 1 line
+Changed paths:
+   A /bar.c
+
+Added new file bar.c
+------------------------------------------------------------------------
+r28 | sally | 2003-01-07 21:48:33 -0600 (Tue, 07 Jan 2003) | 3 lines
+…
+\end{verbatim}
+
+\texttt{svn\ log} uses just a handful of action codes, and they are
+similar to the ones the \texttt{svn\ update} command uses:
+
+\begin{description}
+\item[\texttt{A}]
+The item was added.
+\item[\texttt{D}]
+The item was deleted.
+\item[\texttt{M}]
+Properties or textual contents on the item were changed.
+\item[\texttt{R}]
+The item was replaced by a different one at the same location.
+\end{description}
+
+In addition to the action codes which precede the changed paths,
+\texttt{svn\ log} with the \texttt{-\/-verbose} (\texttt{-v}) option
+will note whether a path was added or replaced as the result of a copy
+operation. It does so by printing
+\texttt{(from\ COPY-FROM-PATH:COPY-FROM-REV)} after such paths.
+
+When you\textquotesingle re concatenating the results of multiple calls
+to the log command, you may want to use the \texttt{-\/-incremental}
+option. \texttt{svn\ log} normally prints out a dashed line at the
+beginning of a log message, after each subsequent log message, and
+following the final log message. If you ran \texttt{svn\ log} on a range
+of two revisions, you would get this:
+
+\begin{verbatim}
+$ svn log -r 14:15
+------------------------------------------------------------------------
+r14 | …
+
+------------------------------------------------------------------------
+r15 | …
+
+------------------------------------------------------------------------
+\end{verbatim}
+
+However, if you wanted to gather two nonsequential log messages into a
+file, you might do something like this:
+
+\begin{verbatim}
+$ svn log -r 14 > mylog
+$ svn log -r 19 >> mylog
+$ svn log -r 27 >> mylog
+$ cat mylog
+------------------------------------------------------------------------
+r14 | …
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+r19 | …
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+r27 | …
+
+------------------------------------------------------------------------
+\end{verbatim}
+
+You can avoid the clutter of the double dashed lines in your output by
+using the \texttt{-\/-incremental} option:
+
+\begin{verbatim}
+$ svn log --incremental -r 14 > mylog
+$ svn log --incremental -r 19 >> mylog
+$ svn log --incremental -r 27 >> mylog
+$ cat mylog
+------------------------------------------------------------------------
+r14 | …
+
+------------------------------------------------------------------------
+r19 | …
+
+------------------------------------------------------------------------
+r27 | …
+\end{verbatim}
+
+The \texttt{-\/-incremental} option provides similar output control when
+using the \texttt{-\/-xml} option:
+
+\begin{verbatim}
+$ svn log --xml --incremental -r 1 sandwich.txt
+<logentry
+   revision="1">
+<author>harry</author>
+<date>2008-06-03T06:35:53.048870Z</date>
+<msg>Initial Import.</msg>
+</logentry>
+\end{verbatim}
+
+Sometimes when you run \texttt{svn\ log} on a specific path and a
+specific revision, you see no log information output at all, as in the
+following:
+
+\begin{verbatim}
+$ svn log -r 20 http://svn.red-bean.com/untouched.txt
+------------------------------------------------------------------------
+\end{verbatim}
+
+That just means the path wasn\textquotesingle t modified in that
+revision. To get log information for that revision, either run the log
+operation against the repository\textquotesingle s root URL, or specify
+a path that you happen to know was changed in that revision:
+
+\begin{verbatim}
+$ svn log -r 20 touched.txt 
+------------------------------------------------------------------------
+r20 | sally | 2003-01-17 22:56:19 -0600 (Fri, 17 Jan 2003) | 1 line
+
+Made a change.
+------------------------------------------------------------------------
+\end{verbatim}
+
+Beginning with Subversion 1.7, users can take advantage of a special
+output mode which combines the information from \texttt{svn\ log} with
+what you would see when running \texttt{svn\ diff} on the same targets
+for each revision of the log. Simply invoke \texttt{svn\ log} with the
+\texttt{-\/-diff} option to trigger this output mode.
+
+\begin{verbatim}
+$ svn log -r 20 touched.txt --diff
+------------------------------------------------------------------------
+r20 | sally | 2003-01-17 22:56:19 -0600 (Fri, 17 Jan 2003) | 1 line
+
+Made a change.
+
+Index: touched.txt
+===================================================================
+--- touched.txt (revision 19)
++++ touched.txt (revision 20)
+@@ -1 +1,2 @@
+ This is the file 'touched.txt'.
++We add such exciting text to files around here!
+------------------------------------------------------------------------
+$
+\end{verbatim}
+
+As with \texttt{svn\ diff}, you may also make use of many of the various
+options which control the way the difference is generated, including
+\texttt{-\/-depth}, \texttt{-\/-diff-cmd}, and \texttt{-\/-extensions}
+(\texttt{-x}).
+
+Beginning with Subversion 1.8, users can filter \texttt{svn\ log} output
+using \texttt{-\/-search} and \texttt{-\/-search-and} options. When
+using these options, a log message is shown only if a
+revision\textquotesingle s author, date, log message text, or list of
+changed paths, matches a search pattern. Searching by changed patch
+requires \texttt{-\/-verbose} option, otherwise \texttt{svn\ log} does
+not show changed paths therefore they can\textquotesingle t be filtered.
+
+The search pattern (also called glob or shell wildcard pattern) can
+contain regular characters and the following wildcard characters:
+
+\begin{description}
+\item[\texttt{?}]
+Matches any single character.
+\item[\texttt{*}]
+Matches a sequence of arbitrary characters.
+\item[\texttt{{[}ABC{]}}]
+Matches any of the characters listed inside the brackets.
+\end{description}
+
+Using multiple \texttt{-\/-search} parameters will show log messages
+that match the pattern specified at least in one of the options. For
+example:
+
+\begin{verbatim}
+$ svn log --search sally --search harry https://svn.red-bean.com/repos/test
+------------------------------------------------------------------------
+r1701 | sally | 2011-10-12 22:35:30 -0600 (Wed, 12 Oct 2011) | 1 line
+
+Add a reminder.
+------------------------------------------------------------------------
+r1564 | harry | 2011-10-09 22:35:30 -0600 (Sun, 09 Oct 2011) | 1 line
+
+Merge r1560 to the 1.0.x branch.
+------------------------------------------------------------------------
+$
+        
+\end{verbatim}
+
+Using \texttt{-\/-search} with \texttt{-\/-search-and} options will show
+log messages that match the combined pattern from both options. For
+example:
+
+\begin{verbatim}
+$ svn log --verbose --search sally --search-and /foo/bar https://svn.red-bean.com/repos/test
+------------------------------------------------------------------------
+r1555 | sally | 2011-07-15 22:33:14 -0600 (Fri, 15 Jul 2011) | 1 line
+Changed paths:
+M /foo/bar/src.c
+
+Typofix.
+------------------------------------------------------------------------
+r1530 | sally | 2011-07-13 07:24:11 -0600 (Wed, 13 Jul 2011) | 1 line
+Changed paths:
+M /foo/bar
+M /foo/build
+
+Fix up some svn:ignore properties.
+------------------------------------------------------------------------
+$
+\end{verbatim}
+
+\texttt{-\/-search} and \texttt{-\/-search-and} options does not
+actually perform a search. They just filter the \texttt{svn\ log} output
+to display only log messages that match the specified pattern.
+Therefore, if \texttt{-\/-limit} is used, it restricts the number of log
+messages searched, rather than restricting the output to a particular
+number of matching log messages.
+
+\section{svn merge}\label{svn.ref.svn.c.merge}
+
+\emph{Apply the differences between two sources to a working copy path.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ merge\ SOURCE{[}@REV{]}\ {[}TARGET\_WCPATH{]}}
+
+\texttt{svn\ merge\ {[}-c\ M{[},N...{]}\ \textbar{}\ -r\ N:M\ ...{]}\ SOURCE{[}@REV{]}\ {[}TARGET\_WCPATH{]}}
+
+\texttt{svn\ merge\ SOURCE1{[}@N{]}\ SOURCE2{[}@M{]}\ {[}TARGET\_WCPATH{]}}
+
+\subsection{Description}
+
+In all three forms \textless TARGET\_WCPATH\textgreater{} is the working
+copy path that will receive the differences. If
+\textless TARGET\_WCPATH\textgreater{} is omitted, the changes are
+applied to the current working directory, unless the sources have
+identical basenames that match a file within the current working
+directory. In that case, the differences will be applied to that file.
+
+In the first two forms, \textless SOURCE\textgreater{} can be either a
+URL or a working copy path (in which case its corresponding URL is
+used). If the peg revision \textless REV\textgreater{} is not specified,
+then \texttt{HEAD} is assumed. In the third form the same rules apply
+for \textless SOURCE1\textgreater, \textless SOURCE2\textgreater,
+\textless M\textgreater, and \textless N\textgreater{} with the only
+difference being that if either source is a working copy path, then the
+peg revisions \emph{must} be explicitly stated.
+
+\begin{itemize}
+\item
+  Automatic Merges
+
+  The first form is called an ``automatic merge'' and is used to perform
+  ``sync'' and ``reintegrate'' merges. ``Sync'' merges merge eligible
+  changes to a branch (\textless TARGET\_WCPATH\textgreater) from the
+  branch\textquotesingle s ancestor branch
+  (\textless SOURCE\textgreater). ``Eligible'' changes are defined as
+  those that were not previously merged from
+  \textless SOURCE\textgreater{} to
+  \textless TARGET\_WCPATH\textgreater. See
+  \hyperref[svn.branchmerge.basicmerging.stayinsync]{Keeping a Branch in
+  Sync}. ``Reintegrate'' merges merge changes from a feature branch
+  (\textless SOURCE\textgreater) back into the feature
+  branch\textquotesingle s ancestor branch
+  (\textless TARGET\_WCPATH\textgreater), see
+  \hyperref[svn.branchmerge.basicmerging.reintegrate]{Reintegrating a
+  Branch} and \hyperref[svn.branchmerge.commonpatterns.feature]{Feature
+  Branches}.
+\item
+  Cherrypick Merges
+
+  The second form is called a ``cherry-pick'' merge and is used to merge
+  an explicitly defined set of changes from one branch to another.
+  \textless SOURCE\textgreater{} in revision \textless REV\textgreater{}
+  is compared as it existed between revisions \textless N\textgreater{}
+  and \textless M\textgreater{} for each revision range provided. See
+  \hyperref[svn.branchmerge.cherrypicking]{Cherrypicking} for more
+  information.
+
+  Multiple \texttt{-c} and/or \texttt{-r} instances may be specified,
+  and mixing of forward and reverse ranges is allowed--- the ranges are
+  internally compacted to their minimum representation before merging
+  begins (which may result in a no-op merge or conflicts that cause the
+  merge to stop before merging all of the requested revisions).
+\item
+  2-URL Merges
+
+  In the third form, called a ``2-URL Merge'', the difference between
+  \textless SOURCE1\textgreater{} at revision \textless N\textgreater{}
+  and \textless SOURCE2\textgreater{} at revision
+  \textless M\textgreater{} is generated and applied to
+  \textless TARGET\_WCPATH\textgreater. The revisions default to
+  \texttt{HEAD} if omitted.
+\end{itemize}
+
+If \hyperref[svn.branchmerge.basicmerging.mergetracking]{Merge Tracking}
+is active, then Subversion will internally track metadata (i.e. the
+\texttt{svn:mergeinfo} property) about merge operations when the two
+merge sources are ancestrally related---if the first source is an
+ancestor of the second or vice versa---this is guaranteed to be the case
+when performing automatic merges. Subversion will also take preexisting
+merge metadata on the working copy target into account when determining
+what revisions to merge and in an effort to avoid repeat merges and
+needless conflicts it may only merge a subset of the requested ranges.
+
+Unlike \texttt{svn\ diff}, the merge command takes the ancestry of a
+file into consideration when performing a merge operation. This is very
+important when you\textquotesingle re merging changes from one branch
+into another and you\textquotesingle ve renamed a file on one branch but
+not the other.
+
+The \texttt{-\/-ignore-ancestry} option will cause
+\hyperref[svn.branchmerge.basicmerging.mergetracking]{Merge Tracking} to
+be disabled and makes merge act like \texttt{svn\ diff}, ignoring the
+ancestry of files when merging.
+
+\subsection{Options}
+
+\begin{verbatim}
+--accept ACTION
+--allow-mixed-revisions
+--change (-c) ARG
+--depth ARG
+--diff3-cmd CMD
+--dry-run
+--extensions (-x) ARG
+--force
+--ignore-ancestry
+--quiet (-q)
+--record-only
+--reintegrate
+--revision (-r) REV
+--verbose (-v)
+\end{verbatim}
+
+\subsection{Examples}
+
+Reintegrate a branch back into the trunk---assuming that you have an
+up-to-date working copy of the trunk (the \texttt{-\/-verbose} option
+prints additional information regarding what the merge is doing prior to
+actually applying any diff; useful in very large which might take a
+significant amount of time to complete):
+
+\begin{verbatim}
+$ svn merge ^/branches/feature-branch-calc-enhancements trunk --verbose
+checking branch relationship...
+calculating automatic merge...
+merging...
+--- Merging r12 through r37 into 'trunk':
+U    trunk/calc/brush.c
+--- Recording mergeinfo for merge of r12 through r37 into 'trunk':
+ U   trunk
+
+$ # build, test, verify, ...
+
+$ svn commit trunk -m "Reintegrate the calc enhancements back to trunk!"
+Sending        trunk
+Sending        trunk/calc/brush.c
+Transmitting file data .
+Committed revision 38.
+\end{verbatim}
+
+Cherry-pick merge a single change to a file:
+
+\begin{verbatim}
+$ svn merge ^/trunk/calc/brush.c branches/1.x/calc/brush.c -c38
+--- Merging r38 into 'branches/1.x/calc/brush.c':
+U    branches/1.x/calc/brush.c
+--- Recording mergeinfo for merge of r38 into 'branches/1.x/calc/brush.c':
+ G   branches/1.x/calc/brush.c
+\end{verbatim}
+
+Merge the differences between two unrelated branches into a third
+branch:
+
+\begin{verbatim}
+$ svn merge ^/vendor-drop/vendor-1.0 ^/vendor-drop/vendor-1.1 \
+            trunk --ignore-ancestry
+--- Merging differences between repository URLs into 'trunk':
+U    trunk/draw/draw.py
+\end{verbatim}
+
+\section{svn mergeinfo}\label{svn.ref.svn.c.mergeinfo}
+
+\emph{Query merge-related information. See
+\hyperref[svn.branchmerge.basicmerging.mergeinfo]{Mergeinfo and
+Previews} for details.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ mergeinfo\ SOURCE\_URL{[}@REV{]}\ {[}TARGET{[}@REV{]}{]}}
+
+\subsection{Description}
+
+Query information related to merges (or potential merges) between
+\textless SOURCE-URL\textgreater{} and \textless TARGET\textgreater. If
+the \texttt{-\/-show-revs} option is not provided, display a graphical
+representation of revisions which have been fully merged from
+\textless SOURCE-URL\textgreater{} to \textless TARGET\textgreater.
+Otherwise, list either the \texttt{merged} or \texttt{eligible}
+revisions as specified by the \texttt{-\/-show-revs} option.
+
+\subsection{Options}
+
+\begin{verbatim}
+--depth ARG
+--recursive (-R)
+--revision (-r) REV
+--show-revs ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Graphical summary of the merges from one branch to another:
+
+\begin{verbatim}
+$ svn mergeinfo ^/trunk feature-branch
+    youngest  last               repos.
+    common    full     tip of    path of
+    ancestor  merge    branch    branch
+
+    11        16       33
+    |         |        |
+  -------| |------------         trunk
+     \         \
+      \         \
+       --| |------------         feature-branch
+                       |
+                       33
+\end{verbatim}
+
+List the operative revisions merged from one branch to another:
+
+\begin{verbatim}
+$ svn mergeinfo ^/trunk feature-branch --show-revs merged
+r15
+r16
+\end{verbatim}
+
+List the operative revisions eligible to be merged from one branch to
+another:
+
+\begin{verbatim}
+$ svn mergeinfo ^/trunk feature-branch --show-revs eligible
+r28
+r30
+\end{verbatim}
+
+\section{svn mkdir}\label{svn.ref.svn.c.mkdir}
+
+\emph{Create a new directory under version control.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ mkdir\ PATH...}
+
+\texttt{svn\ mkdir\ URL...}
+
+\subsection{Description}
+
+Create a directory with a name given by the final component of the
+\textless PATH\textgreater{} or \textless URL\textgreater. A directory
+specified by a working copy \textless PATH\textgreater{} is scheduled
+for addition in the working copy. A directory specified by a URL is
+created in the repository via an immediate commit. Multiple directory
+URLs are committed atomically. In both cases, all the intermediate
+directories must already exist unless the \texttt{-\/-parents} option is
+used.
+
+\subsection{Options}
+
+\begin{verbatim}
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force-log
+--message (-m) MESSAGE
+--parents
+--quiet (-q)
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Create a directory in your working copy:
+
+\begin{verbatim}
+$ svn mkdir newdir
+A         newdir
+\end{verbatim}
+
+Create one in the repository (this is an instant commit, so a log
+message is required):
+
+\begin{verbatim}
+$ svn mkdir -m "Making a new dir." http://svn.red-bean.com/repos/newdir
+
+Committed revision 26.
+\end{verbatim}
+
+\section{svn move (mv)}\label{svn.ref.svn.c.move}
+
+\emph{Move a file or directory.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ move\ SRC...\ DST}
+
+\subsection{Description}
+
+This command moves files or directories in your working copy or in the
+repository.
+
+This command is equivalent to an \texttt{svn\ copy} followed by
+\texttt{svn\ delete}.
+
+When moving multiple sources, they will be added as children of
+\textless DST\textgreater, which must be a directory.
+
+Subversion does not support moving between working copies and URLs. In
+addition, you can only move files within a single
+repository---Subversion does not support cross-repository moving.
+Subversion supports the following types of moves within a single
+repository:
+
+\begin{description}
+\item[WC → WC]
+Move and schedule a file or directory for addition (with history).
+\item[URL → URL]
+Complete server-side rename.
+\end{description}
+
+When moving large trees you should be aware that the URL → URL moves are
+lighter than WC → WC moves. Moving nodes inside a working copy does more
+than just change directory listings (it will copy files, manage
+temporary files, and expand keywords) and may be significantly slower.
+
+Also bear in mind that a WC → WC move in a mixed-revision working copy
+may yield unexpected results (see
+\hyperref[svn.basic.in-action.mixedrevs]{Mixed-revision working
+copies}).
+
+\subsection{Options}
+
+\begin{verbatim}
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force
+--force-log
+--message (-m) MESSAGE
+--parents
+--quiet (-q)
+--revision (-r) REV
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Move a file in your working copy:
+
+\begin{verbatim}
+$ svn move foo.c bar.c
+A         bar.c
+D         foo.c
+\end{verbatim}
+
+Move several files in your working copy into a subdirectory:
+
+\begin{verbatim}
+$ svn move baz.c bat.c qux.c src
+A         src/baz.c
+D         baz.c
+A         src/bat.c
+D         bat.c
+A         src/qux.c
+D         qux.c
+\end{verbatim}
+
+Move a file in the repository (this is an immediate commit, so it
+requires a commit message):
+
+\begin{verbatim}
+$ svn move -m "Move a file" http://svn.red-bean.com/repos/foo.c \
+                            http://svn.red-bean.com/repos/bar.c
+
+Committed revision 27.
+\end{verbatim}
+
+\section{svn patch}\label{svn.ref.svn.c.patch}
+
+\emph{Apply changes represented in a unidiff patch to the working copy.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ patch\ PATCHFILE\ {[}WCPATH{]}}
+
+\subsection{Description}
+
+This subcommand will apply changes described a unidiff-formatted patch
+file \textless PATCHFILE\textgreater{} to the working copy
+\textless WCPATH\textgreater. As with most other working copy
+subcommands, if \textless WCPATH\textgreater{} is omitted, the changes
+are applied to the current working directory. A unidiff patch suitable
+for application to a working copy can be produced with the
+\texttt{svn\ diff} command or third-party differencing tools. Any
+non-unidiff content found in the patch file is ignored.
+
+Changes listed in the patch file will either be applied or rejected. If
+a change does not match at its exact line offset, it may be applied
+earlier or later in the file if a match is found elsewhere for the
+surrounding lines of context provided by the patch. A change may also be
+applied with fuzz---meaning, one or more lines of context are ignored
+when attempting to match the change location. If no matching context can
+be found for a change, the change conflicts and will be written to a
+reject file which bears the extension \texttt{.svnpatch.rej}.
+
+\texttt{svn\ patch} reports a status line for patched file or directory
+using letter codes, very similar to the way that \texttt{svn\ update}
+provides notification. The letter codes have the following meanings:
+
+\begin{description}
+\item[\texttt{A}]
+Added
+\item[\texttt{D}]
+Deleted
+\item[\texttt{C}]
+Conflicted
+\item[\texttt{G}]
+Merged
+\item[\texttt{U}]
+Updated
+\end{description}
+
+Changes applied with an offset or fuzz are reported on lines starting
+with the \textquotesingle{}\texttt{\textgreater{}}\textquotesingle{}
+symbol. You should review such changes carefully.
+
+If the patch removes all content from a file, that file is automatically
+scheduled for deletion. Likewise, if the patch creates a new file, that
+file is automatically scheduled for addition. Use \texttt{svn\ revert}
+to undo undesired deletions and additions.
+
+\subsection{Options}
+
+\begin{verbatim}
+--dry-run
+--ignore-whitespace
+--quiet (-q)
+--reverse-diff
+--strip NUM
+\end{verbatim}
+
+\subsection{Examples}
+
+Apply a simple patch file generated by the \texttt{svn\ diff} command.
+Our patch file will create a new file, delete another file, and modify a
+third\textquotesingle s contents and properties. Here\textquotesingle s
+the patch file itself (which we\textquotesingle ll assume is creatively
+named \texttt{PATCH}):
+
+\begin{verbatim}
+Index: deleted-file
+===================================================================
+--- deleted-file    (revision 3)
++++ deleted-file    (working copy)
+@@ -1 +0,0 @@
+-This file will be deleted.
+Index: changed-file
+===================================================================
+--- changed-file    (revision 4)
++++ changed-file    (working copy)
+@@ -1,6 +1,6 @@
+ The letters in a line of text
+ Could make your day much better.
+ But expanded into paragraphs,
+-I'd tell of kangaroos and calves
++I'd tell of monkeys and giraffes
+ Until you were all smiles and laughs
+ From my letter made of letters.
+
+Property changes on: changed-file
+___________________________________________________________________
+Added: propname
+## -0,0 +1 ##
++propvalue
+Index: added-file
+===================================================================
+--- added-file  (revision 0)
++++ added-file  (working copy)
+@@ -0,0 +1 @@
++This is an added file.
+\end{verbatim}
+
+We can apply the previous patch file to another working copy from our
+repository using \texttt{svn\ patch}, and verify that it did the right
+thing by using \texttt{svn\ diff}:
+
+\begin{verbatim}
+$ cd /some/other/workingcopy
+$ svn patch /path/to/PATCH
+D         deleted-file
+UU        changed-file
+A         added-file
+$ svn diff
+Index: deleted-file
+===================================================================
+--- deleted-file    (revision 3)
++++ deleted-file    (working copy)
+@@ -1 +0,0 @@
+-This file will be deleted.
+Index: changed-file
+===================================================================
+--- changed-file    (revision 4)
++++ changed-file    (working copy)
+@@ -1,6 +1,6 @@
+ The letters in a line of text
+ Could make your day much better.
+ But expanded into paragraphs,
+-I'd tell of kangaroos and calves
++I'd tell of monkeys and giraffes
+ Until you were all smiles and laughs
+ From my letter made of letters.
+
+Property changes on: changed-file
+___________________________________________________________________
+Added: propname
+## -0,0 +1 ##
++propvalue
+Index: added-file
+===================================================================
+--- added-file  (revision 0)
++++ added-file  (working copy)
+@@ -0,0 +1 @@
++This is an added file.
+$
+\end{verbatim}
+
+Sometimes you might need Subversion to interpret a patch ``in
+reverse''---where added things get treated as removed things, and
+vice-versa. Use the \texttt{-\/-reverse-diff} option for this purpose.
+In the following example, we\textquotesingle ll squirrel away a patch
+file which describes the changes in our working copy, and then use a
+reverse patch operation to undo those changes.
+
+\begin{verbatim}
+$ svn status
+M       foo.c
+$ svn diff > PATCH
+$ cat PATCH
+Index: foo.c
+===================================================================
+--- foo.c   (revision 128)
++++ foo.c   (working copy)
+@@ -1003,7 +1003,7 @@
+     return ERROR_ON_THE_G_STRING;
+ 
+   /* Do something in a loop. */
+-  for (i = 0; i < txns->nelts; i++)
++  for (i = 0; i < txns->nelts; i--)
+     {
+       status = do_something(i);
+       if (status)
+$ svn patch --reverse-diff PATCH
+U         foo.c
+$ svn status
+$
+\end{verbatim}
+
+\section{svn propdel (pdel, pd)}\label{svn.ref.svn.c.propdel}
+
+\emph{Remove a property from an item.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ propdel\ PROPNAME\ {[}PATH...{]}}
+
+\texttt{svn\ propdel\ PROPNAME\ -\/-revprop\ -r\ REV\ {[}TARGET{]}}
+
+\subsection{Description}
+
+This removes properties from files, directories, or revisions. The first
+form removes versioned properties in your working copy, and the second
+removes unversioned remote properties on a repository revision
+(\textless TARGET\textgreater{} determines only which repository to
+access).
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--quiet (-q)
+--recursive (-R)
+--revision (-r) REV
+--revprop
+\end{verbatim}
+
+\subsection{Examples}
+
+Delete a property from a file in your working copy:
+
+\begin{verbatim}
+$ svn propdel svn:mime-type some-script
+property 'svn:mime-type' deleted from 'some-script'.
+\end{verbatim}
+
+Delete a revision property:
+
+\begin{verbatim}
+$ svn propdel --revprop -r 26 release-date 
+property 'release-date' deleted from repository revision '26'
+\end{verbatim}
+
+\section{svn propedit (pedit, pe)}\label{svn.ref.svn.c.propedit}
+
+\emph{Edit the property of one or more items under version control. See
+\hyperref[svn.ref.svn.c.propset]{svn propset (pset, ps)} later in this
+chapter.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ propedit\ PROPNAME\ TARGET...}
+
+\texttt{svn\ propedit\ PROPNAME\ -\/-revprop\ -r\ REV\ {[}TARGET{]}}
+
+\subsection{Description}
+
+Edit one or more properties using your favorite editor. The first form
+edits versioned properties in your working copy, and the second edits
+unversioned remote properties on a repository revision
+(\textless TARGET\textgreater{} determines only which repository to
+access).
+
+\subsection{Options}
+
+\begin{verbatim}
+--editor-cmd CMD
+--encoding ENC
+--file (-F) FILENAME
+--force
+--force-log
+--message (-m) MESSAGE
+--revision (-r) REV
+--revprop
+--with-revprop ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+\texttt{svn\ propedit} makes it easy to modify properties that have
+multiple values:
+
+\begin{verbatim}
+$ svn propedit svn:keywords foo.c 
+
+    # svn will open in your favorite text editor a temporary file
+    # containing the current contents of the svn:keywords property.  You
+    # can add multiple values to a property easily here by entering one
+    # value per line.  When you save the temporary file and exit,
+    # Subversion will re-read the temporary file and use its updated
+    # contents as the new value of the property.
+
+Set new value for property 'svn:keywords' on 'foo.c'
+$
+\end{verbatim}
+
+\section{svn propget (pget, pg)}\label{svn.ref.svn.c.propget}
+
+\emph{Print the value of a property.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ propget\ PROPNAME\ {[}TARGET{[}@REV{]}...{]}}
+
+\texttt{svn\ propget\ PROPNAME\ -\/-revprop\ -r\ REV\ {[}URL{]}}
+
+\subsection{Description}
+
+Print the value of a property on files, directories, or revisions. The
+first form prints the versioned property of an item or items in your
+working copy, and the second prints unversioned remote properties on a
+repository revision. See \hyperref[svn.advanced.props]{Properties} for
+more information on properties.
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--recursive (-R)
+--revision (-r) REV
+--revprop
+--show-inherited-props
+--strict
+--verbose (-v)
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+Examine a property of a file in your working copy:
+
+\begin{verbatim}
+$ svn propget svn:keywords foo.c
+Author
+Date
+Rev
+\end{verbatim}
+
+The same goes for a revision property:
+
+\begin{verbatim}
+$ svn propget svn:log --revprop -r 20 
+Began journal.
+\end{verbatim}
+
+For a more structured display of properties, use the
+\texttt{-\/-verbose} (\texttt{-v}) option:
+
+\begin{verbatim}
+$ svn propget svn:keywords foo.c --verbose
+Properties on 'foo.c':
+  svn:keywords
+    Author
+    Date
+    Rev
+\end{verbatim}
+
+Examine the versioned properties inherited by a URL in your repository
+using the \texttt{-\/-show-inherited-props} option:
+
+\begin{verbatim}
+$ svn pg svn:global-ignores --verbose --show-inherited-props ^/branches/1.x
+Inherited properties on 'http://svn.example.com/repos/branches/1.x',
+from 'http://svn.example.com/repos':
+  svn:global-ignores
+    *.diff
+    *.patch
+\end{verbatim}
+
+By default, \texttt{svn\ propget} will append a trailing end-of-line
+sequence to the property value it prints. Most of the time, this is a
+desirable feature that has a positive effect on the printed output. But
+there are times when you might wish to capture the precise property
+value, perhaps because that value is not textual in nature, but of some
+binary format (such as a JPEG thumbnail stored as a property value, for
+example). To disable pretty-printing of property values, use the
+\texttt{-\/-strict} option.
+
+Lastly, you can get \texttt{svn\ propget} output in XML format with the
+\texttt{-\/-xml} option:
+
+\begin{verbatim}
+$ svn propget --xml svn:ignore .
+<?xml version="1.0"?>
+<properties>
+<target
+   path="">
+<property
+   name="svn:ignore">*.o
+</property>
+</target>
+</properties>
+\end{verbatim}
+
+\section{svn proplist (plist, pl)}\label{svn.ref.svn.c.proplist}
+
+\emph{List all properties.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ proplist\ {[}TARGET{[}@REV{]}...{]}}
+
+\texttt{svn\ proplist\ -\/-revprop\ -r\ REV\ {[}TARGET{]}}
+
+\subsection{Description}
+
+List all properties on files, directories, or revisions. The first form
+lists versioned properties in your working copy, and the second lists
+unversioned remote properties on a repository revision
+(\textless TARGET\textgreater{} determines only which repository to
+access).
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--quiet (-q)
+--recursive (-R)
+--revision (-r) REV
+--revprop
+--show-inherited-props
+--verbose (-v)
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+You can use \texttt{proplist} to see the properties on an item in your
+working copy:
+
+\begin{verbatim}
+$ svn proplist foo.c
+Properties on 'foo.c':
+  svn:mime-type
+  svn:keywords
+  owner
+\end{verbatim}
+
+But with the \texttt{-\/-verbose} (\texttt{-v}) flag,
+\texttt{svn\ proplist} is extremely handy as it also shows you the
+values for the properties:
+
+\begin{verbatim}
+$ svn proplist -v foo.c
+Properties on 'foo.c':
+  svn:mime-type
+    text/plain
+  svn:keywords
+    Author Date Rev
+  owner
+    sally
+\end{verbatim}
+
+List all the versioned properties inherited by a file in your working
+copy using the \texttt{-\/-show-inherited-props} option:
+
+\begin{verbatim}
+$ svn proplist --show-inherited-props foo.c
+Inherited properties on 'foo.c',
+from 'http://svn.example.com/repos':
+  svn:auto-props
+  svn:global-ignores
+Inherited properties on 'foo.c',
+from '/home/theob/svn/working-copies/baz-wc':
+  svn:auto-props
+\end{verbatim}
+
+Lastly, you can get \texttt{svn\ proplist} output in XML format with the
+\texttt{-\/-xml} option:
+
+\begin{verbatim}
+$ svn proplist --xml 
+<?xml version="1.0"?>
+<properties>
+<target
+   path=".">
+<property
+   name="svn:ignore"/>
+</target>
+</properties>
+\end{verbatim}
+
+\section{svn propset (pset, ps)}\label{svn.ref.svn.c.propset}
+
+\emph{Set \textless PROPNAME\textgreater{} to
+\textless PROPVAL\textgreater{} on files, directories, or revisions.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ propset\ PROPNAME\ {[}PROPVAL\ \textbar{}\ -F\ VALFILE{]}\ PATH...}
+
+\texttt{svn\ propset\ PROPNAME\ -\/-revprop\ -r\ REV\ {[}PROPVAL\ \textbar{}\ -F\ VALFILE{]}\ {[}TARGET{]}}
+
+\subsection{Description}
+
+Set \textless PROPNAME\textgreater{} to \textless PROPVAL\textgreater{}
+on files, directories, or revisions. The first example creates a
+versioned, local property change in the working copy, and the second
+creates an unversioned, remote property change on a repository revision
+(\textless TARGET\textgreater{} determines only which repository to
+access).
+
+Subversion has a number of ``special'' properties that affect its
+behavior. See
+\hyperref[svn.advanced.props.ref]{Subversion\textquotesingle s Reserved
+Properties} for details.
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--encoding ENC
+--file (-F) FILENAME
+--force
+--quiet (-q)
+--recursive (-R)
+--revision (-r) REV
+--revprop
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Set the MIME type for a file:
+
+\begin{verbatim}
+$ svn propset svn:mime-type image/jpeg foo.jpg 
+property 'svn:mime-type' set on 'foo.jpg'
+\end{verbatim}
+
+On a Unix system, if you want a file to have the executable permission
+set:
+
+\begin{verbatim}
+$ svn propset svn:executable ON somescript
+property 'svn:executable' set on 'somescript'
+\end{verbatim}
+
+Perhaps you have an internal policy to set certain properties for the
+benefit of your coworkers:
+
+\begin{verbatim}
+$ svn propset owner sally foo.c
+property 'owner' set on 'foo.c'
+\end{verbatim}
+
+If you made a mistake in a log message for a particular revision and
+want to change it, use \texttt{-\/-revprop} and set \texttt{svn:log} to
+the new log message:
+
+\begin{verbatim}
+$ svn propset --revprop -r 25 svn:log "Journaled about trip to New York."
+property 'svn:log' set on repository revision '25'
+\end{verbatim}
+
+Or, if you don\textquotesingle t have a working copy, you can provide a
+URL:
+
+\begin{verbatim}
+$ svn propset --revprop -r 26 svn:log "Document nap." \
+              http://svn.red-bean.com/repos
+property 'svn:log' set on repository revision '25'
+\end{verbatim}
+
+Lastly, you can tell \texttt{propset} to take its input from a file. You
+could even use this to set the contents of a property to something
+binary:
+
+\begin{verbatim}
+$ svn propset owner-pic -F sally.jpg moo.c 
+property 'owner-pic' set on 'moo.c'
+\end{verbatim}
+
+By default, you cannot modify revision properties in a Subversion
+repository. Your repository administrator must explicitly enable
+revision property modifications by creating a hook named
+\texttt{pre-revprop-change}. See
+\hyperref[svn.reposadmin.hooks]{Implementing Repository Hooks} for more
+information on hook scripts.
+
+\section{svn relocate}\label{svn.ref.svn.c.relocate}
+
+\emph{Relocate the working copy to point to a different repository root
+URL.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ relocate\ FROM-PREFIX\ TO-PREFIX\ {[}PATH...{]}}
+
+\texttt{svn\ relocate\ TO-URL\ {[}PATH{]}}
+
+\subsection{Description}
+
+Sometimes an administrator might change the location (or apparent
+location, from the client\textquotesingle s perspective) of a
+repository. The content of the repository doesn\textquotesingle t
+change, but the repository\textquotesingle s root URL does. The hostname
+may change because the repository is now being served from a different
+computer. Or, perhaps the URL scheme changes because the repository is
+now being served via SSL (using \texttt{https://}) instead of over plain
+HTTP. There are many different reasons for these types of repository
+relocations. But ideally, a ``change of address'' for a repository
+shouldn\textquotesingle t suddently cause all the working copies which
+point to that repository to become forever unusable. And fortunately,
+that\textquotesingle s not the case. Rather than force users to check
+out a new working copy when a repository is relocated, Subversion
+provides the \texttt{svn\ relocate} command, which ``rewrites'' the
+working copy\textquotesingle s administrative metadata to refer to the
+new repository location.
+
+The first \texttt{svn\ relocate} syntax allows you to update one or more
+working copies by what essentially amounts to a find-and-replace within
+the repository root URLs recorded in those working copies. Subversion
+will replace the initial substring \textless FROM-PREFIX\textgreater{}
+with the string \textless TO-PREFIX\textgreater{} in those URLs. These
+initial URL substrings can be as long or as short as is necessary to
+differentiate between them. Obviously, to use this syntax form, you need
+to know both the current root URL of the repository to which the working
+copy is pointing, and the new URL of that repository. (You can use
+\texttt{svn\ info} to determine the former.)
+
+The second syntax does not require that you know the current repository
+root URL with which the working copy is associated at all---only the new
+repository URL (\textless TO-URL\textgreater) to which it should be
+pointing. In this syntax form, only one working copy may be relocated at
+a time.
+
+Users often get confused about the difference between
+\texttt{svn\ switch} and \texttt{svn\ relocate}. Here\textquotesingle s
+the rule of thumb:
+
+\begin{itemize}
+\item
+  If the working copy needs to reflect a new directory \emph{within} the
+  repository, use \texttt{svn\ switch}.
+\item
+  If the working copy still reflects the same repository directory, but
+  the location of the repository itself has changed, use
+  \texttt{svn\ relocate}.
+\end{itemize}
+
+\subsection{Options}
+
+\begin{verbatim}
+--ignore-externals
+\end{verbatim}
+
+\subsection{Examples}
+
+Let\textquotesingle s start with a working copy that reflects a local
+repository URL:
+
+\begin{verbatim}
+$ svn info | grep ^URL:
+URL: file:///var/svn/repos/trunk
+$
+\end{verbatim}
+
+One day the administrator decides to rename the on-disk repository
+directory. We missed the memo, so we see an error the next time we try
+to update our working copy.
+
+\begin{verbatim}
+$ svn up
+Updating '.':
+svn: E180001: Unable to connect to a repository at URL 'file:///var/svn/repos/trunk'
+\end{verbatim}
+
+After cornering the administrator over by the vending machines, we learn
+about the repository being moved and are told the new URL. Rather than
+checkout a new working copy, though, we simply ask Subversion to rewrite
+the working copy metadata to point to the new repository location.
+
+\begin{verbatim}
+$ svn relocate file:///var/svn/new-repos/trunk
+$
+\end{verbatim}
+
+Subversion doesn\textquotesingle t tell us much about what it did, but
+hey---error-free operation is really all we need, right? Our working
+copy is functional for online operations again.
+
+\begin{verbatim}
+$ svn up
+Updating '.':
+A    lib/new.c
+M    src/code.h
+M    src/headers.h
+…
+\end{verbatim}
+
+Once again, this type of relocation affects \emph{working copy metadata
+only}. It will not change your versioned or unversioned file contents,
+perform any version control operations (such as commits or updates), and
+so on.
+
+A few months later, we\textquotesingle re told that the company is
+moving development to separate machines and that we\textquotesingle ll
+be using HTTP to access the repository. So we relocate our working copy
+again.
+
+\begin{verbatim}
+$ svn relocate http://svn.company.com/repos/trunk
+$
+\end{verbatim}
+
+Now, each time we perform a relocation of this sort, Subversion contacts
+the repository---at its new URL, of course---to verify a few things.
+
+First, it wants to compare the UUID of the repository against what is
+stored in the working copy. If these UUIDs don\textquotesingle t match,
+the working copy relocation is disallowed. Maybe this
+isn\textquotesingle t the same repository (just in a new location) after
+all?
+
+Secondly, Subversion wants to ensure that the updated working copy
+metadata jives with respect to the directory location \emph{inside} the
+repository. Subversion won\textquotesingle t let you accidentally
+relocate a working copy of a branch in your repository to the URL of a
+different branch in the same repository. (That\textquotesingle s what
+\texttt{svn\ switch}, described in \hyperref[svn.ref.svn.c.switch]{svn
+switch (sw)}, is for.)
+
+Also, Subversion will not allow you to relocate a subtree of the working
+copy. If you\textquotesingle re going to relocate the working copy at
+all, you must relocate the whole thing. This is to protect the integrity
+of the working copy metadata and behavior as a whole. (And really,
+you\textquotesingle d be hard pressed to come up with a compelling
+reason to relocate only a piece of your working copy anyway.)
+
+Let\textquotesingle s look at one final relocation opportunity. After
+using HTTP access for some time, the company moves to SSL-only access.
+Now, the only change to the repository URL is that the scheme goes from
+being \texttt{http://} to being \texttt{https://}. There are two
+different ways that we could make our working copy reflect ths change.
+The first is to do exactly as we\textquotesingle ve done before and
+relocate to the new repository URL.
+
+\begin{verbatim}
+$ svn relocate https://svn.company.com/repos/trunk
+$
+\end{verbatim}
+
+But we have another option here, too. We could simply ask Subversion to
+swap out the changed prefixes of the URL.
+
+\begin{verbatim}
+$ svn relocate http https
+$
+\end{verbatim}
+
+Either approach leaves us a working copy whose metadata has been updated
+to point to the right repository location.
+
+By default, \texttt{svn\ relocate} will traverse any external working
+copies nested within your working copy and attempt relocation of those
+working copies, too. Use the \texttt{-\/-ignore-externals} option to
+disable this behavior.
+
+\section{svn resolve}\label{svn.ref.svn.c.resolve}
+
+\emph{Resolve conflicts on working copy files or directories.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ resolve\ {[}PATH...{]}}
+
+\subsection{Description}
+
+Resolve ``conflicted'' state on working copy files or directories. This
+routine does not semantically resolve conflict markers; however, it
+replaces the conflicted item with the version specified (interactively
+or via the \texttt{-\/-accept} argument) and then removes
+conflict-related artifact files. This allows
+\textless PATH\textgreater{} to be committed again---that is, it tells
+Subversion that the conflicts have been ``resolved.''
+
+See \hyperref[svn.tour.cycle.resolve]{Resolve Any Conflicts} for an
+in-depth look at resolving conflicts.
+
+\subsection{Options}
+
+\begin{verbatim}
+--accept ACTION
+--depth ARG
+--quiet (-q)
+--recursive (-R)
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Here\textquotesingle s an example where, after a postponed conflict
+resolution during update, \texttt{svn\ resolve} replaces the all
+conflicts in file \texttt{foo.c} with your edits:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+Conflict discovered in 'foo.c'.
+Select: (p) postpone, (df) diff-full, (e) edit,
+        (mc) mine-conflict, (tc) theirs-conflict,
+        (s) show all options: p
+C    foo.c
+Updated to revision 5.
+Summary of conflicts:
+  Text conflicts: 1
+$ svn resolve --accept mine-full foo.c
+Resolved conflicted state of 'foo.c'
+$
+\end{verbatim}
+
+\section{svn resolved}\label{svn.ref.svn.c.resolved}
+
+\emph{\emph{Deprecated}. Remove ``conflicted'' state on working copy
+files or directories.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ resolved\ PATH...}
+
+\subsection{Description}
+
+This command has been deprecated in favor of running
+\texttt{svn\ resolve\ -\/-accept\ working\ PATH}. See
+\hyperref[svn.ref.svn.c.resolve]{svn resolve} in the preceding section
+for details.
+
+Remove ``conflicted'' state on working copy files or directories. This
+routine does not semantically resolve conflict markers; it merely
+removes conflict-related artifact files and allows
+\textless PATH\textgreater{} to be committed again; that is, it tells
+Subversion that the conflicts have been ``resolved.'' See
+\hyperref[svn.tour.cycle.resolve]{Resolve Any Conflicts} for an in-depth
+look at resolving conflicts.
+
+\subsection{Options}
+
+\begin{verbatim}
+--depth ARG
+--quiet (-q)
+--recursive (-R)
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+If you get a conflict on an update, your working copy will sprout three
+new files:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+C    foo.c
+Updated to revision 31.
+Summary of conflicts:
+  Text conflicts: 1
+$ ls foo.c*
+foo.c
+foo.c.mine
+foo.c.r30
+foo.c.r31
+$
+\end{verbatim}
+
+Once you\textquotesingle ve resolved the conflict and \texttt{foo.c} is
+ready to be committed, run \texttt{svn\ resolved} to let your working
+copy know you\textquotesingle ve taken care of everything.
+
+You \emph{can} just remove the conflict files and commit, but
+\texttt{svn\ resolved} fixes up some bookkeeping data in the working
+copy administrative area in addition to removing the conflict files, so
+we recommend that you use this command.
+
+\section{svn revert}\label{svn.ref.svn.c.revert}
+
+\emph{Undo all local edits.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ revert\ PATH...}
+
+\subsection{Description}
+
+Reverts any local changes to a file or directory and resolves any
+conflicted states. \texttt{svn\ revert} will revert not only the
+contents of an item in your working copy, but also any property changes.
+Finally, you can use it to undo any scheduling operations that you may
+have performed (e.g., files scheduled for addition or deletion can be
+``unscheduled'').
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--quiet (-q)
+--recursive (-R)
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Discard changes to a file:
+
+\begin{verbatim}
+$ svn revert foo.c
+Reverted foo.c
+\end{verbatim}
+
+If you want to revert a whole directory of files, use the
+\texttt{-\/-depth=infinity} option:
+
+\begin{verbatim}
+$ svn revert --depth=infinity .
+Reverted newdir/afile
+Reverted foo.c
+Reverted bar.txt
+\end{verbatim}
+
+Lastly, you can undo any scheduling operations:
+
+\begin{verbatim}
+$ svn add mistake.txt whoops
+A         mistake.txt
+A         whoops
+A         whoops/oopsie.c
+
+$ svn revert mistake.txt whoops
+Reverted mistake.txt
+Reverted whoops
+
+$ svn status
+?       mistake.txt
+?       whoops
+\end{verbatim}
+
+\texttt{svn\ revert} is inherently dangerous, since its entire purpose
+is to throw away data---namely, your uncommitted changes. Once
+you\textquotesingle ve reverted, Subversion provides \emph{no way} to
+get back those uncommitted changes.
+
+If you provide no targets to \texttt{svn\ revert}, it will do nothing.
+To protect you from accidentally losing changes in your working copy,
+\texttt{svn\ revert} requires you to explicitly provide at least one
+target.
+
+\section{svn status (stat, st)}\label{svn.ref.svn.c.status}
+
+\emph{Print the status of working copy files and directories.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ status\ {[}PATH...{]}}
+
+\subsection{Description}
+
+Print the status of working copy files and directories. With no
+arguments, it prints only locally modified items (no repository access).
+With \texttt{-\/-show-updates} (\texttt{-u}), it adds working revision
+and server out-of-date information. With \texttt{-\/-verbose}
+(\texttt{-v}), it prints full revision information on every item. With
+\texttt{-\/-quiet} (\texttt{-q}), it prints only summary information
+about locally modified items.
+
+The first seven columns in the output are each one character wide, and
+each column gives you information about a different aspect of each
+working copy item.
+
+The first column indicates that an item was added, deleted, or otherwise
+changed:
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+No modifications.
+\item[\texttt{\textquotesingle{}A\textquotesingle{}}]
+Item is scheduled for addition.
+\item[\texttt{\textquotesingle{}D\textquotesingle{}}]
+Item is scheduled for deletion.
+\item[\texttt{\textquotesingle{}M\textquotesingle{}}]
+Item has been modified.
+\item[\texttt{\textquotesingle{}R\textquotesingle{}}]
+Item has been replaced in your working copy. This means the file was
+scheduled for deletion, and then a new file with the same name was
+scheduled for addition in its place.
+\item[\texttt{\textquotesingle{}C\textquotesingle{}}]
+The contents (as opposed to the properties) of the item conflict with
+updates received from the repository.
+\item[\texttt{\textquotesingle{}X\textquotesingle{}}]
+Item is present because of an externals definition.
+\item[\texttt{\textquotesingle{}I\textquotesingle{}}]
+Item is being ignored (e.g., with the \texttt{svn:ignore} property).
+\item[\texttt{\textquotesingle{}?\textquotesingle{}}]
+Item is not under version control.
+\item[\texttt{\textquotesingle{}!\textquotesingle{}}]
+Item is missing (e.g., you moved or deleted it without using
+\texttt{svn}). This also indicates that a directory is incomplete (a
+checkout or update was interrupted).
+\item[\texttt{\textquotesingle{}\textasciitilde{}\textquotesingle{}}]
+Item is versioned as one kind of object (file, directory, link), but has
+been replaced by a different kind of object.
+\end{description}
+
+The second column tells the status of a file\textquotesingle s or
+directory\textquotesingle s properties:
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+No modifications.
+\item[\texttt{\textquotesingle{}M\textquotesingle{}}]
+Properties for this item have been modified.
+\item[\texttt{\textquotesingle{}C\textquotesingle{}}]
+Properties for this item are in conflict with property updates received
+from the repository.
+\end{description}
+
+The third column is populated only if the working copy directory is
+locked (see \hyperref[svn.tour.cleanup]{Sometimes You Just Need to Clean
+Up}):
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+Item is not locked.
+\item[\texttt{\textquotesingle{}L\textquotesingle{}}]
+Item is locked.
+\end{description}
+
+The fourth column is populated only if the item is scheduled for
+addition-with-history:
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+No history scheduled with commit.
+\item[\texttt{\textquotesingle{}+\textquotesingle{}}]
+History scheduled with commit.
+\end{description}
+
+The fifth column is populated only if the item is switched relative to
+its parent (see \hyperref[svn.branchmerge.switchwc]{Traversing
+Branches}):
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+Item is a child of its parent directory.
+\item[\texttt{\textquotesingle{}S\textquotesingle{}}]
+Item is switched.
+\end{description}
+
+The sixth column is populated with lock information:
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+When \texttt{-\/-show-updates} (\texttt{-u}) is used, this means the
+file is not locked. If \texttt{-\/-show-updates} (\texttt{-u}) is
+\emph{not} used, this merely means that the file is not locked in this
+working copy.
+\item[\texttt{\textquotesingle{}K\textquotesingle{}}]
+File is locked in this working copy.
+\item[\texttt{\textquotesingle{}O\textquotesingle{}}]
+File is locked either by another user or in another working copy. This
+appears only when \texttt{-\/-show-updates} (\texttt{-u}) is used.
+\item[\texttt{\textquotesingle{}T\textquotesingle{}}]
+File was locked in this working copy, but the lock has been ``stolen''
+and is invalid. The file is currently locked in the repository. This
+appears only when \texttt{-\/-show-updates} (\texttt{-u}) is used.
+\item[\texttt{\textquotesingle{}B\textquotesingle{}}]
+File was locked in this working copy, but the lock has been ``broken''
+and is invalid. The file is no longer locked. This appears only when
+\texttt{-\/-show-updates} (\texttt{-u}) is used.
+\end{description}
+
+The seventh column is populated only if the item is the victim of a tree
+conflict:
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+Item is not the victim of a tree conflict.
+\item[\texttt{\textquotesingle{}C\textquotesingle{}}]
+Item is the victim of a tree conflict.
+\end{description}
+
+The eighth column is always blank.
+
+The out-of-date information appears in the ninth column (only if you
+pass the \texttt{-\/-show-updates} (\texttt{-u}) option):
+
+\begin{description}
+\item[\texttt{\textquotesingle{}\ \textquotesingle{}}]
+The item in your working copy is up to date.
+\item[\texttt{\textquotesingle{}*\textquotesingle{}}]
+A newer revision of the item exists on the server.
+\end{description}
+
+The remaining fields are variable width and delimited by spaces. The
+working revision is the next field if the \texttt{-\/-show-updates}
+(\texttt{-u}) or \texttt{-\/-verbose} (\texttt{-v}) option is passed.
+
+If the \texttt{-\/-verbose} (\texttt{-v}) option is passed, the last
+committed revision and last committed author are displayed next.
+
+The working copy path is always the final field, so it can include
+spaces.
+
+\subsection{Options}
+
+\begin{verbatim}
+--changelist (--cl) ARG
+--depth ARG
+--ignore-externals
+--incremental
+--no-ignore
+--quiet (-q)
+--show-updates (-u)
+--verbose (-v)
+--xml
+\end{verbatim}
+
+\subsection{Examples}
+
+This is the easiest way to find out what changes you have made to your
+working copy:
+
+\begin{verbatim}
+$ svn status wc
+ M      wc/bar.c
+A  +    wc/qax.c
+\end{verbatim}
+
+If you want to find out what files in your working copy are out of date,
+pass the \texttt{-\/-show-updates} (\texttt{-u}) option (this will
+\emph{not} make any changes to your working copy). Here you can see that
+\texttt{wc/foo.c} has changed in the repository since we last updated
+our working copy:
+
+\begin{verbatim}
+$ svn status -u wc
+ M            965    wc/bar.c
+        *     965    wc/foo.c
+A  +          965    wc/qax.c
+Status against revision:    981
+\end{verbatim}
+
+\texttt{-\/-show-updates} (\texttt{-u}) \emph{only} places an asterisk
+next to items that are out of date (i.e., items that will be updated
+from the repository if you later use \texttt{svn\ update}).
+\texttt{-\/-show-updates} (\texttt{-u}) does \emph{not} cause the status
+listing to reflect the repository\textquotesingle s version of the item
+(although you can see the revision number in the repository by passing
+the \texttt{-\/-verbose} (\texttt{-v}) option).
+
+The most information you can get out of the status subcommand is as
+follows:
+
+\begin{verbatim}
+$ svn status -u -v wc
+ M            965       938 sally        wc/bar.c
+        *     965       922 harry        wc/foo.c
+A  +          965       687 harry        wc/qax.c
+              965       687 harry        wc/zig.c
+Status against revision:   981
+\end{verbatim}
+
+Lastly, you can get \texttt{svn\ status} output in XML format with the
+\texttt{-\/-xml} option:
+
+\begin{verbatim}
+$ svn status --xml wc
+<?xml version="1.0"?>
+<status>
+<target
+   path="wc">
+<entry
+   path="qax.c">
+<wc-status
+   props="none"
+   item="added"
+   revision="0">
+</wc-status>
+</entry>
+<entry
+   path="bar.c">
+<wc-status
+   props="normal"
+   item="modified"
+   revision="965">
+<commit
+   revision="965">
+<author>sally</author>
+<date>2008-05-28T06:35:53.048870Z</date>
+</commit>
+</wc-status>
+</entry>
+</target>
+</status>
+\end{verbatim}
+
+For many more examples of \texttt{svn\ status}, see
+\hyperref[svn.tour.cycle.examine.status]{See an overview of your
+changes}.
+
+\section{svn switch (sw)}\label{svn.ref.svn.c.switch}
+
+\emph{Update working copy to a different URL.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ switch\ URL{[}@PEGREV{]}\ {[}PATH{]}}
+
+\texttt{svn\ switch\ -\/-relocate\ FROM\ TO\ {[}PATH...{]}}
+
+\subsection{Description}
+
+The first variant of this subcommand (without the \texttt{-\/-relocate}
+option) updates your working copy to point to a new URL. This is the
+Subversion way to make a working copy begin tracking a new branch. If
+specified, \textless PEGREV\textgreater{} determines in which revision
+the target is first looked up. See
+\hyperref[svn.branchmerge.switchwc]{Traversing Branches} for an in-depth
+look at switching.
+
+Beginning with Subversion 1.7, the \texttt{svn\ switch} command will
+demand by default that the URL to which you are switching your working
+copy shares a common ancestry with item that the working copy currently
+reflects. You can override this behavior by specifying the
+\texttt{-\/-ignore-ancestry} option.
+
+If \texttt{-\/-force} is used, unversioned obstructing paths in the
+working copy do not automatically cause a failure if the switch attempts
+to add the same path. If the obstructing path is the same type (file or
+directory) as the corresponding path in the repository, it becomes
+versioned but its contents are left untouched in the working copy. This
+means that an obstructing directory\textquotesingle s unversioned
+children may also obstruct and become versioned. For files, any content
+differences between the obstruction and the repository are treated like
+a local modification to the working copy. All properties from the
+repository are applied to the obstructing path.
+
+As with most subcommands, you can limit the scope of the switch
+operation to a particular tree depth using the \texttt{-\/-depth}
+option. Alternatively, you can use the \texttt{-\/-set-depth} option to
+set a new ``sticky'' working copy depth on the switch target.
+
+The \texttt{-\/-relocate} option is deprecated as of Subversion 1.7. Use
+\texttt{svn\ relocate} (described in
+\hyperref[svn.ref.svn.c.relocate]{svn relocate}) to perform working copy
+relocation instead.
+
+\subsection{Options}
+
+\begin{verbatim}
+--accept ACTION
+--depth ARG
+--diff3-cmd CMD
+--force
+--ignore-ancestry
+--ignore-externals
+--quiet (-q)
+--relocate
+--revision (-r) REV
+--set-depth ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+If you\textquotesingle re currently inside the directory
+\texttt{vendors}, which was branched to \texttt{vendors-with-fix}, and
+you\textquotesingle d like to switch your working copy to that branch:
+
+\begin{verbatim}
+$ svn switch http://svn.red-bean.com/repos/branches/vendors-with-fix .
+U    myproj/foo.txt
+U    myproj/bar.txt
+U    myproj/baz.c
+U    myproj/qux.c
+Updated to revision 31.
+\end{verbatim}
+
+To switch back, just provide the URL to the location in the repository
+from which you originally checked out your working copy:
+
+\begin{verbatim}
+$ svn switch http://svn.red-bean.com/repos/trunk/vendors .
+U    myproj/foo.txt
+U    myproj/bar.txt
+U    myproj/baz.c
+U    myproj/qux.c
+Updated to revision 31.
+\end{verbatim}
+
+You \emph{can} switch just part of your working copy to a branch if you
+don\textquotesingle t want to switch your entire working copy, but this
+is not generally recommended. It\textquotesingle s too easy to forget
+that you\textquotesingle ve done this and wind up accidentally making
+and committing changes both to the switched and unswitched portions of
+your tree.
+
+\section{svn unlock}\label{svn.ref.svn.c.unlock}
+
+\emph{Unlock working copy paths or URLs.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ unlock\ TARGET...}
+
+\subsection{Description}
+
+Unlock each \textless TARGET\textgreater. If any
+\textless TARGET\textgreater{} is locked by another user or no valid
+lock token exists in the working copy, print a warning and continue
+unlocking the rest of the \textless TARGET\textgreater s. Use
+\texttt{-\/-force} to break a lock belonging to another user or working
+copy.
+
+\subsection{Options}
+
+\begin{verbatim}
+--force
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Unlock two files in your working copy:
+
+\begin{verbatim}
+$ svn unlock tree.jpg house.jpg
+'tree.jpg' unlocked.
+'house.jpg' unlocked.
+\end{verbatim}
+
+Unlock a file in your working copy that is currently locked by another
+user:
+
+\begin{verbatim}
+$ svn unlock tree.jpg
+svn: E195013: 'tree.jpg' is not locked in this working copy
+$ svn unlock --force tree.jpg
+'tree.jpg' unlocked.
+\end{verbatim}
+
+Unlock a file without a working copy:
+
+\begin{verbatim}
+$ svn unlock http://svn.red-bean.com/repos/test/tree.jpg
+'tree.jpg unlocked.
+\end{verbatim}
+
+For further details, see \hyperref[svn.advanced.locking]{Locking}.
+
+\section{svn update (up)}\label{svn.ref.svn.c.update}
+
+\emph{Update your working copy.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ update\ {[}PATH...{]}}
+
+\subsection{Description}
+
+\texttt{svn\ update} brings changes from the repository into your
+working copy. If no revision is given, it brings your working copy up to
+date with the \texttt{HEAD} revision. Otherwise, it synchronizes the
+working copy to the revision given by the \texttt{-\/-revision}
+(\texttt{-r}) option. As part of the synchronization,
+\texttt{svn\ update} also removes any stale locks (see
+\hyperref[svn.tour.cleanup]{Sometimes You Just Need to Clean Up}) found
+in the working copy.
+
+For each updated item, it prints a line that starts with a character
+reporting the action taken. These characters have the following meaning:
+
+\begin{description}
+\item[\texttt{A}]
+Added
+\item[\texttt{B}]
+Broken lock (third column only)
+\item[\texttt{D}]
+Deleted
+\item[\texttt{U}]
+Updated
+\item[\texttt{C}]
+Conflicted
+\item[\texttt{G}]
+Merged
+\item[\texttt{E}]
+Existed
+\end{description}
+
+A character in the first column signifies an update to the actual file,
+whereas updates to the file\textquotesingle s properties are shown in
+the second column. Lock information is printed in the third column.
+
+As with most subcommands, you can limit the scope of the update
+operation to a particular tree depth using the \texttt{-\/-depth}
+option. Alternatively, you can use the \texttt{-\/-set-depth} option to
+set a new ``sticky'' working copy depth on the update target.
+
+\subsection{Options}
+
+\begin{verbatim}
+--accept ACTION
+--changelist (--cl) ARG
+--depth ARG
+--diff3-cmd CMD
+--editor-cmd CMD
+--force
+--ignore-externals
+--parents
+--quiet (-q)
+--revision (-r) REV
+--set-depth ARG
+\end{verbatim}
+
+\subsection{Examples}
+
+Pick up repository changes that have happened since your last update:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+A    newdir/toggle.c
+A    newdir/disclose.c
+A    newdir/launch.c
+D    newdir/README
+Updated to revision 32.
+\end{verbatim}
+
+You can also ``update'' your working copy to an older revision
+(Subversion doesn\textquotesingle t have the concept of ``sticky'' files
+like CVS does; see \hyperref[svn.forcvs]{Subversion for CVS Users}):
+
+\begin{verbatim}
+$ svn update -r30
+Updating '.':
+A    newdir/README
+D    newdir/toggle.c
+D    newdir/disclose.c
+D    newdir/launch.c
+U    foo.c
+Updated to revision 30.
+\end{verbatim}
+
+If you want to examine an older revision of a single file, you may want
+to use \texttt{svn\ cat} instead---it won\textquotesingle t change your
+working copy.
+
+\texttt{svn\ update} is also the primary mechanism used to configure
+sparse working copies. When used with the \texttt{-\/-set-depth}, the
+update operation will omit or reenlist individual working copy members
+by modifying their recorded ambient depth to the depth you specify
+(fetching information from the repository as necessary). See
+\hyperref[svn.advanced.sparsedirs]{Sparse Directories} for more about
+sparse directories.
+
+You can update multiple targets with a single invocation, and Subversion
+will not only gracefully skip any unversioned targets you provide it,
+but as of Subversion 1.7 will also include a post-update summary of all
+the updates it performed:
+
+\begin{verbatim}
+$ cd my-projects
+$ svn update *
+Updating 'calc':
+U    button.c
+U    integer.c
+Updated to revision 394.
+Skipped 'tempfile.tmp'
+Updating 'paint':
+A    palettes.c
+U    brushes.c
+Updated to revision 60.
+Updating 'ziptastic':
+At revision 43.
+Summary of updates:
+  Updated 'calc' to r394.
+  Updated 'paint' to r60.
+  Updated 'ziptastic' to r43.
+Summary of conflicts:
+  Skipped paths: 1
+$
+\end{verbatim}
+
+\section{svn upgrade}\label{svn.ref.svn.c.upgrade}
+
+\emph{Upgrade the metadata storage format for a working copy.}
+
+\textbf{Synopsis}
+
+\texttt{svn\ upgrade\ {[}PATH...{]}}
+
+\subsection{Description}
+
+As new versions of Subversion are released, the format used for the
+working copy metadata changes to accomodate new features or fix bugs.
+Older versions of Subversion would automatically upgrade working copies
+to the new format the first time the working copy was used by the new
+version of the software. Beginning with Subversion 1.7, working copy
+upgrades must be explicitly performed at the user\textquotesingle s
+request. \texttt{svn\ upgrade} is the subcommand used to trigger that
+upgrade process.
+
+\subsection{Options}
+
+\begin{verbatim}
+--quiet (-q)
+\end{verbatim}
+
+\subsection{Examples}
+
+If you attempt to use Subversion 1.7 on a working copy created with an
+older version of Subversion, you will see an error:
+
+\begin{verbatim}
+$ svn status
+svn: E155036: Please see the 'svn upgrade' command
+svn: E155036: Working copy '/home/sally/project' is too old (format 10, create
+d by Subversion 1.6)
+$
+\end{verbatim}
+
+Use the \texttt{svn\ upgrade} command to upgrade the working copy to the
+most recent metadata format supported by your version of Subversion.
+
+\begin{verbatim}
+$ svn upgrade
+Upgraded '.'
+Upgraded 'A'
+Upgraded 'A/B'
+Upgraded 'A/B/E'
+Upgraded 'A/B/F'
+Upgraded 'A/C'
+Upgraded 'A/D'
+Upgraded 'A/D/G'
+Upgraded 'A/D/H'
+$ svn status
+D       A/B/E/alpha
+M       A/D/gamma
+A       A/newfile
+$
+\end{verbatim}
+
+Notice that \texttt{svn\ upgrade} preserved the local modifications
+present in the working copy at the time of the upgrade, which were
+introduced by the version of Subversion previously used to manipulate
+this working copy.
+
+As was the case with automatically upgraded working copies in the past,
+explicitly upgraded working copies will be unusable by older versions of
+Subversion, too.
+

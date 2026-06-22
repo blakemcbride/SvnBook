@@ -1,0 +1,732 @@
+\contentsline {chapter}{Foreword}{1}{chapter*.2}%
+\contentsline {chapter}{Preface}{3}{chapter*.3}%
+\contentsline {section}{What Is Subversion?}{4}{section*.4}%
+\contentsline {subsection}{Is Subversion the Right Tool?}{4}{section*.5}%
+\contentsline {subsection}{Subversion\textquotesingle s History}{6}{section*.6}%
+\contentsline {subsection}{Subversion\textquotesingle s Architecture}{7}{section*.7}%
+\contentsline {subsection}{Subversion\textquotesingle s Components}{7}{section*.8}%
+\contentsline {subsection}{What\textquotesingle s New in Subversion}{9}{section*.9}%
+\contentsline {section}{Audience}{11}{section*.10}%
+\contentsline {section}{How to Read This Book}{11}{section*.11}%
+\contentsline {section}{Organization of This Book}{12}{section*.12}%
+\contentsline {section}{This Book Is Free}{14}{section*.13}%
+\contentsline {section}{Acknowledgments}{14}{section*.14}%
+\contentsline {part}{Getting to Know Subversion}{17}{section*.15}%
+\contentsline {chapter}{Fundamental Concepts}{19}{chapter*.16}%
+\contentsline {section}{Version Control Basics}{19}{section*.17}%
+\contentsline {subsection}{The Repository}{19}{section*.18}%
+\contentsline {subsection}{The Working Copy}{20}{section*.19}%
+\contentsline {subsection}{Versioning Models}{21}{section*.20}%
+\contentsline {subsubsection}{The problem of file sharing}{21}{section*.21}%
+\contentsline {subsubsection}{The lock-modify-unlock solution}{21}{section*.22}%
+\contentsline {subsubsection}{The copy-modify-merge solution}{24}{section*.23}%
+\contentsline {section}{Version Control the Subversion Way}{27}{section*.25}%
+\contentsline {subsection}{Subversion Repositories}{27}{section*.26}%
+\contentsline {subsection}{Revisions}{28}{section*.28}%
+\contentsline {subsection}{Addressing the Repository}{28}{section*.29}%
+\contentsline {subsection}{Subversion Working Copies}{31}{section*.30}%
+\contentsline {subsubsection}{How the working copy works}{32}{section*.31}%
+\contentsline {subsubsection}{Fundamental working copy interactions}{32}{section*.32}%
+\contentsline {subsubsection}{Mixed-revision working copies}{35}{section*.33}%
+\contentsline {paragraph}{Updates and commits are separate}{35}{section*.34}%
+\contentsline {paragraph}{Mixed revisions are normal}{36}{section*.35}%
+\contentsline {paragraph}{Mixed revisions are useful}{36}{section*.36}%
+\contentsline {paragraph}{Mixed revisions have limitations}{36}{section*.37}%
+\contentsline {section}{Summary}{37}{section*.38}%
+\contentsline {chapter}{Basic Usage}{39}{chapter*.39}%
+\contentsline {section}{Help!}{40}{section*.40}%
+\contentsline {section}{Getting Data into Your Repository}{41}{section*.41}%
+\contentsline {subsection}{Importing Files and Directories}{41}{section*.42}%
+\contentsline {subsection}{Recommended Repository Layout}{42}{section*.43}%
+\contentsline {subsection}{What\textquotesingle s In a Name?}{43}{section*.44}%
+\contentsline {section}{Creating a Working Copy}{44}{section*.45}%
+\contentsline {section}{Basic Work Cycle}{45}{section*.46}%
+\contentsline {subsection}{Update Your Working Copy}{46}{section*.47}%
+\contentsline {subsection}{Make Your Changes}{46}{section*.48}%
+\contentsline {subsection}{Review Your Changes}{48}{section*.49}%
+\contentsline {subsubsection}{See an overview of your changes}{49}{section*.50}%
+\contentsline {subsubsection}{Examine the details of your local modifications}{51}{section*.51}%
+\contentsline {subsection}{Fix Your Mistakes}{52}{section*.52}%
+\contentsline {subsection}{Resolve Any Conflicts}{53}{section*.53}%
+\contentsline {subsubsection}{Viewing conflict differences interactively}{56}{section*.54}%
+\contentsline {subsubsection}{Resolving conflict differences interactively}{56}{section*.55}%
+\contentsline {subsubsection}{Postponing conflict resolution}{58}{section*.56}%
+\contentsline {subsubsection}{Manual conflict resolution}{60}{section*.57}%
+\contentsline {subsubsection}{Discarding your changes in favor of a newly fetched revision}{62}{section*.58}%
+\contentsline {subsubsection}{Punting: using svn revert}{62}{section*.59}%
+\contentsline {subsection}{Commit Your Changes}{62}{section*.60}%
+\contentsline {section}{Examining History}{64}{section*.61}%
+\contentsline {subsection}{Examining the Details of Historical Changes}{64}{section*.62}%
+\contentsline {subsubsection}{Examining local changes}{64}{section*.63}%
+\contentsline {subsubsection}{Comparing working copy to repository}{65}{section*.64}%
+\contentsline {subsubsection}{Comparing repository revisions}{65}{section*.65}%
+\contentsline {subsection}{Generating a List of Historical Changes}{66}{section*.66}%
+\contentsline {subsection}{Browsing the Repository}{68}{section*.67}%
+\contentsline {subsubsection}{Displaying file contents}{68}{section*.68}%
+\contentsline {subsubsection}{Displaying line-by-line change attribution}{69}{section*.69}%
+\contentsline {subsubsection}{Listing versioned directories}{70}{section*.70}%
+\contentsline {subsection}{Fetching Older Repository Snapshots}{71}{section*.71}%
+\contentsline {section}{Sometimes You Just Need to Clean Up}{72}{section*.72}%
+\contentsline {subsection}{Disposing of a Working Copy}{72}{section*.73}%
+\contentsline {subsection}{Recovering from an Interruption}{72}{section*.74}%
+\contentsline {section}{Dealing with Structural Conflicts}{73}{section*.75}%
+\contentsline {subsection}{An Example Tree Conflict}{74}{section*.76}%
+\contentsline {section}{Summary}{79}{section*.77}%
+\contentsline {chapter}{Advanced Topics}{81}{chapter*.78}%
+\contentsline {section}{Revision Specifiers}{81}{section*.79}%
+\contentsline {subsection}{Revision Keywords}{82}{section*.80}%
+\contentsline {subsection}{Revision Dates}{83}{section*.81}%
+\contentsline {section}{Peg and Operative Revisions}{84}{section*.82}%
+\contentsline {section}{Properties}{89}{section*.84}%
+\contentsline {subsection}{Why Properties?}{90}{section*.85}%
+\contentsline {subsection}{Manipulating Properties}{92}{section*.86}%
+\contentsline {subsection}{Properties and the Subversion Workflow}{95}{section*.87}%
+\contentsline {subsection}{Inherited Properties}{97}{section*.88}%
+\contentsline {subsection}{Automatic Property Setting}{100}{section*.89}%
+\contentsline {subsection}{Subversion\textquotesingle s Reserved Properties}{105}{section*.90}%
+\contentsline {subsubsection}{Versioned properties}{105}{section*.91}%
+\contentsline {subsubsection}{Unversioned properties}{106}{section*.92}%
+\contentsline {section}{File Portability}{107}{section*.93}%
+\contentsline {subsection}{File Content Type}{107}{section*.94}%
+\contentsline {subsection}{File Executability}{109}{section*.95}%
+\contentsline {subsection}{End-of-Line Character Sequences}{110}{section*.96}%
+\contentsline {section}{Ignoring Unversioned Items}{111}{section*.97}%
+\contentsline {section}{Keyword Substitution}{116}{section*.98}%
+\contentsline {section}{Sparse Directories}{122}{section*.99}%
+\contentsline {section}{Locking}{127}{section*.100}%
+\contentsline {subsection}{Creating Locks}{130}{section*.102}%
+\contentsline {subsection}{Discovering Locks}{132}{section*.103}%
+\contentsline {subsection}{Breaking and Stealing Locks}{134}{section*.104}%
+\contentsline {subsection}{Lock Communication}{136}{section*.105}%
+\contentsline {section}{Externals Definitions}{137}{section*.106}%
+\contentsline {section}{Changelists}{144}{section*.108}%
+\contentsline {subsection}{Creating and Modifying Changelists}{145}{section*.109}%
+\contentsline {subsection}{Changelists As Operation Filters}{147}{section*.110}%
+\contentsline {subsection}{Changelist Limitations}{149}{section*.111}%
+\contentsline {section}{Network Model}{149}{section*.112}%
+\contentsline {subsection}{Requests and Responses}{150}{section*.113}%
+\contentsline {subsection}{Client Credentials}{150}{section*.114}%
+\contentsline {subsubsection}{Caching credentials}{151}{section*.115}%
+\contentsline {subsubsection}{Disabling password caching}{152}{section*.116}%
+\contentsline {subsubsection}{Removing cached credentials}{153}{section*.117}%
+\contentsline {subsubsection}{Command-line authentication}{153}{section*.118}%
+\contentsline {subsubsection}{Authentication wrap-up}{153}{section*.119}%
+\contentsline {section}{Working Without a Working Copy}{154}{section*.120}%
+\contentsline {subsection}{Remote command-line client operations}{155}{section*.121}%
+\contentsline {subsection}{Using svnmucc}{156}{section*.122}%
+\contentsline {section}{Summary}{159}{section*.123}%
+\contentsline {chapter}{Branching and Merging}{161}{chapter*.124}%
+\contentsline {section}{What\textquotesingle s a Branch?}{161}{section*.125}%
+\contentsline {section}{Using Branches}{162}{section*.126}%
+\contentsline {subsection}{Creating a Branch}{164}{section*.127}%
+\contentsline {subsection}{Working with Your Branch}{167}{section*.128}%
+\contentsline {subsection}{The Key Concepts Behind Branching}{170}{section*.129}%
+\contentsline {section}{Basic Merging}{170}{section*.130}%
+\contentsline {subsection}{Changesets}{171}{section*.132}%
+\contentsline {subsection}{Keeping a Branch in Sync}{171}{section*.133}%
+\contentsline {subsection}{Subtree Merges and Subtree Mergeinfo}{176}{section*.134}%
+\contentsline {subsection}{Reintegrating a Branch}{178}{section*.135}%
+\contentsline {subsection}{Mergeinfo and Previews}{180}{section*.136}%
+\contentsline {subsection}{Undoing Changes}{185}{section*.139}%
+\contentsline {subsection}{Resurrecting Deleted Items}{187}{section*.140}%
+\contentsline {section}{Advanced Merging}{189}{section*.141}%
+\contentsline {subsection}{Cherrypicking}{190}{section*.142}%
+\contentsline {subsection}{Merge Syntax: Full Disclosure}{193}{section*.143}%
+\contentsline {subsection}{Merges Without Mergeinfo}{194}{section*.144}%
+\contentsline {subsection}{More on Merge Conflicts}{195}{section*.146}%
+\contentsline {subsection}{Blocking Changes}{198}{section*.147}%
+\contentsline {subsection}{Merge-Sensitive Logs and Annotations}{200}{section*.148}%
+\contentsline {subsection}{Noticing or Ignoring Ancestry}{203}{section*.149}%
+\contentsline {subsection}{Merges and Moves}{204}{section*.150}%
+\contentsline {subsection}{Preventing Naïve Clients from Committing Merges}{206}{section*.151}%
+\contentsline {subsection}{The Final Word on Merge Tracking}{207}{section*.153}%
+\contentsline {section}{Traversing Branches}{208}{section*.154}%
+\contentsline {section}{Tags}{210}{section*.155}%
+\contentsline {subsection}{Creating a Simple Tag}{210}{section*.156}%
+\contentsline {subsection}{Creating a Complex Tag}{211}{section*.157}%
+\contentsline {section}{Branch Maintenance}{212}{section*.158}%
+\contentsline {subsection}{Repository Layout}{212}{section*.159}%
+\contentsline {subsection}{Data Lifetimes}{213}{section*.160}%
+\contentsline {section}{Common Branching Patterns}{215}{section*.161}%
+\contentsline {subsection}{Release Branches}{215}{section*.162}%
+\contentsline {subsection}{Feature Branches}{216}{section*.163}%
+\contentsline {section}{Vendor Branches}{217}{section*.164}%
+\contentsline {subsection}{General Vendor Branch Management Procedure}{219}{section*.165}%
+\contentsline {subsection}{Vendor Branches from Foreign Repositories}{219}{section*.166}%
+\contentsline {subsection}{Vendor Branches from Mirrored Sources}{222}{section*.167}%
+\contentsline {section}{To Branch or Not to Branch?}{226}{section*.168}%
+\contentsline {section}{Summary}{228}{section*.169}%
+\contentsline {chapter}{Repository Administration}{229}{chapter*.170}%
+\contentsline {section}{The Subversion Repository, Defined}{229}{section*.171}%
+\contentsline {section}{Strategies for Repository Deployment}{231}{section*.173}%
+\contentsline {subsection}{Planning Your Repository Organization}{232}{section*.174}%
+\contentsline {subsection}{Deciding Where and How to Host Your Repository}{235}{section*.175}%
+\contentsline {subsection}{Controlling Access to Your Repository}{235}{section*.176}%
+\contentsline {section}{Creating and Configuring Your Repository}{235}{section*.177}%
+\contentsline {subsection}{Creating the Repository}{235}{section*.178}%
+\contentsline {subsection}{Implementing Repository Hooks}{237}{section*.179}%
+\contentsline {subsubsection}{Hook script environment configuration}{238}{section*.180}%
+\contentsline {subsubsection}{Common uses for hook scripts}{239}{section*.182}%
+\contentsline {subsubsection}{Finding hook scripts or rolling your own}{241}{section*.184}%
+\contentsline {subsection}{FSFS Configuration}{241}{section*.185}%
+\contentsline {section}{Repository Maintenance}{242}{section*.186}%
+\contentsline {subsection}{An Administrator\textquotesingle s Toolkit}{242}{section*.187}%
+\contentsline {subsubsection}{svnadmin}{242}{section*.188}%
+\contentsline {subsubsection}{svnlook}{242}{section*.189}%
+\contentsline {subsubsection}{svndumpfilter}{244}{section*.190}%
+\contentsline {subsubsection}{svnrdump}{244}{section*.191}%
+\contentsline {subsubsection}{svnsync}{245}{section*.192}%
+\contentsline {subsubsection}{fsfs-reshard.py}{245}{section*.193}%
+\contentsline {subsection}{Commit Log Message Correction}{246}{section*.194}%
+\contentsline {subsection}{Managing Disk Space}{247}{section*.195}%
+\contentsline {subsubsection}{How Subversion saves disk space}{247}{section*.196}%
+\contentsline {subsubsection}{Removing dead transactions}{248}{section*.197}%
+\contentsline {subsubsection}{Packing FSFS filesystems}{249}{section*.199}%
+\contentsline {subsection}{Migrating Repository Data Elsewhere}{250}{section*.200}%
+\contentsline {subsubsection}{Repository data migration using svnadmin}{252}{section*.201}%
+\contentsline {subsubsection}{Repository data migration using svnrdump}{255}{section*.202}%
+\contentsline {subsection}{Filtering Repository History}{256}{section*.203}%
+\contentsline {subsection}{Repository Replication}{260}{section*.204}%
+\contentsline {subsubsection}{Replication with svnsync}{260}{section*.205}%
+\contentsline {subsubsection}{Partial replication with svnsync}{267}{section*.208}%
+\contentsline {subsubsection}{A quick trick for mirror creation}{267}{section*.209}%
+\contentsline {subsubsection}{Replication wrap-up}{268}{section*.210}%
+\contentsline {subsection}{Repository Backup}{269}{section*.211}%
+\contentsline {subsection}{Managing Repository UUIDs}{271}{section*.212}%
+\contentsline {section}{Moving and Removing Repositories}{272}{section*.213}%
+\contentsline {section}{Summary}{273}{section*.214}%
+\contentsline {chapter}{Server Configuration}{275}{chapter*.215}%
+\contentsline {section}{Overview}{275}{section*.216}%
+\contentsline {section}{Choosing a Server Configuration}{277}{section*.217}%
+\contentsline {subsection}{The svnserve Server}{277}{section*.218}%
+\contentsline {subsection}{svnserve over SSH}{278}{section*.219}%
+\contentsline {subsection}{The Apache HTTP Server}{278}{section*.220}%
+\contentsline {subsection}{Recommendations}{279}{section*.221}%
+\contentsline {section}{svnserve, a Custom Server}{280}{section*.222}%
+\contentsline {subsection}{Invoking the Server}{280}{section*.223}%
+\contentsline {subsubsection}{svnserve as daemon}{280}{section*.224}%
+\contentsline {subsubsection}{svnserve via inetd}{281}{section*.225}%
+\contentsline {subsubsection}{svnserve via xinetd}{282}{section*.226}%
+\contentsline {subsubsection}{svnserve over a tunnel}{282}{section*.227}%
+\contentsline {subsubsection}{svnserve as a Windows service}{283}{section*.228}%
+\contentsline {subsubsection}{svnserve as a launchd job}{284}{section*.229}%
+\contentsline {subsection}{Built-in Authentication and Authorization}{285}{section*.231}%
+\contentsline {subsubsection}{Create a users file and realm}{286}{section*.232}%
+\contentsline {subsubsection}{Set access controls}{287}{section*.233}%
+\contentsline {subsection}{Using svnserve with SASL}{288}{section*.234}%
+\contentsline {subsubsection}{Authenticating with SASL}{289}{section*.235}%
+\contentsline {subsubsection}{SASL encryption}{290}{section*.236}%
+\contentsline {subsection}{Tunneling over SSH}{291}{section*.237}%
+\contentsline {subsection}{SSH Configuration Tricks}{293}{section*.238}%
+\contentsline {subsubsection}{Initial setup}{293}{section*.239}%
+\contentsline {subsubsection}{Controlling the invoked command}{293}{section*.240}%
+\contentsline {subsection}{svnserve Configuration Reference}{294}{section*.241}%
+\contentsline {subsubsection}{General configuration}{295}{section*.242}%
+\contentsline {subsubsection}{Cyrus SASL configuration}{296}{section*.243}%
+\contentsline {section}{httpd, the Apache HTTP Server}{296}{section*.244}%
+\contentsline {subsection}{Prerequisites}{297}{section*.245}%
+\contentsline {subsection}{Basic Apache Configuration}{298}{section*.246}%
+\contentsline {subsection}{Authentication Options}{300}{section*.247}%
+\contentsline {subsubsection}{Basic authentication}{300}{section*.248}%
+\contentsline {subsubsection}{Digest authentication}{302}{section*.249}%
+\contentsline {subsection}{Authorization Options}{303}{section*.250}%
+\contentsline {subsubsection}{Blanket access control}{303}{section*.251}%
+\contentsline {subsubsection}{Per-directory access control}{305}{section*.252}%
+\contentsline {subsubsection}{Disabling path-based checks}{306}{section*.256}%
+\contentsline {subsubsection}{Versioned in repository access files}{307}{section*.258}%
+\contentsline {subsection}{Protecting network traffic with SSL}{308}{section*.261}%
+\contentsline {subsubsection}{Subversion server SSL certificate configuration}{308}{section*.262}%
+\contentsline {subsubsection}{Subversion client SSL certificate management}{309}{section*.263}%
+\contentsline {paragraph}{Server certificate}{309}{section*.264}%
+\contentsline {paragraph}{Client certificate challenge}{309}{section*.265}%
+\contentsline {subsection}{Tuning for Performance}{310}{section*.266}%
+\contentsline {subsubsection}{KeepAlive}{310}{section*.267}%
+\contentsline {subsubsection}{Bulk updates}{311}{section*.268}%
+\contentsline {subsection}{Extra Goodies}{312}{section*.269}%
+\contentsline {subsubsection}{Repository browsing}{312}{section*.270}%
+\contentsline {paragraph}{URL syntax}{312}{section*.271}%
+\contentsline {paragraph}{Proper MIME type}{314}{section*.272}%
+\contentsline {paragraph}{Customizing the look}{314}{section*.273}%
+\contentsline {paragraph}{Listing repositories}{315}{section*.274}%
+\contentsline {subsubsection}{Apache logging}{315}{section*.275}%
+\contentsline {subsubsection}{Write-through proxying}{317}{section*.276}%
+\contentsline {paragraph}{Configure the servers}{318}{section*.277}%
+\contentsline {paragraph}{Set up replication}{319}{section*.278}%
+\contentsline {paragraph}{Caveats}{321}{section*.279}%
+\contentsline {subsubsection}{Other Apache features}{322}{section*.280}%
+\contentsline {subsection}{Subversion Apache HTTP Server Configuration Reference}{323}{section*.281}%
+\contentsline {subsubsection}{mod\_\discretionary {}{}{}dav\_\discretionary {}{}{}svn configuration directives}{323}{section*.282}%
+\contentsline {subsubsection}{mod\_\discretionary {}{}{}authz\_\discretionary {}{}{}svn configuration directives}{326}{section*.283}%
+\contentsline {section}{Path-Based Authorization}{327}{section*.284}%
+\contentsline {subsection}{Getting Started with Path-Based Access Control}{328}{section*.285}%
+\contentsline {subsection}{Access Control Groups}{331}{section*.286}%
+\contentsline {subsection}{Username Aliases}{332}{section*.287}%
+\contentsline {subsection}{Advanced Access Control Features}{332}{section*.288}%
+\contentsline {subsection}{Some Gotchas with Access Control}{333}{section*.289}%
+\contentsline {section}{High-level Logging}{334}{section*.290}%
+\contentsline {section}{Server Optimization}{335}{section*.291}%
+\contentsline {subsection}{Data Caching}{336}{section*.292}%
+\contentsline {subsection}{Network Compression of Data}{336}{section*.293}%
+\contentsline {section}{Supporting Multiple Repository Access Methods}{337}{section*.294}%
+\contentsline {chapter}{Customizing Your Subversion Experience}{341}{chapter*.295}%
+\contentsline {section}{Runtime Configuration Area}{341}{section*.296}%
+\contentsline {subsection}{Configuration Area Layout}{341}{section*.297}%
+\contentsline {subsection}{Configuration and the Windows Registry}{342}{section*.298}%
+\contentsline {subsection}{Runtime Configuration Options}{345}{section*.300}%
+\contentsline {subsubsection}{General configuration}{345}{section*.301}%
+\contentsline {subsubsection}{Per-server configuration}{349}{section*.302}%
+\contentsline {section}{Localization}{352}{section*.303}%
+\contentsline {subsection}{Understanding Locales}{353}{section*.304}%
+\contentsline {subsection}{Subversion\textquotesingle s Use of Locales}{353}{section*.305}%
+\contentsline {section}{Using External Editors}{355}{section*.306}%
+\contentsline {section}{Using External Differencing and Merge Tools}{356}{section*.307}%
+\contentsline {subsection}{External diff}{357}{section*.308}%
+\contentsline {subsection}{External diff3}{359}{section*.311}%
+\contentsline {subsection}{External merge}{360}{section*.314}%
+\contentsline {section}{Summary}{361}{section*.317}%
+\contentsline {chapter}{Embedding Subversion}{363}{chapter*.318}%
+\contentsline {section}{Layered Library Design}{363}{section*.319}%
+\contentsline {subsection}{Repository Layer}{365}{section*.320}%
+\contentsline {subsection}{Repository Access Layer}{368}{section*.321}%
+\contentsline {subsection}{Client Layer}{370}{section*.322}%
+\contentsline {section}{Using the APIs}{371}{section*.323}%
+\contentsline {subsection}{The Apache Portable Runtime Library}{372}{section*.324}%
+\contentsline {subsection}{Functions and Batons}{373}{section*.325}%
+\contentsline {subsection}{URL and Path Requirements}{373}{section*.326}%
+\contentsline {subsection}{Using Languages Other Than C and C++}{374}{section*.327}%
+\contentsline {subsection}{Code Samples}{375}{section*.328}%
+\contentsline {section}{Summary}{382}{section*.332}%
+\contentsline {part}{Subversion Command Reference}{383}{section*.333}%
+\contentsline {chapter}{svn Reference---Subversion Command-Line Client}{385}{chapter*.334}%
+\contentsline {section}{svn add}{395}{section*.414}%
+\contentsline {subsection}{Description}{395}{section*.415}%
+\contentsline {subsection}{Options}{395}{section*.416}%
+\contentsline {subsection}{Examples}{395}{section*.417}%
+\contentsline {section}{svn blame (praise, annotate, ann)}{396}{section*.418}%
+\contentsline {subsection}{Description}{396}{section*.419}%
+\contentsline {subsection}{Options}{396}{section*.420}%
+\contentsline {subsection}{Examples}{397}{section*.421}%
+\contentsline {section}{svn cat}{398}{section*.422}%
+\contentsline {subsection}{Description}{398}{section*.423}%
+\contentsline {subsection}{Options}{398}{section*.424}%
+\contentsline {subsection}{Examples}{399}{section*.425}%
+\contentsline {section}{svn changelist (cl)}{399}{section*.426}%
+\contentsline {subsection}{Description}{400}{section*.427}%
+\contentsline {subsection}{Options}{400}{section*.428}%
+\contentsline {subsection}{Example}{400}{section*.429}%
+\contentsline {section}{svn checkout (co)}{400}{section*.430}%
+\contentsline {subsection}{Description}{401}{section*.431}%
+\contentsline {subsection}{Options}{401}{section*.432}%
+\contentsline {subsection}{Examples}{401}{section*.433}%
+\contentsline {section}{svn cleanup}{404}{section*.434}%
+\contentsline {subsection}{Description}{404}{section*.435}%
+\contentsline {subsection}{Options}{404}{section*.436}%
+\contentsline {subsection}{Examples}{404}{section*.437}%
+\contentsline {section}{svn commit (ci)}{404}{section*.438}%
+\contentsline {subsection}{Description}{405}{section*.439}%
+\contentsline {subsection}{Options}{405}{section*.440}%
+\contentsline {subsection}{Examples}{405}{section*.441}%
+\contentsline {section}{svn copy (cp)}{406}{section*.442}%
+\contentsline {subsection}{Description}{406}{section*.443}%
+\contentsline {subsection}{Options}{406}{section*.444}%
+\contentsline {subsection}{Examples}{407}{section*.445}%
+\contentsline {section}{svn delete (del, remove, rm)}{408}{section*.446}%
+\contentsline {subsection}{Description}{408}{section*.447}%
+\contentsline {subsection}{Options}{408}{section*.448}%
+\contentsline {subsection}{Examples}{409}{section*.449}%
+\contentsline {section}{svn diff (di)}{410}{section*.450}%
+\contentsline {subsection}{Description}{410}{section*.451}%
+\contentsline {subsection}{Options}{411}{section*.452}%
+\contentsline {subsection}{Examples}{411}{section*.453}%
+\contentsline {section}{svn export}{413}{section*.454}%
+\contentsline {subsection}{Description}{414}{section*.455}%
+\contentsline {subsection}{Options}{414}{section*.456}%
+\contentsline {subsection}{Examples}{414}{section*.457}%
+\contentsline {section}{svn help (h, ?)}{415}{section*.458}%
+\contentsline {subsection}{Description}{415}{section*.459}%
+\contentsline {subsection}{Options}{415}{section*.460}%
+\contentsline {section}{svn import}{415}{section*.461}%
+\contentsline {subsection}{Description}{415}{section*.462}%
+\contentsline {subsection}{Options}{415}{section*.463}%
+\contentsline {subsection}{Examples}{416}{section*.464}%
+\contentsline {section}{svn info}{416}{section*.465}%
+\contentsline {subsection}{Description}{416}{section*.466}%
+\contentsline {subsection}{Options}{417}{section*.467}%
+\contentsline {subsection}{Examples}{417}{section*.468}%
+\contentsline {section}{svn list (ls)}{418}{section*.469}%
+\contentsline {subsection}{Description}{419}{section*.470}%
+\contentsline {subsection}{Options}{419}{section*.471}%
+\contentsline {subsection}{Examples}{419}{section*.472}%
+\contentsline {section}{svn lock}{420}{section*.473}%
+\contentsline {subsection}{Description}{420}{section*.474}%
+\contentsline {subsection}{Options}{420}{section*.475}%
+\contentsline {subsection}{Examples}{421}{section*.476}%
+\contentsline {section}{svn log}{421}{section*.477}%
+\contentsline {subsection}{Description}{421}{section*.478}%
+\contentsline {subsection}{Options}{422}{section*.479}%
+\contentsline {subsection}{Examples}{422}{section*.480}%
+\contentsline {section}{svn merge}{427}{section*.481}%
+\contentsline {subsection}{Description}{427}{section*.482}%
+\contentsline {subsection}{Options}{428}{section*.483}%
+\contentsline {subsection}{Examples}{429}{section*.484}%
+\contentsline {section}{svn mergeinfo}{429}{section*.485}%
+\contentsline {subsection}{Description}{430}{section*.486}%
+\contentsline {subsection}{Options}{430}{section*.487}%
+\contentsline {subsection}{Examples}{430}{section*.488}%
+\contentsline {section}{svn mkdir}{431}{section*.489}%
+\contentsline {subsection}{Description}{431}{section*.490}%
+\contentsline {subsection}{Options}{431}{section*.491}%
+\contentsline {subsection}{Examples}{431}{section*.492}%
+\contentsline {section}{svn move (mv)}{431}{section*.493}%
+\contentsline {subsection}{Description}{432}{section*.494}%
+\contentsline {subsection}{Options}{432}{section*.495}%
+\contentsline {subsection}{Examples}{432}{section*.496}%
+\contentsline {section}{svn patch}{433}{section*.497}%
+\contentsline {subsection}{Description}{433}{section*.498}%
+\contentsline {subsection}{Options}{434}{section*.499}%
+\contentsline {subsection}{Examples}{434}{section*.500}%
+\contentsline {section}{svn propdel (pdel, pd)}{436}{section*.501}%
+\contentsline {subsection}{Description}{436}{section*.502}%
+\contentsline {subsection}{Options}{436}{section*.503}%
+\contentsline {subsection}{Examples}{436}{section*.504}%
+\contentsline {section}{svn propedit (pedit, pe)}{437}{section*.505}%
+\contentsline {subsection}{Description}{437}{section*.506}%
+\contentsline {subsection}{Options}{437}{section*.507}%
+\contentsline {subsection}{Examples}{437}{section*.508}%
+\contentsline {section}{svn propget (pget, pg)}{438}{section*.509}%
+\contentsline {subsection}{Description}{438}{section*.510}%
+\contentsline {subsection}{Options}{438}{section*.511}%
+\contentsline {subsection}{Examples}{438}{section*.512}%
+\contentsline {section}{svn proplist (plist, pl)}{439}{section*.513}%
+\contentsline {subsection}{Description}{439}{section*.514}%
+\contentsline {subsection}{Options}{440}{section*.515}%
+\contentsline {subsection}{Examples}{440}{section*.516}%
+\contentsline {section}{svn propset (pset, ps)}{441}{section*.517}%
+\contentsline {subsection}{Description}{441}{section*.518}%
+\contentsline {subsection}{Options}{441}{section*.519}%
+\contentsline {subsection}{Examples}{441}{section*.520}%
+\contentsline {section}{svn relocate}{442}{section*.521}%
+\contentsline {subsection}{Description}{442}{section*.522}%
+\contentsline {subsection}{Options}{443}{section*.523}%
+\contentsline {subsection}{Examples}{443}{section*.524}%
+\contentsline {section}{svn resolve}{445}{section*.525}%
+\contentsline {subsection}{Description}{445}{section*.526}%
+\contentsline {subsection}{Options}{445}{section*.527}%
+\contentsline {subsection}{Examples}{445}{section*.528}%
+\contentsline {section}{svn resolved}{446}{section*.529}%
+\contentsline {subsection}{Description}{446}{section*.530}%
+\contentsline {subsection}{Options}{446}{section*.531}%
+\contentsline {subsection}{Examples}{446}{section*.532}%
+\contentsline {section}{svn revert}{447}{section*.533}%
+\contentsline {subsection}{Description}{447}{section*.534}%
+\contentsline {subsection}{Options}{447}{section*.535}%
+\contentsline {subsection}{Examples}{447}{section*.536}%
+\contentsline {section}{svn status (stat, st)}{448}{section*.537}%
+\contentsline {subsection}{Description}{448}{section*.538}%
+\contentsline {subsection}{Options}{450}{section*.539}%
+\contentsline {subsection}{Examples}{451}{section*.540}%
+\contentsline {section}{svn switch (sw)}{452}{section*.541}%
+\contentsline {subsection}{Description}{452}{section*.542}%
+\contentsline {subsection}{Options}{453}{section*.543}%
+\contentsline {subsection}{Examples}{453}{section*.544}%
+\contentsline {section}{svn unlock}{453}{section*.545}%
+\contentsline {subsection}{Description}{454}{section*.546}%
+\contentsline {subsection}{Options}{454}{section*.547}%
+\contentsline {subsection}{Examples}{454}{section*.548}%
+\contentsline {section}{svn update (up)}{454}{section*.549}%
+\contentsline {subsection}{Description}{454}{section*.550}%
+\contentsline {subsection}{Options}{455}{section*.551}%
+\contentsline {subsection}{Examples}{455}{section*.552}%
+\contentsline {section}{svn upgrade}{457}{section*.553}%
+\contentsline {subsection}{Description}{457}{section*.554}%
+\contentsline {subsection}{Options}{457}{section*.555}%
+\contentsline {subsection}{Examples}{457}{section*.556}%
+\contentsline {chapter}{svnadmin Reference---Subversion Repository Administration}{459}{chapter*.557}%
+\contentsline {section}{svnadmin crashtest}{461}{section*.584}%
+\contentsline {subsection}{Description}{461}{section*.585}%
+\contentsline {subsection}{Options}{461}{section*.586}%
+\contentsline {subsection}{Examples}{461}{section*.587}%
+\contentsline {section}{svnadmin create}{461}{section*.588}%
+\contentsline {subsection}{Description}{461}{section*.589}%
+\contentsline {subsection}{Options}{462}{section*.590}%
+\contentsline {subsection}{Examples}{462}{section*.591}%
+\contentsline {section}{svnadmin deltify}{462}{section*.592}%
+\contentsline {subsection}{Description}{462}{section*.593}%
+\contentsline {subsection}{Options}{463}{section*.594}%
+\contentsline {section}{svnadmin dump}{463}{section*.595}%
+\contentsline {subsection}{Description}{463}{section*.596}%
+\contentsline {subsection}{Options}{464}{section*.597}%
+\contentsline {subsection}{Examples}{464}{section*.598}%
+\contentsline {section}{svnadmin freeze}{464}{section*.599}%
+\contentsline {subsection}{Description}{464}{section*.600}%
+\contentsline {subsection}{Options}{465}{section*.601}%
+\contentsline {subsection}{Examples}{465}{section*.602}%
+\contentsline {section}{svnadmin help (h, ?)}{465}{section*.603}%
+\contentsline {subsection}{Description}{465}{section*.604}%
+\contentsline {section}{svnadmin hotcopy}{465}{section*.605}%
+\contentsline {subsection}{Description}{465}{section*.606}%
+\contentsline {subsection}{Options}{466}{section*.607}%
+\contentsline {section}{svnadmin list-dblogs}{466}{section*.608}%
+\contentsline {subsection}{Description}{466}{section*.609}%
+\contentsline {section}{svnadmin list-unused-dblogs}{466}{section*.610}%
+\contentsline {subsection}{Description}{466}{section*.611}%
+\contentsline {subsection}{Examples}{467}{section*.612}%
+\contentsline {section}{svnadmin load}{467}{section*.613}%
+\contentsline {subsection}{Description}{467}{section*.614}%
+\contentsline {subsection}{Options}{467}{section*.615}%
+\contentsline {subsection}{Examples}{467}{section*.616}%
+\contentsline {section}{svnadmin lock}{468}{section*.617}%
+\contentsline {subsection}{Description}{468}{section*.618}%
+\contentsline {subsection}{Options}{468}{section*.619}%
+\contentsline {section}{svnadmin lslocks}{468}{section*.620}%
+\contentsline {subsection}{Description}{469}{section*.621}%
+\contentsline {subsection}{Options}{469}{section*.622}%
+\contentsline {subsection}{Examples}{469}{section*.623}%
+\contentsline {section}{svnadmin lstxns}{469}{section*.624}%
+\contentsline {subsection}{Description}{469}{section*.625}%
+\contentsline {subsection}{Examples}{469}{section*.626}%
+\contentsline {section}{svnadmin pack}{470}{section*.627}%
+\contentsline {subsection}{Description}{470}{section*.628}%
+\contentsline {subsection}{Options}{470}{section*.629}%
+\contentsline {section}{svnadmin recover}{470}{section*.630}%
+\contentsline {subsection}{Description}{470}{section*.631}%
+\contentsline {subsection}{Options}{470}{section*.632}%
+\contentsline {subsection}{Examples}{470}{section*.633}%
+\contentsline {section}{svnadmin rmlocks}{471}{section*.634}%
+\contentsline {subsection}{Description}{471}{section*.635}%
+\contentsline {subsection}{Options}{471}{section*.636}%
+\contentsline {subsection}{Examples}{471}{section*.637}%
+\contentsline {section}{svnadmin rmtxns}{471}{section*.638}%
+\contentsline {subsection}{Description}{472}{section*.639}%
+\contentsline {subsection}{Options}{472}{section*.640}%
+\contentsline {subsection}{Examples}{472}{section*.641}%
+\contentsline {section}{svnadmin setlog}{472}{section*.642}%
+\contentsline {subsection}{Description}{472}{section*.643}%
+\contentsline {subsection}{Options}{472}{section*.644}%
+\contentsline {subsection}{Examples}{473}{section*.645}%
+\contentsline {section}{svnadmin setrevprop}{473}{section*.646}%
+\contentsline {subsection}{Description}{473}{section*.647}%
+\contentsline {subsection}{Options}{473}{section*.648}%
+\contentsline {subsection}{Examples}{473}{section*.649}%
+\contentsline {section}{svnadmin setuuid}{473}{section*.650}%
+\contentsline {subsection}{Description}{473}{section*.651}%
+\contentsline {subsection}{Options}{474}{section*.652}%
+\contentsline {subsection}{Examples}{474}{section*.653}%
+\contentsline {section}{svnadmin unlock}{474}{section*.654}%
+\contentsline {subsection}{Description}{474}{section*.655}%
+\contentsline {subsection}{Options}{474}{section*.656}%
+\contentsline {section}{svnadmin upgrade}{474}{section*.657}%
+\contentsline {subsection}{Description}{474}{section*.658}%
+\contentsline {subsection}{Options}{475}{section*.659}%
+\contentsline {subsection}{Examples}{475}{section*.660}%
+\contentsline {section}{svnadmin verify}{475}{section*.661}%
+\contentsline {subsection}{Description}{475}{section*.662}%
+\contentsline {subsection}{Options}{475}{section*.663}%
+\contentsline {subsection}{Examples}{475}{section*.664}%
+\contentsline {chapter}{svnlook Reference---Subversion Repository Examination}{477}{chapter*.665}%
+\contentsline {section}{svnlook author}{479}{section*.685}%
+\contentsline {subsection}{Description}{479}{section*.686}%
+\contentsline {subsection}{Options}{479}{section*.687}%
+\contentsline {subsection}{Examples}{479}{section*.688}%
+\contentsline {section}{svnlook cat}{479}{section*.689}%
+\contentsline {subsection}{Description}{479}{section*.690}%
+\contentsline {subsection}{Options}{479}{section*.691}%
+\contentsline {subsection}{Examples}{480}{section*.692}%
+\contentsline {section}{svnlook changed}{480}{section*.693}%
+\contentsline {subsection}{Description}{480}{section*.694}%
+\contentsline {subsection}{Options}{480}{section*.695}%
+\contentsline {subsection}{Examples}{481}{section*.696}%
+\contentsline {section}{svnlook date}{481}{section*.697}%
+\contentsline {subsection}{Description}{481}{section*.698}%
+\contentsline {subsection}{Options}{481}{section*.699}%
+\contentsline {subsection}{Examples}{481}{section*.700}%
+\contentsline {section}{svnlook diff}{482}{section*.701}%
+\contentsline {subsection}{Description}{482}{section*.702}%
+\contentsline {subsection}{Options}{482}{section*.703}%
+\contentsline {subsection}{Examples}{482}{section*.704}%
+\contentsline {section}{svnlook dirs-changed}{484}{section*.705}%
+\contentsline {subsection}{Description}{484}{section*.706}%
+\contentsline {subsection}{Options}{484}{section*.707}%
+\contentsline {subsection}{Examples}{484}{section*.708}%
+\contentsline {section}{svnlook filesize}{484}{section*.709}%
+\contentsline {subsection}{Description}{484}{section*.710}%
+\contentsline {subsection}{Options}{485}{section*.711}%
+\contentsline {subsection}{Examples}{485}{section*.712}%
+\contentsline {section}{svnlook help (h, ?)}{485}{section*.713}%
+\contentsline {subsection}{Description}{485}{section*.714}%
+\contentsline {subsection}{Options}{485}{section*.715}%
+\contentsline {section}{svnlook history}{485}{section*.716}%
+\contentsline {subsection}{Description}{485}{section*.717}%
+\contentsline {subsection}{Options}{486}{section*.718}%
+\contentsline {subsection}{Examples}{486}{section*.719}%
+\contentsline {section}{svnlook info}{486}{section*.720}%
+\contentsline {subsection}{Description}{486}{section*.721}%
+\contentsline {subsection}{Options}{486}{section*.722}%
+\contentsline {subsection}{Examples}{486}{section*.723}%
+\contentsline {section}{svnlook lock}{487}{section*.724}%
+\contentsline {subsection}{Description}{487}{section*.725}%
+\contentsline {subsection}{Options}{487}{section*.726}%
+\contentsline {subsection}{Examples}{487}{section*.727}%
+\contentsline {section}{svnlook log}{487}{section*.728}%
+\contentsline {subsection}{Description}{487}{section*.729}%
+\contentsline {subsection}{Options}{488}{section*.730}%
+\contentsline {subsection}{Examples}{488}{section*.731}%
+\contentsline {section}{svnlook propget (pget, pg)}{488}{section*.732}%
+\contentsline {subsection}{Description}{488}{section*.733}%
+\contentsline {subsection}{Options}{488}{section*.734}%
+\contentsline {subsection}{Examples}{488}{section*.735}%
+\contentsline {section}{svnlook proplist (plist, pl)}{489}{section*.736}%
+\contentsline {subsection}{Description}{489}{section*.737}%
+\contentsline {subsection}{Options}{489}{section*.738}%
+\contentsline {subsection}{Examples}{489}{section*.739}%
+\contentsline {section}{svnlook tree}{490}{section*.740}%
+\contentsline {subsection}{Description}{490}{section*.741}%
+\contentsline {subsection}{Options}{490}{section*.742}%
+\contentsline {subsection}{Example}{490}{section*.743}%
+\contentsline {section}{svnlook uuid}{491}{section*.744}%
+\contentsline {subsection}{Description}{491}{section*.745}%
+\contentsline {subsection}{Options}{491}{section*.746}%
+\contentsline {subsection}{Examples}{491}{section*.747}%
+\contentsline {section}{svnlook youngest}{491}{section*.748}%
+\contentsline {subsection}{Description}{492}{section*.749}%
+\contentsline {subsection}{Options}{492}{section*.750}%
+\contentsline {subsection}{Examples}{492}{section*.751}%
+\contentsline {chapter}{svnserve Reference---Custom Subversion Server}{493}{chapter*.752}%
+\contentsline {section}{svnserve}{493}{section*.753}%
+\contentsline {subsection}{Description}{493}{section*.754}%
+\contentsline {subsection}{Options}{493}{section*.755}%
+\contentsline {chapter}{svnversion Reference---Subversion Working Copy Version Info}{497}{chapter*.777}%
+\contentsline {section}{svnversion}{497}{section*.778}%
+\contentsline {subsection}{Description}{497}{section*.779}%
+\contentsline {subsection}{Options}{497}{section*.780}%
+\contentsline {subsection}{Examples}{498}{section*.786}%
+\contentsline {chapter}{svnsync Reference---Subversion Repository Mirroring}{499}{chapter*.787}%
+\contentsline {section}{svnsync copy-revprops}{501}{section*.804}%
+\contentsline {subsection}{Description}{501}{section*.805}%
+\contentsline {subsection}{Options}{501}{section*.806}%
+\contentsline {subsection}{Examples}{502}{section*.807}%
+\contentsline {section}{svnsync help}{502}{section*.808}%
+\contentsline {subsection}{Description}{502}{section*.809}%
+\contentsline {subsection}{Options}{502}{section*.810}%
+\contentsline {section}{svnsync info}{502}{section*.811}%
+\contentsline {subsection}{Description}{503}{section*.812}%
+\contentsline {subsection}{Options}{503}{section*.813}%
+\contentsline {subsection}{Examples}{503}{section*.814}%
+\contentsline {section}{svnsync initialize (init)}{503}{section*.815}%
+\contentsline {subsection}{Description}{503}{section*.816}%
+\contentsline {subsection}{Options}{504}{section*.817}%
+\contentsline {subsection}{Examples}{504}{section*.818}%
+\contentsline {section}{svnsync synchronize (sync)}{505}{section*.819}%
+\contentsline {subsection}{Description}{505}{section*.820}%
+\contentsline {subsection}{Options}{505}{section*.821}%
+\contentsline {subsection}{Examples}{505}{section*.822}%
+\contentsline {chapter}{svnrdump Reference---Remote Subversion Repository Data Migration}{507}{chapter*.823}%
+\contentsline {section}{svnrdump dump}{508}{section*.835}%
+\contentsline {subsection}{Description}{508}{section*.836}%
+\contentsline {subsection}{Options}{508}{section*.837}%
+\contentsline {subsection}{Examples}{509}{section*.838}%
+\contentsline {section}{svnrdump help}{509}{section*.839}%
+\contentsline {subsection}{Description}{509}{section*.840}%
+\contentsline {subsection}{Options}{509}{section*.841}%
+\contentsline {section}{svnrdump load}{509}{section*.842}%
+\contentsline {subsection}{Description}{510}{section*.843}%
+\contentsline {subsection}{Options}{510}{section*.844}%
+\contentsline {subsection}{Examples}{510}{section*.845}%
+\contentsline {chapter}{svndumpfilter Reference---Subversion History Filtering}{511}{chapter*.846}%
+\contentsline {section}{svndumpfilter exclude}{512}{section*.856}%
+\contentsline {subsection}{Description}{512}{section*.857}%
+\contentsline {subsection}{Options}{512}{section*.858}%
+\contentsline {subsection}{Examples}{512}{section*.859}%
+\contentsline {section}{svndumpfilter include}{513}{section*.860}%
+\contentsline {subsection}{Description}{513}{section*.861}%
+\contentsline {subsection}{Options}{513}{section*.862}%
+\contentsline {subsection}{Example}{513}{section*.863}%
+\contentsline {section}{svndumpfilter help}{515}{section*.864}%
+\contentsline {subsection}{Description}{515}{section*.865}%
+\contentsline {subsection}{Options}{515}{section*.866}%
+\contentsline {chapter}{svnmucc Reference---Subversion Multiple URL Command Client}{517}{chapter*.867}%
+\contentsline {section}{svnmucc}{517}{section*.868}%
+\contentsline {subsection}{Description}{517}{section*.869}%
+\contentsline {subsection}{Actions}{518}{section*.870}%
+\contentsline {subsection}{Options}{518}{section*.871}%
+\contentsline {subsection}{Examples}{520}{section*.872}%
+\contentsline {chapter}{Subversion Repository Hook Reference}{523}{chapter*.873}%
+\contentsline {section}{start-commit}{523}{section*.874}%
+\contentsline {subsection}{Description}{523}{section*.875}%
+\contentsline {subsection}{Input Parameter(s)}{524}{section*.876}%
+\contentsline {subsection}{Common uses}{524}{section*.877}%
+\contentsline {section}{pre-commit}{524}{section*.878}%
+\contentsline {subsection}{Description}{524}{section*.879}%
+\contentsline {subsection}{Input parameter(s)}{525}{section*.880}%
+\contentsline {subsection}{Common uses}{525}{section*.881}%
+\contentsline {section}{post-commit}{525}{section*.882}%
+\contentsline {subsection}{Description}{525}{section*.883}%
+\contentsline {subsection}{Input parameter(s)}{526}{section*.884}%
+\contentsline {subsection}{Common uses}{526}{section*.885}%
+\contentsline {section}{pre-revprop-change}{526}{section*.886}%
+\contentsline {subsection}{Description}{526}{section*.887}%
+\contentsline {subsection}{Input parameter(s)}{526}{section*.888}%
+\contentsline {subsection}{Common uses}{527}{section*.889}%
+\contentsline {section}{post-revprop-change}{527}{section*.890}%
+\contentsline {subsection}{Description}{527}{section*.891}%
+\contentsline {subsection}{Input parameter(s)}{527}{section*.892}%
+\contentsline {subsection}{Common uses}{527}{section*.893}%
+\contentsline {section}{pre-lock}{527}{section*.894}%
+\contentsline {subsection}{Description}{528}{section*.895}%
+\contentsline {subsection}{Input parameter(s)}{528}{section*.896}%
+\contentsline {subsection}{Common uses}{528}{section*.897}%
+\contentsline {section}{post-lock}{528}{section*.898}%
+\contentsline {subsection}{Description}{529}{section*.899}%
+\contentsline {subsection}{Input parameter(s)}{529}{section*.900}%
+\contentsline {subsection}{Common uses}{529}{section*.901}%
+\contentsline {section}{pre-unlock}{529}{section*.902}%
+\contentsline {subsection}{Description}{529}{section*.903}%
+\contentsline {subsection}{Input parameter(s)}{529}{section*.904}%
+\contentsline {subsection}{Common uses}{530}{section*.905}%
+\contentsline {section}{post-unlock}{530}{section*.906}%
+\contentsline {subsection}{Description}{530}{section*.907}%
+\contentsline {subsection}{Input parameter(s)}{530}{section*.908}%
+\contentsline {subsection}{Common uses}{530}{section*.909}%
+\contentsline {part}{Appendices}{531}{section*.910}%
+\contentsline {chapter}{Subversion Quick-Start Guide}{533}{chapter*.911}%
+\contentsline {section}{Installing Subversion}{533}{section*.912}%
+\contentsline {section}{High-Speed Tutorial}{534}{section*.913}%
+\contentsline {chapter}{Subversion for CVS Users}{537}{chapter*.914}%
+\contentsline {section}{Revision Numbers Are Different Now}{537}{section*.915}%
+\contentsline {section}{Directory Versions}{538}{section*.916}%
+\contentsline {section}{More Disconnected Operations}{539}{section*.917}%
+\contentsline {section}{Distinction Between Status and Update}{539}{section*.918}%
+\contentsline {subsection}{Status}{539}{section*.919}%
+\contentsline {subsection}{Update}{540}{section*.920}%
+\contentsline {section}{Branches and Tags}{540}{section*.921}%
+\contentsline {section}{Metadata Properties}{541}{section*.922}%
+\contentsline {section}{Conflict Resolution}{541}{section*.923}%
+\contentsline {section}{Binary Files and Translation}{541}{section*.924}%
+\contentsline {section}{Versioned Modules}{542}{section*.925}%
+\contentsline {section}{Authentication}{542}{section*.926}%
+\contentsline {section}{Converting a Repository from CVS to Subversion}{543}{section*.927}%
+\contentsline {chapter}{WebDAV and Autoversioning}{545}{chapter*.928}%
+\contentsline {section}{What Is WebDAV?}{545}{section*.929}%
+\contentsline {section}{Autoversioning}{547}{section*.930}%
+\contentsline {section}{Client Interoperability}{548}{section*.931}%
+\contentsline {subsection}{Standalone WebDAV Applications}{552}{section*.932}%
+\contentsline {subsubsection}{Microsoft Office, Dreamweaver, Photoshop}{552}{section*.933}%
+\contentsline {subsubsection}{cadaver, DAV Explorer}{552}{section*.934}%
+\contentsline {subsection}{File-Explorer WebDAV Extensions}{553}{section*.935}%
+\contentsline {subsubsection}{Microsoft Web Folders}{553}{section*.936}%
+\contentsline {subsubsection}{Nautilus, Konqueror}{555}{section*.937}%
+\contentsline {subsection}{WebDAV Filesystem Implementation}{555}{section*.938}%
+\contentsline {subsubsection}{WebDrive, NetDrive}{555}{section*.939}%
+\contentsline {subsubsection}{Mac OS X}{555}{section*.940}%
+\contentsline {subsubsection}{Linux davfs2}{556}{section*.941}%
+\contentsline {chapter}{The Berkeley DB Legacy Filesystem}{557}{chapter*.942}%
+\contentsline {section}{Configuring Your Berkeley DB Environment}{557}{section*.943}%
+\contentsline {section}{Limitations of Berkeley DB}{558}{section*.944}%
+\contentsline {subsection}{Architectural Limitations}{558}{section*.945}%
+\contentsline {subsection}{Network Share Deployment}{558}{section*.946}%
+\contentsline {subsection}{Fault Tolerance and the Need for Recovery}{559}{section*.947}%
+\contentsline {section}{Maintaining Berkeley DB Repositories}{559}{section*.948}%
+\contentsline {subsection}{Berkeley DB Recovery}{560}{section*.949}%
+\contentsline {subsection}{Purging unused Berkeley DB logfiles}{561}{section*.950}%
+\contentsline {subsection}{Berkeley DB Utilities}{562}{section*.951}%
+\contentsline {chapter}{Copyright}{565}{chapter*.952}%

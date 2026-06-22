@@ -1,0 +1,2464 @@
+\chapter{Basic Usage}\label{svn.tour}
+
+Theory is useful, but its application is just plain fun.
+Let\textquotesingle s move now into the details of using Subversion. By
+the time you reach the end of this chapter, you will be able to perform
+all the tasks you need to use Subversion in a normal
+day\textquotesingle s work. You\textquotesingle ll start with getting
+your files into Subversion, followed by an initial checkout of your
+code. We\textquotesingle ll then walk you through making changes and
+examining those changes. You\textquotesingle ll also see how to bring
+changes made by others into your working copy, examine them, and work
+through any conflicts that might arise.
+
+This chapter will not provide exhaustive coverage of all of
+Subversion\textquotesingle s commands---rather, it\textquotesingle s a
+conversational introduction to the most common Subversion tasks that
+you\textquotesingle ll encounter. This chapter assumes that
+you\textquotesingle ve read and understood
+\hyperref[svn.basic]{Fundamental Concepts} and are familiar with the
+general model of Subversion. For a complete reference of all commands,
+see \hyperref[svn.ref.svn]{svn Reference---Subversion Command-Line
+Client}.
+
+Also, this chapter assumes that the reader is seeking information about
+how to interact in a basic fashion with an existing Subversion
+repository. No repository means no working copy; no working copy means
+not much of interest in this chapter. There are many Internet sites
+which offer free or inexpensive Subversion repository hosting services.
+Or, if you\textquotesingle d prefer to set up and administer your own
+repositories, check out \hyperref[svn.reposadmin]{Repository
+Administration}. But don\textquotesingle t expect the examples in this
+chapter to work without the user having access to a Subversion
+repository.
+
+Finally, any Subversion operation that contacts the repository over a
+network may potentially require that the user authenticate. For the sake
+of simplicity, our examples throughout this chapter avoid demonstrating
+and discussing authentication. Be aware that if you hope to apply the
+knowledge herein to an existing, real-world Subversion instance,
+you\textquotesingle ll probably be forced to provide at least a username
+and password to the server. See
+\hyperref[svn.serverconfig.netmodel.creds]{Client Credentials} for a
+detailed description of Subversion\textquotesingle s handling of
+authentication and client credentials.
+
+\section{Help!}\label{svn.tour.help}
+
+It goes without saying that this book exists to be a source of
+information and assistance for Subversion users new and old.
+Conveniently, though, the Subversion command-line is self-documenting,
+alleviating the need to grab a book off the shelf (wooden, virtual, or
+otherwise). The \texttt{svn\ help} command is your gateway to that
+built-in documentation:
+
+\begin{verbatim}
+$ svn help
+usage: svn <subcommand> [options] [args]
+Subversion command-line client, version 1.8.13.
+Type 'svn help <subcommand>' for help on a specific subcommand.
+Type 'svn --version' to see the program version and RA modules
+  or 'svn --version --quiet' to see just the version number.
+
+Most subcommands take file and/or directory arguments, recursing
+on the directories.  If no arguments are supplied to such a
+command, it recurses on the current directory (inclusive) by default.
+
+Available subcommands:
+   add
+   blame (praise, annotate, ann)
+   cat
+…
+\end{verbatim}
+
+As described in the previous output, you can ask for help on a
+particular subcommand by running \texttt{svn\ help\ SUBCOMMAND}.
+Subversion will respond with the full usage message for that subcommand,
+including its syntax, options, and behavior:
+
+\begin{verbatim}
+$ svn help help
+help (?, h): Describe the usage of this program or its subcommands.
+usage: help [SUBCOMMAND...]
+
+Global options:
+  --username ARG           : specify a username ARG
+  --password ARG           : specify a password ARG
+…
+\end{verbatim}
+
+Options and Switches and Flags, Oh My!
+
+The Subversion command-line client has numerous command modifiers. Some
+folks refer to such things as ``switches'' or ``flags''---in this book,
+we\textquotesingle ll call them ``options''. You\textquotesingle ll find
+the options supported by a given \texttt{svn} subcommand, plus a set of
+options which are globally supported by all subcommands, listed near the
+bottom of the built-in usage message for that subcommand.
+
+Subversion\textquotesingle s options have two distinct forms: short
+options are a single hyphen followed by a single letter, and long
+options consist of two hyphens followed by several letters and hyphens
+(e.g., \texttt{-s} and \texttt{-\/-this-is-a-long-option},
+respectively). Every option has at least one long format. Some, such as
+the \texttt{-\/-changelist} option, feature an abbreviated long-format
+alias (\texttt{-\/-cl}, in this case). Only certain options---generally
+the most-used ones---have an additional short format. To maintain
+clarity in this book, we usually use the long form in code examples, but
+when describing options, if there\textquotesingle s a short form,
+we\textquotesingle ll provide the long form (to improve clarity) and the
+short form (to make it easier to remember). Use the form
+you\textquotesingle re more comfortable with when executing your own
+Subversion commands.
+
+Many Unix-based distributions of Subversion include manual pages of the
+sort that can be invoked using the \texttt{man} program, but those tend
+to carry only pointers to other sources of real help, such as the
+project\textquotesingle s website and to the website which hosts this
+book. Also, several companies offer Subversion help and support, too,
+usually via a mixture of web-based discussion forums and fee-based
+consulting. And of course, the Internet holds a decade\textquotesingle s
+worth of Subversion-related discussions just begging to be located by
+your favorite search engine. Subversion help is never too far away.
+
+\section{Getting Data into Your Repository}\label{svn.tour.importing}
+
+You can get new files into your Subversion repository in two ways:
+\texttt{svn\ import} and \texttt{svn\ add}. We\textquotesingle ll
+discuss \texttt{svn\ import} now and will discuss \texttt{svn\ add}
+later in this chapter when we review a typical day with Subversion.
+
+\subsection{Importing Files and
+Directories}\label{svn.tour.importing.import}
+
+The \texttt{svn\ import} command is a quick way to copy an unversioned
+tree of files into a repository, creating intermediate directories as
+necessary. \texttt{svn\ import} doesn\textquotesingle t require a
+working copy, and your files are immediately committed to the
+repository. You typically use this when you have an existing tree of
+files that you want to begin tracking in your Subversion repository. For
+example:
+
+\begin{verbatim}
+$ svn import /path/to/mytree \
+             http://svn.example.com/svn/repo/some/project \
+             -m "Initial import"
+Adding         mytree/foo.c
+Adding         mytree/bar.c
+Adding         mytree/subdir
+Adding         mytree/subdir/quux.h
+
+Committed revision 1.
+$
+\end{verbatim}
+
+The previous example copied the contents of the local directory
+\texttt{mytree} into the directory \texttt{some/project} in the
+repository. Note that you didn\textquotesingle t have to create that new
+directory first---\texttt{svn\ import} does that for you. Immediately
+after the commit, you can see your data in the repository:
+
+\begin{verbatim}
+$ svn list http://svn.example.com/svn/repo/some/project
+bar.c
+foo.c
+subdir/
+$
+\end{verbatim}
+
+Note that after the import is finished, the original local directory is
+\emph{not} converted into a working copy. To begin working on that data
+in a versioned fashion, you still need to create a fresh working copy of
+that tree.
+
+\subsection{Recommended Repository
+Layout}\label{svn.tour.importing.layout}
+
+Subversion provides the ultimate flexibility in terms of how you arrange
+your data. Because it simply versions directories and files, and because
+it ascribes no particular meaning to any of those objects, you may
+arrange the data in your repository in any way that you choose.
+Unfortunately, this flexibility also means that it\textquotesingle s
+easy to find yourself ``lost without a roadmap'' as you attempt to
+navigate different Subversion repositories which may carry completely
+different and unpredictable arrangements of the data within them.
+
+To counteract this confusion, we recommend that you follow a repository
+layout convention (established long ago, in the nascency of the
+Subversion project itself) in which a handful of strategically named
+Subversion repository directories convey valuable meaning about the data
+they hold. Most projects have a recognizable ``main line'', or trunk, of
+development; some branches, which are divergent copies of development
+lines; and some tags, which are named, stable snapshots of a particular
+line of development. So we first recommend that each project have a
+recognizable project root in the repository, a directory under which all
+of the versioned information for that project---and only that
+project---lives. Secondly, we suggest that each project root contain a
+\texttt{trunk} subdirectory for the main development line, a
+\texttt{branches} subdirectory in which specific branches (or
+collections of branches) will be created, and a \texttt{tags}
+subdirectory in which specific tags (or collections of tags) will be
+created. Of course, if a repository houses only a single project, the
+root of the repository can serve as the project root, too.
+
+Here are some examples:
+
+\begin{verbatim}
+$ svn list file:///var/svn/single-project-repo
+trunk/
+branches/
+tags/
+$ svn list file:///var/svn/multi-project-repo
+project-A/
+project-B/
+$ svn list file:///var/svn/multi-project-repo/project-A
+trunk/
+branches/
+tags/
+$
+\end{verbatim}
+
+We talk much more about tags and branches in
+\hyperref[svn.branchmerge]{Branching and Merging}. For details and some
+advice on how to set up repositories when you have multiple projects,
+see \hyperref[svn.branchmerge.maint.layout]{Repository Layout}. Finally,
+we discuss project roots more in
+\hyperref[svn.reposadmin.projects.chooselayout]{Planning Your Repository
+Organization}.
+
+\subsection{What\textquotesingle s In a
+Name?}\label{svn.tour.importing.naming}
+
+Subversion tries hard not to limit the type of data you can place under
+version control. The contents of files and property values are stored
+and transmitted as binary data, and
+\hyperref[svn.advanced.props.special.mime-type]{File Content Type} tells
+you how to give Subversion a hint that ``textual'' operations
+don\textquotesingle t make sense for a particular file. There are a few
+places, however, where Subversion places restrictions on information it
+stores.
+
+Subversion internally handles certain bits of data---for example,
+property names, pathnames, and log messages---as UTF-8-encoded Unicode.
+This is not to say that all your interactions with Subversion must
+involve UTF-8, though. As a general rule, Subversion clients will
+gracefully and transparently handle conversions between UTF-8 and the
+encoding system in use on your computer, if such a conversion can
+meaningfully be done (which is the case for most common encodings in use
+today).
+
+In WebDAV exchanges and older versions of some of
+Subversion\textquotesingle s administrative files, paths are used as XML
+attribute values, and property names in XML tag names. This means that
+pathnames can contain only legal XML (1.0) characters, and properties
+are further limited to ASCII characters. Subversion also prohibits
+\texttt{TAB}, \texttt{CR}, and \texttt{LF} characters in path names to
+prevent paths from being broken up in diffs or in the output of commands
+such as \texttt{svn\ log} or \texttt{svn\ status}.
+
+While it may seem like a lot to remember, in practice these limitations
+are rarely a problem. As long as your locale settings are compatible
+with UTF-8 and you don\textquotesingle t use control characters in path
+names, you should have no trouble communicating with Subversion. The
+command-line client adds an extra bit of help---to create ``legally
+correct'' versions for internal use it will automatically escape illegal
+path characters as needed in URLs that you type.
+
+Of course, when it comes to choosing valid path names, Subversion
+isn\textquotesingle t the only limiting factor. Teams using multiple
+operating systems need to consider the limitations placed on path names
+by those operating systems, too. For example, while Windows disallows
+the use of colon characters in file names, a user on a Linux system can
+very easily add such a file to version control, resulting in a dataset
+that can no longer be checked out on Windows. Adding multiple files to a
+directory whose names differ only in their letter casing will likewise
+cause problems for users checking out working copies onto
+case-insensitive filesystems. So, some broad awareness of the various
+limitations introduced by different operating systems and filesystems,
+then, is recommended.
+
+\section{Creating a Working Copy}\label{svn.tour.initial}
+
+Most of the time, you will start using a Subversion repository by
+performing a checkout of your project. Checking out a directory from a
+repository creates a working copy of that directory on your local
+machine. Unless otherwise specified, this copy contains the youngest
+(that is, most recently created or modified) versions of the directory
+and its children found in the Subversion repository:
+
+\begin{verbatim}
+$ svn checkout http://svn.example.com/svn/repo/trunk
+A    trunk/README
+A    trunk/INSTALL
+A    trunk/src/main.c
+A    trunk/src/header.h
+…
+Checked out revision 8810.
+$
+\end{verbatim}
+
+Although the preceding example checks out the trunk directory, you can
+just as easily check out a deeper subdirectory of a repository by
+specifying that subdirectory\textquotesingle s URL as the checkout URL:
+
+\begin{verbatim}
+$ svn checkout http://svn.example.com/svn/repo/trunk/src
+A    src/main.c
+A    src/header.h
+A    src/lib/helpers.c
+…
+Checked out revision 8810.
+$
+\end{verbatim}
+
+Since Subversion uses a copy-modify-merge model instead of
+lock-modify-unlock (see \hyperref[svn.basic.vsn-models]{Versioning
+Models}), you can immediately make changes to the files and directories
+in your working copy. Your working copy is just like any other
+collection of files and directories on your system. You can edit the
+files inside it, rename it, even delete the entire working copy and
+forget about it.
+
+While your working copy is ``just like any other collection of files and
+directories on your system,'' you can edit files at will, but you must
+tell Subversion about \emph{everything else} that you do. For example,
+if you want to copy or move an item in a working copy, you should use
+\texttt{svn\ copy} or \texttt{svn\ move} instead of the copy and move
+commands provided by your operating system. We\textquotesingle ll talk
+more about them later in this chapter.
+
+Unless you\textquotesingle re ready to commit the addition of a new file
+or directory or changes to existing ones, there\textquotesingle s no
+need to further notify the Subversion server that you\textquotesingle ve
+done anything.
+
+What Is This .svn Directory?
+
+The topmost directory of a working copy---and prior to version 1.7,
+every versioned subdirectory thereof---contains a special administrative
+subdirectory named \texttt{.svn}. Usually, your operating
+system\textquotesingle s directory listing commands
+won\textquotesingle t show this subdirectory, but it is nevertheless an
+important directory. Whatever you do, don\textquotesingle t delete or
+change anything in the administrative area! Subversion uses that
+directory and its contents to manage your working copy.
+
+Notice that in the previous pair of examples, Subversion chose to create
+a working copy in a directory named for the final component of the
+checkout URL. This occurs only as a convenience to the user when the
+checkout URL is the only bit of information provided to the
+\texttt{svn\ checkout} command. Subversion\textquotesingle s
+command-line client gives you additional flexibility, though, allowing
+you to optionally specify the local directory name that Subversion
+should use for the working copy it creates. For example:
+
+\begin{verbatim}
+$ svn checkout http://svn.example.com/svn/repo/trunk my-working-copy
+A    my-working-copy/README
+A    my-working-copy/INSTALL
+A    my-working-copy/src/main.c
+A    my-working-copy/src/header.h
+…
+Checked out revision 8810.
+$
+\end{verbatim}
+
+If the local directory you specify doesn\textquotesingle t yet exist,
+that\textquotesingle s okay---\texttt{svn\ checkout} will create it for
+you.
+
+\section{Basic Work Cycle}\label{svn.tour.cycle}
+
+Subversion has numerous features, options, bells, and whistles, but on a
+day-to-day basis, odds are that you will use only a few of them. In this
+section, we\textquotesingle ll run through the most common things that
+you might find yourself doing with Subversion in the course of a
+day\textquotesingle s work.
+
+The typical work cycle looks like this:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \emph{Update your working copy.} This involves the use of the
+  \texttt{svn\ update} command.
+\item
+  \emph{Make your changes.} The most common changes that
+  you\textquotesingle ll make are edits to the contents of your existing
+  files. But sometimes you need to add, remove, copy and move files and
+  directories---the \texttt{svn\ add}, \texttt{svn\ delete},
+  \texttt{svn\ copy}, and \texttt{svn\ move} commands handle those sorts
+  of structural changes within the working copy.
+\item
+  \emph{Review your changes.} The \texttt{svn\ status} and
+  \texttt{svn\ diff} commands are critical to reviewing the changes
+  you\textquotesingle ve made in your working copy.
+\item
+  \emph{Fix your mistakes.} Nobody\textquotesingle s perfect, so as you
+  review your changes, you may spot something that\textquotesingle s not
+  quite right. Sometimes the easiest way to fix a mistake is start all
+  over again from scratch. The \texttt{svn\ revert} command restores a
+  file or directory to its unmodified state.
+\item
+  \emph{Resolve any conflicts (merge others\textquotesingle{} changes).}
+  In the time it takes you to make and review your changes, others might
+  have made and published changes, too. You\textquotesingle ll want to
+  integrate their changes into your working copy to avoid the potential
+  out-of-dateness scenarios when you attempt to publish your own. Again,
+  the \texttt{svn\ update} command is the way to do this. If this
+  results in local conflicts, you\textquotesingle ll need to resolve
+  those using the \texttt{svn\ resolve} command.
+\item
+  \emph{Publish (commit) your changes.} The \texttt{svn\ commit} command
+  transmits your changes to the repository where, if they are accepted,
+  they create the newest versions of all the things you modified. Now
+  others can see your work, too!
+\end{enumerate}
+
+\subsection{Update Your Working Copy}\label{svn.tour.cycle.update}
+
+When working on a project that is being modified via multiple working
+copies, you\textquotesingle ll want to update your working copy to
+receive any changes committed from other working copies since your last
+update. These might be changes that other members of your project team
+have made, or they might simply be changes you\textquotesingle ve made
+yourself from a different computer. To protect your data, Subversion
+won\textquotesingle t allow you commit new changes to out-of-date files
+and directories, so it\textquotesingle s best to have the latest
+versions of all your project\textquotesingle s files and directories
+before making new changes of your own.
+
+Use \texttt{svn\ update} to bring your working copy into sync with the
+latest revision in the repository:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+U    foo.c
+U    bar.c
+Updated to revision 2.
+$
+\end{verbatim}
+
+In this case, it appears that someone committed modifications to both
+\texttt{foo.c} and \texttt{bar.c} since the last time you updated, and
+Subversion has updated your working copy to include those changes.
+
+When the server sends changes to your working copy via
+\texttt{svn\ update}, a letter code is displayed next to each item to
+let you know what actions Subversion performed to bring your working
+copy up to date. To find out what these letters mean, run
+\texttt{svn\ help\ update} or see \hyperref[svn.ref.svn.c.update]{svn
+update (up)} in \hyperref[svn.ref.svn]{svn Reference---Subversion
+Command-Line Client}.
+
+\subsection{Make Your Changes}\label{svn.tour.cycle.edit}
+
+Now you can get to work and make changes in your working copy. You can
+make two kinds of changes to your working copy: file changes and tree
+changes. You don\textquotesingle t need to tell Subversion that you
+intend to change a file; just make your changes using your text editor,
+word processor, graphics program, or whatever tool you would normally
+use. Subversion automatically detects which files have been changed, and
+in addition, it handles binary files just as easily as it handles text
+files---and just as efficiently, too. Tree changes are different, and
+involve changes to a directory\textquotesingle s structure. Such changes
+include adding and removing files, renaming files or directories, and
+copying files or directories to new locations. For tree changes, you use
+Subversion operations to ``schedule'' files and directories for removal,
+addition, copying, or moving. These changes may take place immediately
+in your working copy, but no additions or removals will happen in the
+repository until you commit them.
+
+Versioning Symbolic Links
+
+On non-Windows platforms, Subversion is able to version files of the
+special type symbolic link (or ``symlink''). A symlink is a file that
+acts as a sort of transparent reference to some other object in the
+filesystem, allowing programs to read and write to those objects
+indirectly by performing operations on the symlink itself.
+
+When a symlink is committed into a Subversion repository, Subversion
+remembers that the file was in fact a symlink, as well as the object to
+which the symlink ``points.'' When that symlink is checked out to
+another working copy on a non-Windows system, Subversion reconstructs a
+real filesystem-level symbolic link from the versioned symlink. But that
+doesn\textquotesingle t in any way limit the usability of working copies
+on systems such as Windows that do not support symlinks. On such
+systems, Subversion simply creates a regular text file whose contents
+are the path to which the original symlink pointed. While that file
+can\textquotesingle t be used as a symlink on a Windows system, it also
+won\textquotesingle t prevent Windows users from performing their other
+Subversion-related activities.
+
+Here is an overview of the five Subversion subcommands that
+you\textquotesingle ll use most often to make tree changes:
+
+\begin{description}
+\item[\texttt{svn\ add\ FOO}]
+Use this to schedule the file, directory, or symbolic link \texttt{FOO}
+to be added to the repository. When you next commit, \texttt{FOO} will
+become a child of its parent directory. Note that if \texttt{FOO} is a
+directory, everything underneath \texttt{FOO} will be scheduled for
+addition. If you want only to add \texttt{FOO} itself, pass the
+\texttt{-\/-depth=empty} option.
+\item[\texttt{svn\ delete\ FOO}]
+Use this to schedule the file, directory, or symbolic link \texttt{FOO}
+to be deleted from the repository. \texttt{FOO} is immediately deleted
+from your working copy. (Of course, nothing is ever totally deleted from
+the repository---just from its \texttt{HEAD} revision. You may continue
+to access the deleted item in previous revisions). \footnote{Should you
+  desire to resurrect the item so that it is again present in
+  \texttt{HEAD}, see
+  \hyperref[svn.branchmerge.basicmerging.resurrect]{Resurrecting Deleted
+  Items}.}
+\item[\texttt{svn\ copy\ FOO\ BAR}]
+Create a new item \texttt{BAR} as a duplicate of \texttt{FOO} and
+automatically schedule \texttt{BAR} for addition. When \texttt{BAR} is
+added to the repository on the next commit, its copy history is recorded
+(as having originally come from \texttt{FOO}). \texttt{svn\ copy} does
+not create intermediate directories unless you pass the
+\texttt{-\/-parents} option.
+\item[\texttt{svn\ move\ FOO\ BAR}]
+This command is exactly the same as running
+\texttt{svn\ copy\ FOO\ BAR;\ svn\ delete\ FOO}. That is, \texttt{BAR}
+is scheduled for addition as a copy of \texttt{FOO}, and \texttt{FOO} is
+scheduled for removal. \texttt{svn\ move} does not create intermediate
+directories unless you pass the \texttt{-\/-parents} option.
+\item[\texttt{svn\ mkdir\ FOO}]
+This command is exactly the same as running
+\texttt{mkdir\ FOO;\ svn\ add\ FOO}. That is, a new directory named
+\texttt{FOO} is created and scheduled for addition.
+\end{description}
+
+Changing the Repository Without a Working Copy
+
+Subversion \emph{does} offer ways to immediately commit tree changes to
+the repository without an explicit commit action. In particular,
+specific uses of \texttt{svn\ mkdir}, \texttt{svn\ copy},
+\texttt{svn\ move}, and \texttt{svn\ delete} can operate directly on
+repository URLs as well as on working copy paths. Of course, as
+previously mentioned, \texttt{svn\ import} always makes direct changes
+to the repository. We discuss the ways to commit tree changes without a
+working copy in \hyperref[svn.advanced.working-without-a-wc]{Working
+Without a Working Copy}.
+
+There are pros and cons to performing URL-based operations. One obvious
+advantage to doing so is speed: sometimes, checking out a working copy
+that you don\textquotesingle t already have solely to perform some
+seemingly simple action is an overbearing cost. A disadvantage is that
+you are generally limited to a single, or single type of, operation at a
+time when operating directly on URLs. Finally, the primary advantage of
+a working copy is in its utility as a sort of ``staging area'' for
+changes. You can make sure that the changes you are about to commit make
+sense in the larger scope of your project before committing them. And,
+of course, these staged changes can be as complex or as a simple as they
+need to be, yet result in but a single new revision when committed.
+
+\subsection{Review Your Changes}\label{svn.tour.cycle.examine}
+
+Once you\textquotesingle ve finished making changes, you need to commit
+them to the repository, but before you do so, it\textquotesingle s
+usually a good idea to take a look at exactly what
+you\textquotesingle ve changed. By examining your changes before you
+commit, you can compose a more accurate log message (a human-readable
+description of the committed changes stored alongside those changes in
+the repository). You may also discover that you\textquotesingle ve
+inadvertently changed a file, and that you need to undo that change
+before committing. Additionally, this is a good opportunity to review
+and scrutinize changes before publishing them. You can see an overview
+of the changes you\textquotesingle ve made by using the
+\texttt{svn\ status} command, and you can dig into the details of those
+changes by using the \texttt{svn\ diff} command.
+
+Look Ma! No Network!
+
+You can use the commands \texttt{svn\ status}, \texttt{svn\ diff}, and
+\texttt{svn\ revert} without any network access even if your repository
+\emph{is} across the network. This makes it easy to manage and review
+your changes-in-progress when you are working offline or are otherwise
+unable to contact your repository over the network.
+
+Subversion does this by keeping private caches of pristine, unmodified
+versions of each versioned file inside its working copy administrative
+area (or prior to version 1.7, potentially multiple administrative
+areas). This allows Subversion to report---and revert---local
+modifications to those files \emph{without network access}. This cache
+(called the text-base) also allows Subversion to send the
+user\textquotesingle s local modifications during a commit to the server
+as a compressed delta (or ``difference'') against the pristine version.
+Having this cache is a tremendous benefit---even if you have a fast
+Internet connection, it\textquotesingle s generally much faster to send
+only a file\textquotesingle s changes rather than the whole file to the
+server.
+
+\subsubsection{See an overview of your
+changes}\label{svn.tour.cycle.examine.status}
+
+To get an overview of your changes, use the \texttt{svn\ status}
+command. You\textquotesingle ll probably use \texttt{svn\ status} more
+than any other Subversion command.
+
+Because the \texttt{cvs\ status} command\textquotesingle s output was so
+noisy, and because \texttt{cvs\ update} not only performs an update, but
+also reports the status of your local changes, most CVS users have grown
+accustomed to using \texttt{cvs\ update} to report their changes. In
+Subversion, the update and status reporting facilities are completely
+separate. See \hyperref[svn.forcvs.status-vs-update]{Distinction Between
+Status and Update} for more details.
+
+If you run \texttt{svn\ status} at the top of your working copy with no
+additional arguments, it will detect and report all file and tree
+changes you\textquotesingle ve made.
+
+\begin{verbatim}
+$ svn status
+?       scratch.c
+A       stuff/loot
+A       stuff/loot/new.c
+D       stuff/old.c
+M       bar.c
+$
+\end{verbatim}
+
+In its default output mode, \texttt{svn\ status} prints seven columns of
+characters, followed by several whitespace characters, followed by a
+file or directory name. The first column tells the status of a file or
+directory and/or its contents. Some of the most common codes that
+\texttt{svn\ status} displays are:
+
+\begin{description}
+\item[\texttt{?\ item}]
+The file, directory, or symbolic link \texttt{item} is not under version
+control.
+\item[\texttt{A\ item}]
+The file, directory, or symbolic link \texttt{item} has been scheduled
+for addition into the repository.
+\item[\texttt{C\ item}]
+The file \texttt{item} is in a state of conflict. That is, changes
+received from the server during an update overlap with local changes
+that you have in your working copy (and weren\textquotesingle t resolved
+during the update). You must resolve this conflict before committing
+your changes to the repository.
+\item[\texttt{D\ item}]
+The file, directory, or symbolic link \texttt{item} has been scheduled
+for deletion from the repository.
+\item[\texttt{M\ item}]
+The contents of the file \texttt{item} have been modified.
+\end{description}
+
+If you pass a specific path to \texttt{svn\ status}, you get information
+about that item alone:
+
+\begin{verbatim}
+$ svn status stuff/fish.c
+D       stuff/fish.c
+\end{verbatim}
+
+\texttt{svn\ status} also has a \texttt{-\/-verbose} (\texttt{-v})
+option, which will show you the status of \emph{every} item in your
+working copy, even if it has not been changed:
+
+\begin{verbatim}
+$ svn status -v
+M               44        23    sally     README
+                44        30    sally     INSTALL
+M               44        20    harry     bar.c
+                44        18    ira       stuff
+                44        35    harry     stuff/trout.c
+D               44        19    ira       stuff/fish.c
+                44        21    sally     stuff/things
+A                0         ?     ?        stuff/things/bloo.h
+                44        36    harry     stuff/things/gloo.c
+\end{verbatim}
+
+This is the ``long form'' output of \texttt{svn\ status}. The letters in
+the first column mean the same as before, but the second column shows
+the working revision of the item. The third and fourth columns show the
+revision in which the item last changed, and who changed it.
+
+None of the prior invocations to \texttt{svn\ status} contact the
+repository---they merely report what is known about the working copy
+items based on the records stored in the working copy administrative
+area and on the timestamps and contents of modified files. But sometimes
+it is useful to see which of the items in your working copy have been
+modified in the repository since the last time you updated your working
+copy. For this, \texttt{svn\ status} offers the
+\texttt{-\/-show-updates} (\texttt{-u}) option, which contacts the
+repository and adds information about items that are out of date:
+
+\begin{verbatim}
+$ svn status -u -v
+M      *        44        23    sally     README
+M               44        20    harry     bar.c
+       *        44        35    harry     stuff/trout.c
+D               44        19    ira       stuff/fish.c
+A                0         ?     ?        stuff/things/bloo.h
+Status against revision:   46
+\end{verbatim}
+
+Notice in the previous example the two asterisks: if you were to run
+\texttt{svn\ update} at this point, you would receive changes to
+\texttt{README} and \texttt{trout.c}. This tells you some very useful
+information---because one of those items is also one that you have
+locally modified (the file \texttt{README}), you\textquotesingle ll need
+to update and get the server\textquotesingle s changes for that file
+before you commit, or the repository will reject your commit for being
+out of date. We discuss this in more detail later.
+
+\texttt{svn\ status} can display much more information about the files
+and directories in your working copy than we\textquotesingle ve shown
+here---for an exhaustive description of \texttt{svn\ status} and its
+output, run \texttt{svn\ help\ status} or see
+\hyperref[svn.ref.svn.c.status]{svn status (stat, st)} in
+\hyperref[svn.ref.svn]{svn Reference---Subversion Command-Line Client}.
+
+\subsubsection{Examine the details of your local
+modifications}\label{svn.tour.cycle.examine.diff}
+
+Another way to examine your changes is with the \texttt{svn\ diff}
+command, which displays differences in file content. When you run
+\texttt{svn\ diff} at the top of your working copy with no arguments,
+Subversion will print the changes you\textquotesingle ve made to
+human-readable files in your working copy. It displays those changes in
+unified diff format, a format which describes changes as ``hunks'' (or
+``snippets'') of a file\textquotesingle s content where each line of
+text is prefixed with a single-character code: a space, which means the
+line was unchanged; a minus sign (\texttt{-}), which means the line was
+removed from the file; or a plus sign (\texttt{+}), which means the line
+was added to the file. In the context of \texttt{svn\ diff}, those
+minus-sign- and plus-sign-prefixed lines show how the lines looked
+before and after your modifications, respectively.
+
+Here\textquotesingle s an example:
+
+\begin{verbatim}
+$ svn diff
+Index: bar.c
+===================================================================
+--- bar.c   (revision 3)
++++ bar.c   (working copy)
+@@ -1,7 +1,12 @@
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++
++#include <stdio.h>
+
+ int main(void) {
+-  printf("Sixty-four slices of American Cheese...\n");
++  printf("Sixty-five slices of American Cheese...\n");
+ return 0;
+ }
+
+Index: README
+===================================================================
+--- README  (revision 3)
++++ README  (working copy)
+@@ -193,3 +193,4 @@
++Note to self:  pick up laundry.
+
+Index: stuff/fish.c
+===================================================================
+--- stuff/fish.c    (revision 1)
++++ stuff/fish.c    (working copy)
+-Welcome to the file known as 'fish'.
+-Information on fish will be here soon.
+
+Index: stuff/things/bloo.h
+===================================================================
+--- stuff/things/bloo.h (revision 8)
++++ stuff/things/bloo.h (working copy)
++Here is a new file to describe
++things about bloo.
+\end{verbatim}
+
+The \texttt{svn\ diff} command produces this output by comparing your
+working files against its pristine text-base. Files scheduled for
+addition are displayed as files in which every line was added; files
+scheduled for deletion are displayed as if every line was removed from
+those files. The output from \texttt{svn\ diff} is somewhat compatible
+with the \texttt{patch} program---more so with the \texttt{svn\ patch}
+subcommand introduced in Subversion 1.7. Patch processing commands such
+as these read and apply patch files (or ``patches''), which are files
+that describe differences made to one or more files. Because of this,
+you can share the changes you\textquotesingle ve made in your working
+copy with someone else without first committing those changes by
+creating a patch file from the redirected output of \texttt{svn\ diff}:
+
+\begin{verbatim}
+$ svn diff > patchfile
+$
+\end{verbatim}
+
+Subversion uses its internal diff engine, which produces unified diff
+format, by default. If you want diff output in a different format,
+specify an external diff program using \texttt{-\/-diff-cmd} and pass
+any additional flags that it needs via the \texttt{-\/-extensions}
+(\texttt{-x}) option. For example, you might want Subversion to defer
+its difference calculation and display to the GNU \texttt{diff} program,
+asking that program to print local modifications made to the file
+\texttt{foo.c} in context diff format (another flavor of difference
+format) while ignoring changes made only to the case of the letters used
+in the file\textquotesingle s contents:
+
+\begin{verbatim}
+$ svn diff --diff-cmd /usr/bin/diff -x "-i" foo.c
+…
+$
+\end{verbatim}
+
+\subsection{Fix Your Mistakes}\label{svn.tour.cycle.revert}
+
+Suppose while viewing the output of \texttt{svn\ diff} you determine
+that all the changes you made to a particular file are mistakes. Maybe
+you shouldn\textquotesingle t have changed the file at all, or perhaps
+it would be easier to make different changes starting from scratch. You
+could edit the file again and unmake all those changes. You could try to
+find a copy of how the file looked before you changed it, and then copy
+its contents atop your modified version. You could attempt to apply
+those changes to the file again in reverse using
+\texttt{svn\ patch\ -\/-reverse-diff} or using your operating
+system\textquotesingle s \texttt{patch\ -R}. And there are probably
+other approaches you could take.
+
+Fortunately in Subversion, undoing your work and starting over from
+scratch doesn\textquotesingle t require such acrobatics. Just use the
+\texttt{svn\ revert} command:
+
+\begin{verbatim}
+$ svn status README
+M       README
+$ svn revert README
+Reverted 'README'
+$ svn status README
+$
+\end{verbatim}
+
+In this example, Subversion has reverted the file to its premodified
+state by overwriting it with the pristine version of the file cached in
+the text-base area. But note that \texttt{svn\ revert} can undo
+\emph{any} scheduled operation---for example, you might decide that you
+don\textquotesingle t want to add a new file after all:
+
+\begin{verbatim}
+$ svn status new-file.txt
+?       new-file.txt
+$ svn add new-file.txt
+A         new-file.txt
+$ svn revert new-file.txt
+Reverted 'new-file.txt'
+$ svn status new-file.txt
+?       new-file.txt
+$
+\end{verbatim}
+
+Or perhaps you mistakenly removed a file from version control:
+
+\begin{verbatim}
+$ svn status README
+$ svn delete README
+D         README
+$ svn revert README
+Reverted 'README'
+$ svn status README
+$
+\end{verbatim}
+
+The \texttt{svn\ revert} command offers salvation for imperfect people.
+It can save you huge amounts of time and energy that would otherwise be
+spent manually unmaking changes or, worse, disposing of your working
+copy and checking out a fresh one just to have a clean slate to work
+with again.
+
+\subsection{Resolve Any Conflicts}\label{svn.tour.cycle.resolve}
+
+We\textquotesingle ve already seen how \texttt{svn\ status\ -u} can
+predict conflicts, but dealing with those conflicts is still something
+that remains to be done. Conflicts can occur any time you attempt to
+merge or integrate (in a very general sense) changes from the repository
+into your working copy. By now you know that \texttt{svn\ update}
+creates exactly that sort of scenario---that command\textquotesingle s
+very purpose is to bring your working copy up to date with the
+repository by merging all the changes made since your last update into
+your working copy. So how does Subversion report these conflicts to you,
+and how do you deal with them?
+
+Suppose you run \texttt{svn\ update} and you see this sort of
+interesting output:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+U    INSTALL
+G    README
+Conflict discovered in 'bar.c'.
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options:
+        
+\end{verbatim}
+
+The \texttt{U} (which stands for ``Updated'') and \texttt{G} (for
+``merGed'') codes are no cause for concern; those files cleanly absorbed
+changes from the repository. A file marked with \texttt{U} contains no
+local changes but was updated with changes from the repository. One
+marked with \texttt{G} had local changes to begin with, but the changes
+coming from the repository didn\textquotesingle t conflict with those
+local changes.
+
+It\textquotesingle s the next few lines which are interesting. First,
+Subversion reports to you that in its attempt to merge outstanding
+server changes into the file \texttt{bar.c}, it has detected that some
+of those changes clash with local modifications you\textquotesingle ve
+made to that file in your working copy but have not yet committed.
+Perhaps someone has changed the same line of text you also changed.
+Whatever the reason, Subversion instantly flags this file as being in a
+state of conflict. It then asks you what you want to do about the
+problem, allowing you to interactively choose an action to take toward
+resolving the conflict. The most commonly used options are displayed,
+but you can see all of the options by typing \textless s\textgreater:
+
+\begin{verbatim}
+…
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options: s
+
+  (e)  - change merged file in an editor  [edit]
+  (df) - show all changes made to merged file
+  (r)  - accept merged version of file
+
+  (dc) - show all conflicts (ignoring merged version)
+  (mc) - accept my version for all conflicts (same)  [mine-conflict]
+  (tc) - accept their version for all conflicts (same)  [theirs-conflict]
+
+  (mf) - accept my version of entire file (even non-conflicts)  [mine-full]
+  (tf) - accept their version of entire file (same)  [theirs-full]
+
+  (m)  - use internal merge tool to resolve conflict
+  (l)  - launch external tool to resolve conflict  [launch]
+  (p)  - mark the conflict to be resolved later  [postpone]
+  (q)  - postpone all remaining conflicts
+  (s)  - show this list (also 'h', '?')
+Words in square brackets are the corresponding --accept option arguments.
+
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options:
+\end{verbatim}
+
+Let\textquotesingle s briefly review each of these options before we go
+into detail on what each option means.
+
+\begin{description}
+\item[\texttt{(e)\ edit\ {[}edit{]}}]
+Open the file in conflict with your favorite editor, as set in the
+environment variable \texttt{EDITOR}.
+\item[\texttt{(df)\ diff-full}]
+Display the differences between the base revision and the conflicted
+file itself in unified diff format.
+\item[\texttt{(r)\ resolved}]
+After editing a file, tell \texttt{svn} that you\textquotesingle ve
+resolved the conflicts in the file and that it should accept the current
+contents---basically that you\textquotesingle ve ``resolved'' the
+conflict.
+\item[\texttt{(dc)\ display-conflict}]
+Display all conflicting regions of the file, ignoring changes which were
+successfully merged.
+\item[\texttt{(mc)\ mine-conflict\ {[}mine-conflict{]}}]
+Discard any newly received changes from the server which conflict with
+your local changes to the file under review. However, accept and merge
+all non-conflicting changes received from the server for that file.
+\item[\texttt{(tc)\ theirs-conflict\ {[}theirs-conflict{]}}]
+Discard any local changes which conflict with incoming changes from the
+server for the file under review. However, preserve all non-conflicting
+local changes to that file.
+\item[\texttt{(mf)\ mine-full\ {[}mine-full{]}}]
+Discard all newly received changes from the server for the file under
+review, but preserve all your local changes for that file.
+\item[\texttt{(tf)\ theirs-full\ {[}theirs-full{]}}]
+Discard all your local changes to the file under review and use only the
+newly received changes from the server for that file.
+\item[\texttt{(m)\ merge}]
+Launch an internal file merge tool to perform the conflict resolution.
+The option is available starting with Subversion 1.8.
+\item[\texttt{(l)\ launch}]
+Launch an external program to perform the conflict resolution. This
+requires a bit of preparation beforehand.
+\item[\texttt{(p)\ postpone\ {[}postpone{]}}]
+Leave the file in a conflicted state for you to resolve after your
+update is complete.
+\item[\texttt{(s)\ show\ all}]
+Show the list of all possible commands you can use in interactive
+conflict resolution.
+\end{description}
+
+We\textquotesingle ll cover these commands in more detail now, grouping
+them together by related functionality.
+
+\subsubsection{Viewing conflict differences
+interactively}\label{svn.tour.cycle.resolve.diff}
+
+Before deciding how to attack a conflict interactively, odds are that
+you\textquotesingle d like to see exactly what is in conflict. Two of
+the commands available at the interactive conflict resolution prompt can
+assist you here. The first is the ``diff-full'' command (\texttt{df}),
+which displays all the local modifications to the file in question plus
+any conflict regions:
+
+\begin{verbatim}
+…
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options: df
+--- .svn/text-base/sandwich.txt.svn-base      Tue Dec 11 21:33:57 2007
++++ .svn/tmp/tempfile.32.tmp     Tue Dec 11 21:34:33 2007
+@@ -1 +1,5 @@
+-Just buy a sandwich.
++<<<<<<< .mine
++Go pick up a cheesesteak.
++=======
++Bring me a taco!
++>>>>>>> .r32
+…
+\end{verbatim}
+
+The first line of the diff content shows the previous contents of the
+working copy (the \texttt{BASE} revision), the next content line is your
+change, and the last content line is the change that was just received
+from the server (\emph{usually} the \texttt{HEAD} revision).
+
+The second command is similar to the first, but the ``display-conflict''
+(\texttt{dc}) command shows only the conflict regions, not all the
+changes made to the file. Additionally, this command uses a slightly
+different display format for the conflict regions which allows you to
+more easily compare the file\textquotesingle s contents in those regions
+as they would appear in each of three states: original and unedited;
+with your local changes applied and the server\textquotesingle s
+conflicting changes ignored; and with only the server\textquotesingle s
+incoming changes applied and your local, conflicting changes reverted.
+
+After reviewing the information provided by these commands,
+you\textquotesingle re ready to move on to the next action.
+
+\subsubsection{Resolving conflict differences
+interactively}\label{svn.tour.cycle.resolve.resolve}
+
+The main way to resolve conflicts interactively is to use an internal
+file merge tool. The tool asks you what to do with each conflicting
+change and allows you to selectively merge and edit changes. However,
+there are several other different ways to resolve conflicts
+interactively---two of them allow you to selectively merge and edit
+changes using external editors, the rest of which allow you to simply
+pick a version of the file and move along. Internal merge tool combines
+all of the available ways to resolve conflicts.
+
+You\textquotesingle ve already reviewed the conflicting changes, so
+it\textquotesingle s now time to resolve the conflicts. The first
+command that should help you is the ``merge'' command (\texttt{m}) which
+is available starting with Subversion 1.8. The command displays the
+conflicting areas and allows you to choose from a number of options to
+resolve the conflicts area-by-area:
+
+\begin{verbatim}
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options: m
+Merging 'Makefile'.
+Conflicting section found during merge:
+(1) their version (at line 24)                  |(2) your version (at line 24)
+------------------------------------------------+------------------------------------------------
+top_builddir = /bar                             |top_builddir = /foo
+------------------------------------------------+------------------------------------------------
+Select: (1) use their version, (2) use your version,
+        (12) their version first, then yours,
+        (21) your version first, then theirs,
+        (e1) edit their version and use the result,
+        (e2) edit your version and use the result,
+        (eb) edit both versions and use the result,
+        (p) postpone this conflicting section leaving conflict markers,
+        (a) abort file merge and return to main menu:
+\end{verbatim}
+
+As you can see, when you use the internal file merge tool, you can cycle
+through individual conflicting areas in the file and select various
+resolution options or postpone conflict resolution for selected
+conflicts.
+
+However, if you wish to use an external editor to choose some
+combination of your local changes, you can use the ``edit'' command
+(\texttt{e}) to manually edit the file with conflict markers in a text
+editor (configured per the instructions in
+\hyperref[svn.advanced.externaleditors]{Using External Editors}). After
+you\textquotesingle ve edited the file, if you\textquotesingle re
+satisfied with the changes you\textquotesingle ve made, you can tell
+Subversion that the edited file is no longer in conflict by using the
+``resolved'' command (\texttt{r}).
+
+Regardless of what your local Unix snob will likely tell you, editing
+the file by hand in your favorite text editor is a somewhat low-tech way
+of remedying conflicts (see
+\hyperref[svn.tour.cycle.resolve.byhand]{Manual conflict resolution} for
+a walkthrough). For this reason, Subversion provides the ``launch''
+resolution command (\texttt{l}) to fire up a fancy graphical merge tool
+instead (see \hyperref[svn.advanced.externaldifftools.merge]{External
+merge}).
+
+There is also a pair of compromise options available. The
+``mine-conflict'' (\texttt{mc}) and ``theirs-conflict'' (\texttt{tc})
+commands instruct Subversion to select your local changes or the
+server\textquotesingle s incoming changes, respectively, as the
+``winner'' for all conflicts in the file. But, unlike the ``mine-full''
+and ``theirs-full'' commands, these commands preserve both your local
+changes and changes received from the server in regions of the file
+where no conflict was detected.
+
+Finally, if you decide that you don\textquotesingle t need to merge any
+changes, but just want to accept one version of the file or the other,
+you can either choose your changes (a.k.a. ``mine'') by using the
+``mine-full'' command (\texttt{mf}) or choose theirs by using the
+``theirs-full'' command (\texttt{tf}).
+
+\subsubsection{Postponing conflict
+resolution}\label{svn.tour.cycle.resolve.pending}
+
+This may sound like an appropriate section for avoiding marital
+disagreements, but it\textquotesingle s actually still about Subversion,
+so read on. If you\textquotesingle re doing an update and encounter a
+conflict that you\textquotesingle re not prepared to review or resolve,
+you can type \texttt{p} to postpone resolving a conflict on a
+file-by-file basis when you run \texttt{svn\ update}. If you know in
+advance that you don\textquotesingle t want to resolve any conflicts
+interactively, you can pass the \texttt{-\/-non-interactive} option to
+\texttt{svn\ update}, and any file in conflict will be marked with a
+\texttt{C} automatically.
+
+Beginning with Subversion 1.8, an internal file merge tool allows you to
+postpone conflict resolution for certain conflicts, but resolve other
+conflicts. Therefore, you can postpone conflict resolution area-by-area,
+not just on a file-to-file basis.
+
+The \texttt{C} (for ``Conflicted'') means that the changes from the
+server overlapped with your own, and now you have to manually choose
+between them after the update has completed. When you postpone a
+conflict resolution, \texttt{svn} typically does three things to assist
+you in noticing and resolving that conflict:
+
+\begin{itemize}
+\item
+  Subversion prints a \texttt{C} during the update and remembers that
+  the file is in a state of conflict.
+\item
+  If Subversion considers the file to be mergeable, it places conflict
+  markers---special strings of text that delimit the ``sides'' of the
+  conflict---into the file to visibly demonstrate the overlapping areas.
+  (Subversion uses the \texttt{svn:mime-type} property to decide whether
+  a file is capable of contextual, line-based merging. See
+  \hyperref[svn.advanced.props.special.mime-type]{File Content Type} to
+  learn more.)
+\item
+  For every conflicted file, Subversion places three extra unversioned
+  files in your working copy:
+
+  \begin{description}
+  \item[\texttt{filename.mine}]
+  This is the file as it existed in your working copy before you began
+  the update process. It contains any local modifications you had made
+  to the file up to that point. (If Subversion considers the file to be
+  unmergeable, the \texttt{.mine} file isn\textquotesingle t created,
+  since it would be identical to the working file.)
+  \item[\texttt{filename.rOLDREV}]
+  This is the file as it existed in the \texttt{BASE} revision---that
+  is, the unmodified revision of the file in your working copy
+  \emph{before} you began the update process---where
+  \textless OLDREV\textgreater{} is that base revision number.
+  \item[\texttt{filename.rNEWREV}]
+  This is the file that your Subversion client just received from the
+  server via the update of your working copy, where
+  \textless NEWREV\textgreater{} corresponds to the revision number to
+  which you were updating (\texttt{HEAD}, unless otherwise requested).
+  \end{description}
+\end{itemize}
+
+For example, Sally makes changes to the file \texttt{sandwich.txt}, but
+does not yet commit those changes. Meanwhile, Harry commits changes to
+that same file. Sally updates her working copy before committing and she
+gets a conflict, which she postpones:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+Conflict discovered in 'sandwich.txt'.
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options: p
+C    sandwich.txt
+Updated to revision 2.
+Summary of conflicts:
+  Text conflicts: 1
+$ ls -1
+sandwich.txt
+sandwich.txt.mine
+sandwich.txt.r1
+sandwich.txt.r2
+\end{verbatim}
+
+At this point, Subversion will \emph{not} allow Sally to commit the file
+\texttt{sandwich.txt} until the three temporary files are removed:
+
+\begin{verbatim}
+$ svn commit -m "Add a few more things"
+svn: E155015: Commit failed (details follow):
+svn: E155015: Aborting commit: '/home/sally/svn-work/sandwich.txt' remains in conflict
+\end{verbatim}
+
+If you\textquotesingle ve postponed a conflict, you need to resolve the
+conflict before Subversion will allow you to commit your changes.
+You\textquotesingle ll do this with the \texttt{svn\ resolve} command.
+This command accepts the \texttt{-\/-accept} option, which allows you
+specify your desired approach for resolving the conflict. Prior to
+Subversion 1.8, the \texttt{svn\ resolve} command \emph{required} the
+use of this option. Subversion now allows you to run the
+\texttt{svn\ resolve} command without that option. When you do so,
+Subversion cranks up its interactive conflict resolution mechanism,
+which you can read about (if you haven\textquotesingle t done so
+already) in the previous section,
+\hyperref[svn.tour.cycle.resolve.resolve]{Resolving conflict differences
+interactively}. We\textquotesingle ll take the opportunity in this
+section, though, to discuss the use of the \texttt{-\/-accept} option
+for conflict resolution.
+
+The \texttt{-\/-accept} option to the \texttt{svn\ resolve} command
+instructs Subversion to use one of its pre-packaged approaches to
+conflict resolution. If you want Subversion to resolve the conflict
+using the version of the file that you last checked out before making
+your edits, use \texttt{-\/-accept=base}. If you\textquotesingle d
+prefer instead to keep the version that contains only your edits, use
+\texttt{-\/-accept=mine-full}. You can also select the version that your
+most recent update pulled from the server (discarding your edits
+entirely)---that\textquotesingle s done using
+\texttt{-\/-accept=theirs-full}. There are other ``canned'' resolution
+types, too. See \hyperref[svn.ref.svn.sw.accept]{\texttt{-\/-accept}
+\textless ACTION\textgreater{}} in \hyperref[svn.ref.svn]{svn
+Reference---Subversion Command-Line Client} for details.
+
+You aren\textquotesingle t limited strictly to all-or-nothing options.
+If you want to pick and choose from your changes and the changes that
+your update fetched from the server, you can manually repair the working
+file, fixing up the conflicted text ``by hand'' (by examining and
+editing the conflict markers within the file), then tell Subversion to
+resolve the conflict by keeping the working file in its current state by
+running \texttt{svn\ resolve} with the \texttt{-\/-accept=working}
+option.
+
+\texttt{svn\ resolve} removes the three temporary files and accepts the
+version of the file that you specified. After the command completes
+successfully---and assuming you didn\textquotesingle t interactively
+choose to postpone resolution, of course---Subversion no longer
+considers the file to be in a state of conflict:
+
+\begin{verbatim}
+$ svn resolve --accept working sandwich.txt
+Resolved conflicted state of 'sandwich.txt'
+\end{verbatim}
+
+\subsubsection{Manual conflict
+resolution}\label{svn.tour.cycle.resolve.byhand}
+
+Manually resolving conflicts can be quite intimidating the first time
+you attempt it, but with a little practice, it can become as easy as
+falling off a bike.
+
+Here\textquotesingle s an example. Due to a miscommunication, you and
+Sally, your collaborator, both edit the file \texttt{sandwich.txt} at
+the same time. Sally commits her changes, and when you go to update your
+working copy, you get a conflict and you\textquotesingle re going to
+have to edit \texttt{sandwich.txt} to resolve the conflict. First,
+let\textquotesingle s take a look at the file:
+
+\begin{verbatim}
+$ cat sandwich.txt
+Top piece of bread
+Mayonnaise
+Lettuce
+Tomato
+Provolone
+<<<<<<< .mine
+Salami
+Mortadella
+Prosciutto
+=======
+Sauerkraut
+Grilled Chicken
+>>>>>>> .r2
+Creole Mustard
+Bottom piece of bread
+\end{verbatim}
+
+The strings of less-than signs, equals signs, and greater-than signs are
+conflict markers and are not part of the actual data in conflict. You
+generally want to ensure that those are removed from the file before
+your next commit. The text between the first two sets of markers is
+composed of the changes you made in the conflicting area:
+
+\begin{verbatim}
+<<<<<<< .mine
+Salami
+Mortadella
+Prosciutto
+=======
+\end{verbatim}
+
+The text between the second and third sets of conflict markers is the
+text from Sally\textquotesingle s commit:
+
+\begin{verbatim}
+=======
+Sauerkraut
+Grilled Chicken
+>>>>>>> .r2
+\end{verbatim}
+
+Usually you won\textquotesingle t want to just delete the conflict
+markers and Sally\textquotesingle s changes---she\textquotesingle s
+going to be awfully surprised when the sandwich arrives and
+it\textquotesingle s not what she wanted. This is where you pick up the
+phone or walk across the office and explain to Sally that you
+can\textquotesingle t get sauerkraut from an Italian deli.\footnote{And
+  if you ask them for it, they may very well ride you out of town on a
+  rail.} Once you\textquotesingle ve agreed on the changes you will
+commit, edit your file and remove the conflict markers:
+
+\begin{verbatim}
+Top piece of bread
+Mayonnaise
+Lettuce
+Tomato
+Provolone
+Salami
+Mortadella
+Prosciutto
+Creole Mustard
+Bottom piece of bread
+\end{verbatim}
+
+Now use \texttt{svn\ resolve}, and you\textquotesingle re ready to
+commit your changes:
+
+\begin{verbatim}
+$ svn resolve --accept working sandwich.txt
+Resolved conflicted state of 'sandwich.txt'
+$ svn commit -m "Go ahead and use my sandwich, discarding Sally's edits."
+\end{verbatim}
+
+Naturally, you want to be careful that when using \texttt{svn\ resolve}
+you don\textquotesingle t tell Subversion that you\textquotesingle ve
+resolved a conflict when you truly haven\textquotesingle t. Once the
+temporary files are removed, Subversion will let you commit the file
+even if it still contains conflict markers.
+
+If you ever get confused while editing the conflicted file, you can
+always consult the three files that Subversion creates for you in your
+working copy---including your file as it was before you updated. You can
+even use a third-party interactive merging tool to examine those three
+files.
+
+\subsubsection{Discarding your changes in favor of a newly fetched
+revision}\label{svn.tour.cycle.resolve.theirsfull}
+
+If you get a conflict and decide that you want to throw out your
+changes, you can run
+\texttt{svn\ resolve\ -\/-accept\ theirs-full\ CONFLICTED-PATH} and
+Subversion will discard your edits and remove the temporary files:
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+Conflict discovered in 'sandwich.txt'.
+Select: (p) postpone, (df) show diff, (e) edit file, (m) merge,
+        (mc) my side of conflict, (tc) their side of conflict,
+        (s) show all options: p
+C    sandwich.txt
+Updated to revision 2.
+Summary of conflicts:
+  Text conflicts: 1
+$ ls sandwich.*
+sandwich.txt  sandwich.txt.mine  sandwich.txt.r2  sandwich.txt.r1
+$ svn resolve --accept theirs-full sandwich.txt
+Resolved conflicted state of 'sandwich.txt'
+$
+\end{verbatim}
+
+\subsubsection{Punting: using svn
+revert}\label{svn.tour.cycle.resolve.revert}
+
+If you decide that you want to throw out your changes and start your
+edits again (whether this occurs after a conflict or anytime), just
+revert your changes:
+
+\begin{verbatim}
+$ svn revert sandwich.txt
+Reverted 'sandwich.txt'
+$ ls sandwich.*
+sandwich.txt
+$
+\end{verbatim}
+
+Note that when you revert a conflicted file, you don\textquotesingle t
+have to use \texttt{svn\ resolve}.
+
+\subsection{Commit Your Changes}\label{svn.tour.cycle.commit}
+
+Finally! Your edits are finished, you\textquotesingle ve merged all
+changes from the server, and you\textquotesingle re ready to commit your
+changes to the repository.
+
+The \texttt{svn\ commit} command sends all of your changes to the
+repository. When you commit a change, you need to supply a log message
+describing your change. Your log message will be attached to the new
+revision you create. If your log message is brief, you may wish to
+supply it on the command line using the \texttt{-\/-message}
+(\texttt{-m}) option:
+
+\begin{verbatim}
+$ svn commit -m "Corrected number of cheese slices."
+Sending        sandwich.txt
+Transmitting file data .
+Committed revision 3.
+\end{verbatim}
+
+However, if you\textquotesingle ve been composing your log message in
+some other text file as you work, you may want to tell Subversion to get
+the message from that file by passing its filename as the value of the
+\texttt{-\/-file} (\texttt{-F}) option:
+
+\begin{verbatim}
+$ svn commit -F logmsg
+Sending        sandwich.txt
+Transmitting file data .
+Committed revision 4.
+\end{verbatim}
+
+If you fail to specify either the \texttt{-\/-message} (\texttt{-m}) or
+\texttt{-\/-file} (\texttt{-F}) option, Subversion will automatically
+launch your favorite editor (see the information on \texttt{editor-cmd}
+in \hyperref[svn.advanced.confarea.opts.config]{General configuration})
+for composing a log message.
+
+If you\textquotesingle re in your editor writing a commit message and
+decide that you want to cancel your commit, you can just quit your
+editor without saving changes. If you\textquotesingle ve already saved
+your commit message, simply delete all the text, save again, and then
+abort:
+
+\begin{verbatim}
+$ svn commit
+Waiting for Emacs...Done
+
+Log message unchanged or not specified
+(a)bort, (c)ontinue, (e)dit
+a
+$
+\end{verbatim}
+
+The repository doesn\textquotesingle t know or care whether your changes
+make any sense as a whole; it checks only to make sure nobody else has
+changed any of the same files that you did when you
+weren\textquotesingle t looking. If somebody \emph{has} done that, the
+entire commit will fail with a message informing you that one or more of
+your files are out of date:
+
+\begin{verbatim}
+$ svn commit -m "Add another rule"
+Sending        rules.txt
+Transmitting file data .
+svn: E155011: Commit failed (details follow):
+svn: E155011: File '/home/sally/svn-work/sandwich.txt' is out of date
+…
+\end{verbatim}
+
+(The exact wording of this error message depends on the network protocol
+and server you\textquotesingle re using, but the idea is the same in all
+cases.)
+
+At this point, you need to run \texttt{svn\ update}, deal with any
+merges or conflicts that result, and then attempt your commit again.
+
+That covers the basic work cycle for using Subversion. Subversion offers
+many other features that you can use to manage your repository and
+working copy, but most of your day-to-day use of Subversion will involve
+only the commands that we\textquotesingle ve discussed so far in this
+chapter. We will, however, cover a few more commands that
+you\textquotesingle ll use fairly often.
+
+\section{Examining History}\label{svn.tour.history}
+
+Your Subversion repository is like a time machine. It keeps a record of
+every change ever committed and allows you to explore this history by
+examining previous versions of files and directories as well as the
+metadata that accompanies them. With a single Subversion command, you
+can check out the repository (or restore an existing working copy)
+exactly as it was at any date or revision number in the past. However,
+sometimes you just want to \emph{peer into} the past instead of
+\emph{going into} it.
+
+Several commands can provide you with historical data from the
+repository:
+
+\begin{description}
+\item[\texttt{svn\ diff}]
+Shows line-level details of a particular change
+\item[\texttt{svn\ log}]
+Shows you broad information: log messages with date and author
+information attached to revisions and which paths changed in each
+revision
+\item[\texttt{svn\ cat}]
+Retrieves a file as it existed in a particular revision number and
+displays it on your screen
+\item[\texttt{svn\ annotate}]
+Retrieves a human-readable file as it existed in a particular revision
+number, displaying its contents in a tabular form with last-changed
+information added to each line of the file
+\item[\texttt{svn\ list}]
+Displays the files in a directory for any given revision
+\end{description}
+
+\subsection{Examining the Details of Historical
+Changes}\label{svn.tour.history.diff}
+
+We\textquotesingle ve already seen \texttt{svn\ diff} before---it
+displays file differences in unified diff format; we used it to show the
+local modifications made to our working copy before committing to the
+repository.
+
+In fact, it turns out that there are \emph{three} distinct uses of
+\texttt{svn\ diff}:
+
+\begin{itemize}
+\item
+  Examining local changes
+\item
+  Comparing your working copy to the repository
+\item
+  Comparing repository revisions
+\end{itemize}
+
+\subsubsection{Examining local
+changes}\label{svn.tour.history.diff.local}
+
+As we\textquotesingle ve seen, invoking \texttt{svn\ diff} with no
+options will compare your working files to the cached ``pristine''
+copies in the \texttt{.svn} area:
+
+\begin{verbatim}
+$ svn diff
+Index: rules.txt
+===================================================================
+--- rules.txt   (revision 3)
++++ rules.txt   (working copy)
+@@ -1,4 +1,5 @@
+ Be kind to others
+ Freedom = Responsibility
+ Everything in moderation
+-Chew with your mouth open
++Chew with your mouth closed
++Listen when others are speaking
+$
+\end{verbatim}
+
+\subsubsection{Comparing working copy to
+repository}\label{svn.tour.history.diff.wcrepos}
+
+If a single \texttt{-\/-revision} (\texttt{-r}) number is passed, your
+working copy is compared to the specified revision in the repository:
+
+\begin{verbatim}
+$ svn diff -r 3 rules.txt
+Index: rules.txt
+===================================================================
+--- rules.txt   (revision 3)
++++ rules.txt   (working copy)
+@@ -1,4 +1,5 @@
+ Be kind to others
+ Freedom = Responsibility
+ Everything in moderation
+-Chew with your mouth open
++Chew with your mouth closed
++Listen when others are speaking
+$
+\end{verbatim}
+
+\subsubsection{Comparing repository
+revisions}\label{svn.tour.history.diff.reposrepos}
+
+If two revision numbers, separated by a colon, are passed via
+\texttt{-\/-revision} (\texttt{-r}), the two revisions are directly
+compared:
+
+\begin{verbatim}
+$ svn diff -r 2:3 rules.txt
+Index: rules.txt
+===================================================================
+--- rules.txt   (revision 2)
++++ rules.txt   (revision 3)
+@@ -1,4 +1,4 @@
+ Be kind to others
+-Freedom = Chocolate Ice Cream
++Freedom = Responsibility
+ Everything in moderation
+ Chew with your mouth open
+$
+\end{verbatim}
+
+A more convenient way of comparing one revision to the previous revision
+is to use the \texttt{-\/-change} (\texttt{-c}) option:
+
+\begin{verbatim}
+$ svn diff -c 3 rules.txt
+Index: rules.txt
+===================================================================
+--- rules.txt   (revision 2)
++++ rules.txt   (revision 3)
+@@ -1,4 +1,4 @@
+ Be kind to others
+-Freedom = Chocolate Ice Cream
++Freedom = Responsibility
+ Everything in moderation
+ Chew with your mouth open
+$
+\end{verbatim}
+
+Lastly, you can compare repository revisions even when you
+don\textquotesingle t have a working copy on your local machine, just by
+including the appropriate URL on the command line:
+
+\begin{verbatim}
+$ svn diff -c 5 http://svn.example.com/repos/example/trunk/text/rules.txt
+…
+$
+\end{verbatim}
+
+\subsection{Generating a List of Historical
+Changes}\label{svn.tour.history.log}
+
+To find information about the history of a file or directory, use the
+\texttt{svn\ log} command. \texttt{svn\ log} will provide you with a
+record of who made changes to a file or directory, at what revision it
+changed, the time and date of that revision, and---if it was
+provided---the log message that accompanied the commit:
+
+\begin{verbatim}
+$ svn log
+------------------------------------------------------------------------
+r3 | sally | 2008-05-15 23:09:28 -0500 (Thu, 15 May 2008) | 1 line
+
+Added include lines and corrected # of cheese slices.
+------------------------------------------------------------------------
+r2 | harry | 2008-05-14 18:43:15 -0500 (Wed, 14 May 2008) | 1 line
+
+Added main() methods.
+------------------------------------------------------------------------
+r1 | sally | 2008-05-10 19:50:31 -0500 (Sat, 10 May 2008) | 1 line
+
+Initial import
+------------------------------------------------------------------------
+\end{verbatim}
+
+Note that the log messages are printed in \emph{reverse chronological
+order} by default. If you wish to see a different range of revisions in
+a particular order or just a single revision, pass the
+\texttt{-\/-revision} (\texttt{-r}) option:
+
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*2)/2\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*2)/2\relax}@{}}
+\caption{Common log
+requests}\label{svn.tour.history.log.tbl-1}\tabularnewline
+\toprule\noalign{}
+Command & Description \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Command & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{svn\ log\ -r\ 5:19} & Display logs for revisions 5 through 19 in
+chronological order \\
+\texttt{svn\ log\ -r\ 19:5} & Display logs for revisions 5 through 19 in
+reverse chronological order \\
+\texttt{svn\ log\ -r\ 8} & Display logs for revision 8 only \\
+\end{longtable}
+
+You can also examine the log history of a single file or directory. For
+example:
+
+\begin{verbatim}
+$ svn log foo.c
+…
+$ svn log http://foo.com/svn/trunk/code/foo.c
+…
+\end{verbatim}
+
+These will display log messages \emph{only} for those revisions in which
+the named file (or directory) changed.
+
+Why Does svn log Not Show Me What I Just Committed?
+
+If you make a commit and immediately type \texttt{svn\ log} with no
+arguments, you may notice that your most recent commit
+doesn\textquotesingle t show up in the list of log messages. This is due
+to a combination of the behavior of \texttt{svn\ commit} and the default
+behavior of \texttt{svn\ log}. First, when you commit changes to the
+repository, \texttt{svn} bumps only the revision number of files (and
+directories) that it commits, so usually the parent directory remains at
+the older revision (See
+\hyperref[svn.basic.in-action.mixedrevs.update-commit]{Updates and
+commits are separate} for an explanation of why). \texttt{svn\ log} then
+defaults to fetching the history of the directory at its current
+revision, and thus you don\textquotesingle t see the newly committed
+changes. The solution here is to either update your working copy or
+explicitly provide a revision number to \texttt{svn\ log} by using the
+\texttt{-\/-revision} (\texttt{-r}) option.
+
+If you want even more information about a file or directory,
+\texttt{svn\ log} also takes a \texttt{-\/-verbose} (\texttt{-v})
+option. Because Subversion allows you to move and copy files and
+directories, it is important to be able to track path changes in the
+filesystem. So, in verbose mode, \texttt{svn\ log} will include a list
+of changed paths in a revision in its output:
+
+\begin{verbatim}
+$ svn log -r 8 -v
+------------------------------------------------------------------------
+r8 | sally | 2008-05-21 13:19:25 -0500 (Wed, 21 May 2008) | 1 line
+Changed paths:
+   M /trunk/code/foo.c
+   M /trunk/code/bar.h
+   A /trunk/code/doc/README
+
+Frozzled the sub-space winch.
+
+------------------------------------------------------------------------
+\end{verbatim}
+
+\texttt{svn\ log} also takes a \texttt{-\/-quiet} (\texttt{-q}) option,
+which suppresses the body of the log message. When combined with
+\texttt{-\/-verbose} (\texttt{-v}), it gives just the names of the
+changed files.
+
+Why Does svn log Give Me an Empty Response?
+
+After working with Subversion for a bit, most users will come across
+something like this:
+
+\begin{verbatim}
+$ svn log -r 2
+------------------------------------------------------------------------
+$
+\end{verbatim}
+
+At first glance, this seems like an error. But recall that while
+revisions are repository-wide, \texttt{svn\ log} operates on a path in
+the repository. If you supply no path, Subversion uses the current
+working directory as the default target. As a result, if
+you\textquotesingle re operating in a subdirectory of your working copy
+and attempt to see the log of a revision in which neither that directory
+nor any of its children was changed, Subversion will show you an empty
+log. If you want to see what changed in that revision, try pointing
+\texttt{svn\ log} directly at the topmost URL of your repository, as in
+\texttt{svn\ log\ -r\ 2\ \^{}/}.
+
+As of Subversion 1.7, users of the Subversion command-line can also take
+advantage of a special output mode for \texttt{svn\ log} which
+integrates a difference report such as is generated by the
+\texttt{svn\ diff} command we introduced earlier. When you invoke
+\texttt{svn\ log} with the \texttt{-\/-diff} option, Subversion will
+append to each revision log chunk in the log report a
+\texttt{diff}-style difference report. This is a very convenient way to
+see both the high-level, semantic changes and the line-based
+modifications of a revision all at the same time!
+
+Beginning with Subversion 1.8, \texttt{svn\ log} accepts
+\texttt{-\/-search} and \texttt{-\/-search-and} options. The options
+allow you to filter the output of \texttt{svn\ log} based on the search
+pattern you supply. When using these options, a log message is shown
+only if a revision\textquotesingle s author, date, log message text, or
+list of changed paths, matches the search pattern.
+
+\subsection{Browsing the Repository}\label{svn.tour.history.browsing}
+
+Using \texttt{svn\ cat} and \texttt{svn\ list}, you can view various
+revisions of files and directories without changing the working revision
+of your working copy. In fact, you don\textquotesingle t even need a
+working copy to use either one.
+
+\subsubsection{Displaying file
+contents}\label{svn.tour.history.browsing.cat}
+
+If you want to examine an earlier version of a file and not necessarily
+the differences between two files, you can use \texttt{svn\ cat}:
+
+\begin{verbatim}
+$ svn cat -r 2 rules.txt
+Be kind to others
+Freedom = Chocolate Ice Cream
+Everything in moderation
+Chew with your mouth open
+$
+\end{verbatim}
+
+You can also redirect the output directly into a file:
+
+\begin{verbatim}
+$ svn cat -r 2 rules.txt > rules.txt.v2
+$
+\end{verbatim}
+
+\subsubsection{Displaying line-by-line change
+attribution}\label{svn.tour.history.browsing.annotate}
+
+Very similar to the \texttt{svn\ cat} command we discussed in the
+previous section is the \texttt{svn\ annotate} command. This command
+also displays the contents of a versioned file, but it does so using a
+tabular format. Each line of output shows not only a line of the
+file\textquotesingle s content but also the username, the revision
+number and (optionally) the datestamp of the revision in which that line
+was last modified.
+
+When used with a working copy file target, \texttt{svn\ annotate} will
+by default show line-by-line attribution of the file as it currently
+appears in the working copy.
+
+\begin{verbatim}
+$ svn annotate rules.txt
+     1      harry Be kind to others
+     3      sally Freedom = Responsibility
+     1      harry Everything in moderation
+     -          - Chew with your mouth closed
+     -          - Listen when others are speaking
+\end{verbatim}
+
+Notice that for some lines, there is no attribution provided. In this
+case, that\textquotesingle s because those lines have been modified in
+the working copy\textquotesingle s version of the file. In this way,
+\texttt{svn\ annotate} becomes another way for you to see which lines in
+the file you have changed. You can use the \texttt{BASE} revision
+keyword (see \hyperref[svn.tour.revs.keywords]{Revision Keywords}) to
+instead see the unmodified form of the file as it resides in your
+working copy.
+
+\begin{verbatim}
+$ svn annotate rules.txt@BASE
+     1      harry Be kind to others
+     3      sally Freedom = Responsibility
+     1      harry Everything in moderation
+     1      harry Chew with your mouth open
+\end{verbatim}
+
+The \texttt{-\/-verbose\ (-v)} option causes \texttt{svn\ annotate} to
+also include on each line the datestamp associated with that
+line\textquotesingle s reported revision number. (This adds a
+significant amount of width to each line of ouput, so
+we\textquotesingle ll skip the demonstration here.)
+
+As with \texttt{svn\ cat}, you can also ask \texttt{svn\ annotate} to
+display previous versions of the file. This can be a handy trick when,
+after finding out who most recently modified a particular line of
+interest in the file, you then wish to see who modified the same line
+prior to that.
+
+\begin{verbatim}
+$ svn blame rules.txt -r 2
+     1      harry Be kind to others
+     1      harry Freedom = Chocolate Ice Cream
+     1      harry Everything in moderation
+     1      harry Chew with your mouth open
+\end{verbatim}
+
+Unlike the \texttt{svn\ cat} command, the functionality of
+\texttt{svn\ annotate} is tied heavily to the idea of ``lines'' of text
+in a human-readable file. As such, if you attempt to run the command on
+a file that Subversion has determined is \emph{not} human-readable (per
+the file\textquotesingle s \texttt{svn:mime-type} property---see
+\hyperref[svn.advanced.props.special.mime-type]{File Content Type} for
+details), you\textquotesingle ll get an error message.
+
+\begin{verbatim}
+$ svn annotate images/logo.png
+Skipping binary file (use --force to treat as text): 'images/logo.png'
+$
+\end{verbatim}
+
+As revealed in the error message, you can use the \texttt{-\/-force}
+option to disable this check and proceed with the annotation as if the
+file\textquotesingle s contents are, in fact, human-readable and
+line-based. Naturally, if you force Subversion to try to perform
+line-based annotation on a nontextual file, you\textquotesingle ll get
+what you asked for: a screenful of nonsense.
+
+\begin{verbatim}
+$ svn annotate images/logo.png --force
+     6      harry \211PNG
+     6      harry ^Z
+     6      harry 
+     7      harry \274\361\MI\300\365\353^X\300…
+\end{verbatim}
+
+Depending on your mood at the time you execute this command and your
+reasons for doing so, you may find yourself typing
+\texttt{svn\ blame\ …} or \texttt{svn\ praise\ …} instead of using the
+canonical \texttt{svn\ annotate} command form. That\textquotesingle s
+okay---the Subversion developers anticipated as much, so those
+particular command aliases work, too!
+
+Finally, as with many of Subversion\textquotesingle s informational
+commands, you can also reference files in your \texttt{svn\ annotate}
+command invocations by their repository URLs, allowing access to this
+information even when you don\textquotesingle t have ready access to a
+working copy.
+
+\subsubsection{Listing versioned
+directories}\label{svn.tour.history.browsing.list}
+
+The \texttt{svn\ list} command shows you what files are in a repository
+directory without actually downloading the files to your local machine:
+
+\begin{verbatim}
+$ svn list http://svn.example.com/repo/project
+README
+branches/
+tags/
+trunk/
+\end{verbatim}
+
+If you want a more detailed listing, pass the \texttt{-\/-verbose}
+(\texttt{-v}) flag to get output like this:
+
+\begin{verbatim}
+$ svn list -v http://svn.example.com/repo/project
+  23351 sally                 Feb 05 13:26 ./
+  20620 harry            1084 Jul 13  2006 README
+  23339 harry                 Feb 04 01:40 branches/
+  23198 harry                 Jan 23 17:17 tags/
+  23351 sally                 Feb 05 13:26 trunk/
+\end{verbatim}
+
+The columns tell you the revision at which the file or directory was
+last modified, the user who modified it, the size if it is a file, the
+date it was last modified, and the item\textquotesingle s name.
+
+The \texttt{svn\ list} command with no arguments defaults to the
+\emph{repository URL} of the current working directory, \emph{not} the
+local working copy directory. After all, if you want a listing of your
+local directory, you could use just plain \texttt{ls} (or any reasonable
+non-Unixy equivalent).
+
+\subsection{Fetching Older Repository
+Snapshots}\label{svn.tour.history.snapshots}
+
+In addition to all of the previous commands, you can use the
+\texttt{-\/-revision} (\texttt{-r}) option with \texttt{svn\ update} to
+take an entire working copy ``back in time'':\footnote{See? We told you
+  that Subversion was a time machine.}
+
+\begin{verbatim}
+# Make the current directory look like it did in r1729.
+$ svn update -r 1729
+Updating '.':
+…
+$
+\end{verbatim}
+
+Many Subversion newcomers attempt to use the preceding
+\texttt{svn\ update} example to ``undo'' committed changes, but this
+won\textquotesingle t work as you can\textquotesingle t commit changes
+that you obtain from backdating a working copy if the changed files have
+newer revisions. See
+\hyperref[svn.branchmerge.basicmerging.resurrect]{Resurrecting Deleted
+Items} for a description of how to ``undo'' a commit.
+
+If you\textquotesingle d prefer to create a whole new working copy from
+an older snapshot, you can do so by modifying the typical
+\texttt{svn\ checkout} command. As with \texttt{svn\ update}, you can
+provide the \texttt{-\/-revision} (\texttt{-r}) option. But for reasons
+that we cover in \hyperref[svn.advanced.pegrevs]{Peg and Operative
+Revisions}, you might instead want to specify the target revision as
+part of Subversion\textquotesingle s expanded URL syntax.
+
+\begin{verbatim}
+# Checkout the trunk from r1729.
+$ svn checkout http://svn.example.com/svn/repo/trunk@1729 trunk-1729
+…
+# Checkout the current trunk as it looked in r1729.
+$ svn checkout http://svn.example.com/svn/repo/trunk -r 1729 trunk-1729
+…
+$
+\end{verbatim}
+
+Lastly, if you\textquotesingle re building a release and wish to bundle
+up your versioned files and directories, you can use
+\texttt{svn\ export} to create a local copy of all or part of your
+repository without any \texttt{.svn} administrative directories
+included. The basic syntax of this subcommand is identical to that of
+\texttt{svn\ checkout}:
+
+\begin{verbatim}
+# Export the trunk from the latest revision.
+$ svn export http://svn.example.com/svn/repo/trunk trunk-export
+…
+# Export the trunk from r1729.
+$ svn export http://svn.example.com/svn/repo/trunk@1729 trunk-1729
+…
+# Export the current trunk as it looked in r1729. 
+$ svn export http://svn.example.com/svn/repo/trunk -r 1729 trunk-1729
+…
+$
+\end{verbatim}
+
+\section{Sometimes You Just Need to Clean Up}\label{svn.tour.cleanup}
+
+Now that we\textquotesingle ve covered the day-to-day tasks that
+you\textquotesingle ll frequently use Subversion for,
+we\textquotesingle ll review a few administrative tasks relating to your
+working copy.
+
+\subsection{Disposing of a Working
+Copy}\label{svn.tour.cleanup.disposal}
+
+Subversion doesn\textquotesingle t track either the state or the
+existence of working copies on the server, so there\textquotesingle s no
+server overhead to keeping working copies around. Likewise,
+there\textquotesingle s no need to let the server know that
+you\textquotesingle re going to delete a working copy.
+
+If you\textquotesingle re likely to use a working copy again,
+there\textquotesingle s nothing wrong with just leaving it on disk until
+you\textquotesingle re ready to use it again, at which point all it
+takes is an \texttt{svn\ update} to bring it up to date and ready for
+use.
+
+However, if you\textquotesingle re definitely not going to use a working
+copy again, you can safely delete the entire thing using whatever
+directory removal capabilities your operating system offers. We
+recommend that before you do so you run \texttt{svn\ status} and review
+any files listed in its output that are prefixed with a \texttt{?} to
+make certain that they\textquotesingle re not of importance.
+
+\subsection{Recovering from an
+Interruption}\label{svn.tour.cleanup.interruption}
+
+When Subversion modifies your working copy---either your files or its
+own administrative state---it tries to do so as safely as possible.
+Before changing the working copy, Subversion logs its intentions in a
+private ``to-do list'', of sorts. Next, it performs those actions to
+effect the desired change, holding a lock on the relevant part of the
+working copy while it works. This prevents other Subversion clients from
+accessing the working copy mid-change. Finally, Subversion releases its
+lock and cleans up its private to-do list. Architecturally, this is
+similar to a journaled filesystem. If a Subversion operation is
+interrupted (e.g, if the process is killed or if the machine crashes),
+the private to-do list remains on disk. This allows Subversion to return
+to that list later to complete any unfinished operations and return your
+working copy to a consistent state.
+
+This is exactly what \texttt{svn\ cleanup} does: it searches your
+working copy and runs any leftover to-do items, removing working copy
+locks as it completes those operations. If Subversion ever tells you
+that some part of your working copy is ``locked,'' run
+\texttt{svn\ cleanup} to remedy the problem. The \texttt{svn\ status}
+command will inform you about administrative locks in the working copy,
+too, by displaying an \texttt{L} next to those locked paths:
+
+\begin{verbatim}
+$ svn status
+  L     somedir
+M       somedir/foo.c
+$ svn cleanup
+$ svn status
+M       somedir/foo.c
+\end{verbatim}
+
+Don\textquotesingle t confuse these working copy administrative locks
+with the user-managed locks that Subversion users create when using the
+lock-modify-unlock model of concurrent version control; see the sidebar
+\hyperref[svn.advanced.locking.meanings]{The Many Meanings of ``Lock''}
+for clarification.
+
+\section{Dealing with Structural
+Conflicts}\label{svn.tour.treeconflicts}
+
+So far, we have only talked about conflicts at the level of file
+content. When you and your collaborators make overlapping changes within
+the same file, Subversion forces you to merge those changes before you
+can commit.\footnote{Well, you \emph{could} mark files containing
+  conflict markers as resolved and commit them, if you really wanted to.
+  But this is rarely done in practice.}
+
+But what happens if your collaborators move or delete a file that you
+are still working on? Maybe there was a miscommunication, and one person
+thinks the file should be deleted, while another person still wants to
+commit changes to the file. Or maybe your collaborators did some
+refactoring, renaming files and moving around directories in the
+process. If you were still working on these files, those modifications
+may need to be applied to the files at their new location. Such
+conflicts manifest themselves at the directory tree structure level
+rather than at the file content level, and are known as tree conflicts.
+
+Tree conflicts prior to Subversion 1.6
+
+Prior to Subversion 1.6, tree conflicts could yield rather unexpected
+results. For example, if a file was locally modified, but had been
+renamed in the repository, running \texttt{svn\ update} would make
+Subversion carry out the following steps:
+
+\begin{itemize}
+\item
+  Check the file to be renamed for local modifications.
+\item
+  Delete the file at its old location, and if it had local
+  modifications, keep an on-disk copy of the file at the old location.
+  This on-disk copy now appears as an unversioned file in the working
+  copy.
+\item
+  Add the file, as it exists in the repository, at its new location.
+\end{itemize}
+
+When this situation arises, there is the possibility that the user makes
+a commit without realizing that local modifications have been left in a
+now-unversioned file in the working copy, and have not reached the
+repository. This gets more and more likely (and tedious) if the number
+of files affected by this problem is large.
+
+Since Subversion 1.6, this and other similar situations are flagged as
+conflicts in the working copy.
+
+As with textual conflicts, tree conflicts prevent a commit from being
+made from the conflicted state, giving the user the opportunity to
+examine the state of the working copy for potential problems arising
+from the tree conflict, and resolving any such problems before
+committing.
+
+\subsection{An Example Tree
+Conflict}\label{svn.tour.treeconflicts.example}
+
+Suppose a software project you were working on currently looked like
+this:
+
+\begin{verbatim}
+$ svn list -Rv svn://svn.example.com/trunk/
+     13 harry                 Sep 06 10:34 ./
+     13 harry              27 Sep 06 10:34 COPYING
+     13 harry              41 Sep 06 10:32 Makefile
+     13 harry              53 Sep 06 10:34 README
+     13 harry                 Sep 06 10:32 code/
+     13 harry              54 Sep 06 10:32 code/bar.c
+     13 harry             130 Sep 06 10:32 code/foo.c
+$
+\end{verbatim}
+
+Later, in revision 14, your collaborator Harry renames the file
+\texttt{bar.c} to \texttt{baz.c}. Unfortunately, you
+don\textquotesingle t realize this yet. As it turns out, you are busy in
+your working copy composing a different set of changes, some of which
+also involve modifications to \texttt{bar.c}:
+
+\begin{verbatim}
+$ svn diff
+Index: code/foo.c
+===================================================================
+--- code/foo.c  (revision 13)
++++ code/foo.c  (working copy)
+@@ -3,5 +3,5 @@
+ int main(int argc, char *argv[])
+ {
+     printf("I don't like being moved around!\n%s", bar());
+-    return 0;
++    return 1;
+ }
+Index: code/bar.c
+===================================================================
+--- code/bar.c  (revision 13)
++++ code/bar.c  (working copy)
+@@ -1,4 +1,4 @@
+ const char *bar(void)
+ {
+-    return "Me neither!\n";
++    return "Well, I do like being moved around!\n";
+ }
+$
+\end{verbatim}
+
+You first realize that someone else has changed \texttt{bar.c} when your
+own commit attempt fails:
+
+\begin{verbatim}
+$ svn commit -m "Small fixes"
+Sending        code/bar.c
+Transmitting file data .
+svn: E155011: Commit failed (details follow):
+svn: E155011: File '/home/svn/project/code/bar.c' is out of date
+svn: E160013: File not found: transaction '14-e', path '/code/bar.c'
+$
+\end{verbatim}
+
+At this point, you need to run \texttt{svn\ update}. Besides bringing
+our working copy up to date so that you can see Harry\textquotesingle s
+changes, this also flags a tree conflict so you have the opportunity to
+evaluate and properly resolve it.
+
+\begin{verbatim}
+$ svn update
+Updating '.':
+   C code/bar.c
+A    code/baz.c
+U    Makefile
+Updated to revision 14.
+Summary of conflicts:
+  Tree conflicts: 1
+$
+\end{verbatim}
+
+In its output, \texttt{svn\ update} signifies tree conflicts using a
+capital C in the fourth output column. \texttt{svn\ status} reveals
+additional details of the conflict:
+
+\begin{verbatim}
+$ svn status
+M       code/foo.c
+A  +  C code/bar.c
+      >   local edit, incoming delete upon update
+Summary of conflicts:
+  Tree conflicts: 1
+$
+\end{verbatim}
+
+Note how \texttt{bar.c} is automatically scheduled for re-addition in
+your working copy, which simplifies things in case you want to keep the
+file.
+
+Because a move in Subversion is implemented as a copy operation followed
+by a delete operation, and these two operations cannot be easily related
+to one another during an update, all Subversion can warn you about is an
+incoming delete operation on a locally modified file. This delete
+operation \emph{may} be part of a move, or it could be a genuine delete
+operation. Determining exactly what semantic change was made to the
+repository is important---you want to know just how your own edits fit
+into the overall trajectory of the project. So read log messages, talk
+to your collaborators, study the line-based differences---do whatever
+you must do---to determine your best course of action.
+
+In this case, Harry\textquotesingle s commit log message tells you what
+you need to know.
+
+\begin{verbatim}
+$ svn log -r14 ^/trunk
+------------------------------------------------------------------------
+r14 | harry | 2011-09-06 10:38:17 -0400 (Tue, 06 Sep 2011) | 1 line
+Changed paths:
+   M /Makefile
+   D /code/bar.c
+   A /code/baz.c (from /code/bar.c:13)
+
+Rename bar.c to baz.c, and adjust Makefile accordingly.
+------------------------------------------------------------------------
+$
+\end{verbatim}
+
+\texttt{svn\ info} shows the URLs of the items involved in the conflict.
+The \emph{left} URL shows the source of the local side of the conflict,
+while the \emph{right} URL shows the source of the incoming side of the
+conflict. These URLs indicate where you should start searching the
+repository\textquotesingle s history for the change which conflicts with
+your local change.
+
+\begin{verbatim}
+$ svn info code/bar.c
+Path: code/bar.c
+Name: bar.c
+URL: http://svn.example.com/svn/repo/trunk/code/bar.c
+…
+Tree conflict: local edit, incoming delete upon update
+  Source  left: (file) ^/trunk/code/bar.c@4
+  Source right: (none) ^/trunk/code/bar.c@5
+
+$
+\end{verbatim}
+
+\texttt{bar.c} is now said to be the victim of a tree conflict. It
+cannot be committed until the conflict is resolved:
+
+\begin{verbatim}
+$ svn commit -m "Small fixes" 
+svn: E155015: Commit failed (details follow):
+svn: E155015: Aborting commit: '/home/svn/project/code/bar.c' remains in confl
+ict
+$
+\end{verbatim}
+
+To resolve this conflict, you must either agree or disagree with the
+move that Harry made.
+
+If you agree with the move, your \texttt{bar.c} is superfluous.
+You\textquotesingle ll want to delete it and mark the tree conflict as
+resolved. But wait: you made changes to that file! Before deleting
+\texttt{bar.c}, you need to decide if the changes you made to it need to
+be applied elsewhere, for example to the new \texttt{baz.c} file where
+all of \texttt{bar.c}\textquotesingle s code now lives.
+Let\textquotesingle s assume that your changes do need to ``follow the
+move''. Subversion isn\textquotesingle t smart enough to do this work
+for you\footnote{In some cases, Subversion 1.5 and 1.6 \emph{would}
+  actually handle this for you, but this somewhat hit-or-miss
+  functionality was removed in Subversion 1.7.}, so you need to migrate
+your changes manually.
+
+In our example, you could manually re-make your change to \texttt{bar.c}
+pretty easily---it was, after all, a single-line change.
+That\textquotesingle s not always the case, though, so
+we\textquotesingle ll show a more scalable approach.
+We\textquotesingle ll first use \texttt{svn\ diff} to create a patch
+file. Then we\textquotesingle ll edit the headers of that patch file to
+point to the new name of our renamed file. Finally, we re-apply the
+modified patch to our working copy.
+
+\begin{verbatim}
+$ svn diff code/bar.c > PATCHFILE
+$ cat PATCHFILE
+Index: code/bar.c
+===================================================================
+--- code/bar.c  (revision 14)
++++ code/bar.c  (working copy)
+@@ -1,4 +1,4 @@
+ const char *bar(void)
+ {
+-    return "Me neither!\n";
++    return "Well, I do like being moved around!\n";
+ }
+$ ### Edit PATCHFILE to refer to code/baz.c instead of code/bar.c
+$ cat PATCHFILE
+Index: code/baz.c
+===================================================================
+--- code/baz.c  (revision 14)
++++ code/baz.c  (working copy)
+@@ -1,4 +1,4 @@
+ const char *bar(void)
+ {
+-    return "Me neither!\n";
++    return "Well, I do like being moved around!\n";
+ }
+$ svn patch PATCHFILE
+U         code/baz.c
+$
+\end{verbatim}
+
+Now that the changes you originally made to \texttt{bar.c} have been
+successfully reproduced in \texttt{baz.c}, you can delete \texttt{bar.c}
+and resolve the conflict, instructing the resolution logic to accept
+what is currently in the working copy as the desired result.
+
+\begin{verbatim}
+$ svn delete --force code/bar.c
+D         code/bar.c
+$ svn resolve --accept=working code/bar.c
+Resolved conflicted state of 'code/bar.c'
+$ svn status
+M       code/foo.c
+M       code/baz.c
+$ svn diff
+Index: code/foo.c
+===================================================================
+--- code/foo.c  (revision 14)
++++ code/foo.c  (working copy)
+@@ -3,5 +3,5 @@
+ int main(int argc, char *argv[])
+ {
+     printf("I don't like being moved around!\n%s", bar());
+-    return 0;
++    return 1;
+ }
+Index: code/baz.c
+===================================================================
+--- code/baz.c  (revision 14)
++++ code/baz.c  (working copy)
+@@ -1,4 +1,4 @@
+ const char *bar(void)
+ {
+-    return "Me neither!\n";
++    return "Well, I do like being moved around!\n";
+ }
+$
+\end{verbatim}
+
+But what if you do not agree with the move? Well, in that case, you can
+delete \texttt{baz.c} instead, after making sure any changes made to it
+after it was renamed are either preserved or not worth keeping. (Do not
+forget to also revert the changes Harry made to \texttt{Makefile}.)
+Since \texttt{bar.c} is already scheduled for re-addition, there is
+nothing else left to do, and the conflict can be marked resolved:
+
+\begin{verbatim}
+$ svn delete --force code/baz.c
+D         code/baz.c
+$ svn resolve --accept=working code/bar.c
+Resolved conflicted state of 'code/bar.c'
+$ svn status
+M       code/foo.c
+A  +    code/bar.c
+D       code/baz.c
+M       Makefile
+$ svn diff
+Index: code/foo.c
+===================================================================
+--- code/foo.c  (revision 14)
++++ code/foo.c  (working copy)
+@@ -3,5 +3,5 @@
+ int main(int argc, char *argv[])
+ {
+     printf("I don't like being moved around!\n%s", bar());
+-    return 0;
++    return 1;
+ }
+Index: code/bar.c
+===================================================================
+--- code/bar.c  (revision 14)
++++ code/bar.c  (working copy)
+@@ -1,4 +1,4 @@
+ const char *bar(void)
+ {
+-    return "Me neither!\n";
++    return "Well, I do like being moved around!\n";
+ }
+Index: code/baz.c
+===================================================================
+--- code/baz.c  (revision 14)
++++ code/baz.c  (working copy)
+@@ -1,4 +0,0 @@
+-const char *bar(void)
+-{
+-    return "Me neither!\n";
+-}
+Index: Makefile
+===================================================================
+--- Makefile    (revision 14)
++++ Makefile    (working copy)
+@@ -1,2 +1,2 @@
+ foo: 
+-   $(CC) -o $@ code/foo.c code/baz.c
++   $(CC) -o $@ code/foo.c code/bar.c
+\end{verbatim}
+
+You\textquotesingle ve now resolved your first tree conflict! You can
+commit your changes and tell Harry during tea break about all the extra
+work he caused for you.
+
+\section{Summary}\label{svn.tour.summary}
+
+Now we\textquotesingle ve covered most of the Subversion client
+commands. Notable exceptions are those dealing with branching and
+merging (see \hyperref[svn.branchmerge]{Branching and Merging}) and
+properties (see \hyperref[svn.advanced.props]{Properties}). However, you
+may want to take a moment to skim through \hyperref[svn.ref.svn]{svn
+Reference---Subversion Command-Line Client} to get an idea of all the
+different commands that Subversion has---and how you can use them to
+make your work easier.
+

@@ -1,0 +1,236 @@
+\chapter{svndumpfilter Reference---Subversion History
+Filtering}\label{svn.ref.svndumpfilter}
+
+\texttt{svndumpfilter} is a command-line utility for removing history
+from a Subversion dump file by either excluding or including paths
+beginning with one or more named prefixes. For details, see
+\hyperref[svn.reposadmin.maint.tk.svndumpfilter]{svndumpfilter}.
+
+Options in \texttt{svndumpfilter} are global, just as they are in
+\texttt{svn} and \texttt{svnadmin}:
+
+\protect\phantomsection\label{svn.ref.svndumpfilter.sw}{}
+
+\begin{description}
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.drop_empty_revs}{}\texttt{-\/-drop-empty-revs}]
+If the current filtering invocation causes any revision to be empty
+(i.e., the revision causes no change to the repository), removes these
+revisions from the final dump file.
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.drop_all_empty_revs}{}\texttt{-\/-drop-all-empty-revs}]
+Removes all empty revisions found in the dumpstream from the final dump
+file (except revision 0).
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.pattern}{}\texttt{-\/-pattern}]
+Treat the path prefixes provided to the filtering commands as file glob
+patterns rather than explicit path substrings.
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.renumber_revs}{}\texttt{-\/-renumber-revs}]
+Renumbers revisions that remain after filtering.
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.skip_missing_merge_sources}{}\texttt{-\/-skip-missing-merge-sources}]
+Skips merge sources that have been removed as part of the filtering.
+Without this option, \texttt{svndumpfilter} will exit with an error if
+the merge source for a retained path is removed by filtering.
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.preserve_revprops}{}\texttt{-\/-preserve-revprops}]
+If all nodes in a revision are removed by filtering and
+\texttt{-\/-drop-empty-revs} is not passed, the default behavior of
+\texttt{svndumpfilter} is to remove all revision properties except for
+the date and the log message (which will merely indicate that the
+revision is empty). Passing this option will preserve existing revision
+properties (which may or may not make sense since the related content is
+no longer present in the dump file).
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.targets}{}\texttt{-\/-targets}
+\textless FILENAME\textgreater{}]
+Instructs \texttt{svndumpfilter} to read additional path prefixes---one
+per line---from the file located at \textless FILENAME\textgreater. This
+is especially useful for complex filtering operations which require more
+prefixes than the operating system allows to be specified on a single
+command line.
+\item[\protect\phantomsection\label{svn.ref.svndumpfilter.sw.quiet}{}\texttt{-\/-quiet}]
+Does not display filtering statistics.
+\end{description}
+
+\section{svndumpfilter
+exclude}\label{svn.ref.svndumpfilter.commands.c.exclude}
+
+\emph{Filter out nodes with given prefixes from the dump stream.}
+
+\textbf{Synopsis}
+
+\texttt{svndumpfilter\ exclude\ PATH\_PREFIX...}
+
+\subsection{Description}
+
+This can be used to exclude nodes that begin with one or more
+\textless PATH\_PREFIX\textgreater es from a filtered dump file.
+
+\subsection{Options}
+
+\begin{verbatim}
+--drop-empty-revs
+--drop-all-empty-revs
+--pattern
+--preserve-revprops
+--quiet
+--renumber-revs
+--skip-missing-merge-sources
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Examples}
+
+If we have a dump file from a repository with a number of different
+picnic-related directories in it, but we want to keep everything
+\emph{except} the \texttt{sandwiches} part of the repository,
+we\textquotesingle ll exclude only that path:
+
+\begin{verbatim}
+$ svndumpfilter exclude sandwiches < dumpfile > filtered-dumpfile
+Excluding prefixes:
+   '/sandwiches'
+
+Revision 0 committed as 0.
+Revision 1 committed as 1.
+Revision 2 committed as 2.
+Revision 3 committed as 3.
+Revision 4 committed as 4.
+
+Dropped 1 node(s):
+   '/sandwiches'
+$
+\end{verbatim}
+
+Beginning in Subversion 1.7, \texttt{svndumpfilter} can optionally treat
+the \textless PATH\_PREFIX\textgreater s not merely as explicit
+substrings, but as file patterns instead. So, for example, if you wished
+to filter out paths which ended with \texttt{.OLD}, you would do the
+following:
+
+\begin{verbatim}
+$ svndumpfilter exclude --pattern "*.OLD" < dumpfile > filtered-dumpfile
+Excluding prefix patterns:
+   '/*.OLD'
+
+Revision 0 committed as 0.
+Revision 1 committed as 1.
+Revision 2 committed as 2.
+Revision 3 committed as 3.
+Revision 4 committed as 4.
+
+Dropped 3 node(s):
+   '/condiments/salt.OLD'
+   '/condiments/pepper.OLD'
+   '/toppings/cheese.OLD'
+$
+\end{verbatim}
+
+\section{svndumpfilter
+include}\label{svn.ref.svndumpfilter.commands.c.include}
+
+\emph{Filter out nodes without given prefixes from dump stream.}
+
+\textbf{Synopsis}
+
+\texttt{svndumpfilter\ include\ PATH\_PREFIX...}
+
+\subsection{Description}
+
+Can be used to include nodes that begin with one or more
+\textless PATH\_PREFIX\textgreater es in a filtered dump file (thus
+excluding all other paths).
+
+\subsection{Options}
+
+\begin{verbatim}
+--drop-empty-revs
+--drop-all-empty-revs
+--pattern
+--preserve-revprops
+--quiet
+--renumber-revs
+--skip-missing-merge-sources
+--targets FILENAME
+\end{verbatim}
+
+\subsection{Example}
+
+If we have a dump file from a repository with a number of different
+picnic-related directories in it, but want to keep only the
+\texttt{sandwiches} part of the repository, we\textquotesingle ll
+include only that path:
+
+\begin{verbatim}
+$ svndumpfilter include sandwiches < dumpfile > filtered-dumpfile
+Including prefixes:
+   '/sandwiches'
+
+Revision 0 committed as 0.
+Revision 1 committed as 1.
+Revision 2 committed as 2.
+Revision 3 committed as 3.
+Revision 4 committed as 4.
+
+Dropped 12 node(s):
+   '/condiments'
+   '/condiments/pepper'
+   '/condiments/pepper.OLD'
+   '/condiments/salt'
+   '/condiments/salt.OLD'
+   '/drinks'
+   '/snacks'
+   '/supplies'
+   '/toppings'
+   '/toppings/cheese'
+   '/toppings/cheese.OLD'
+   '/toppings/lettuce'
+$
+\end{verbatim}
+
+Beginning in Subversion 1.7, \texttt{svndumpfilter} can optionally treat
+the \textless PATH\_PREFIX\textgreater s not merely as explicit
+substrings, but as file patterns instead. So, for example, if you wished
+to include only paths which ended with \texttt{ks}, you would do the
+following:
+
+\begin{verbatim}
+$ svndumpfilter include --pattern "*ks" < dumpfile > filtered-dumpfile
+Including prefix patterns:
+   '/*ks'
+
+Revision 0 committed as 0.
+Revision 1 committed as 1.
+Revision 2 committed as 2.
+Revision 3 committed as 3.
+Revision 4 committed as 4.
+
+Dropped 11 node(s):
+   '/condiments'
+   '/condiments/pepper'
+   '/condiments/pepper.OLD'
+   '/condiments/salt'
+   '/condiments/salt.OLD'
+   '/sandwiches'
+   '/supplies'
+   '/toppings'
+   '/toppings/cheese'
+   '/toppings/cheese.OLD'
+   '/toppings/lettuce'
+$
+\end{verbatim}
+
+\section{svndumpfilter
+help}\label{svn.ref.svndumpfilter.commands.c.help}
+
+\emph{Help!}
+
+\textbf{Synopsis}
+
+\texttt{svndumpfilter\ help\ {[}SUBCOMMAND...{]}}
+
+\subsection{Description}
+
+Displays the help message for \texttt{svndumpfilter}. Unlike other help
+commands documented in this chapter, there is no witty commentary for
+this help command. The authors of this book deeply regret the omission.
+
+\subsection{Options}
+
+None
+

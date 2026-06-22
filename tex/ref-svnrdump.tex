@@ -1,0 +1,192 @@
+\chapter{svnrdump Reference---Remote Subversion Repository Data
+Migration}\label{svn.ref.svnrdump}
+
+\texttt{svnrdump} joined the Subversion tool chain in the Subversion 1.7
+release. It is best described as a network-aware version of the
+\texttt{svnadmin\ dump} and \texttt{svnadmin\ load} commands, paired
+together and released as a separate standalone program. We discuss the
+process of dumping and loading repository data---using both
+\texttt{svnadmin} and \texttt{svnrdump}--- in
+\hyperref[svn.reposadmin.maint.migrate]{Migrating Repository Data
+Elsewhere}.
+
+Options in \texttt{svnrdump} are global, just as they are in
+\texttt{svn} and \texttt{svnadmin}:
+
+\protect\phantomsection\label{svn.ref.svnrdump.sw}{}
+
+\begin{description}
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.config_dir}{}\texttt{-\/-config-dir}
+\textless DIR\textgreater{}]
+Instructs Subversion to read configuration information from the
+specified directory instead of the default location
+(\texttt{.subversion} in the user\textquotesingle s home directory).
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.config_option}{}\texttt{-\/-config-option}
+\textless FILE\textgreater:\textless SECTION\textgreater:\textless OPTION\textgreater={[}\textless VALUE\textgreater{]}]
+Sets, for the duration of the command, the value of a runtime
+configuration option. \textless FILE\textgreater{} and
+\textless SECTION\textgreater{} are the runtime configuration file
+(either \texttt{config} or \texttt{servers}) and the section thereof,
+respectively, which contain the option whose value you wish to change.
+\textless OPTION\textgreater{} is, of course, the option itself, and
+\textless VALUE\textgreater{} the value (if any) you wish to assign to
+the option. For example, to temporarily disable the use of the
+compression in the HTTP protocol, use
+\texttt{-\/-config-option=servers:global:http-compression=no}. You can
+use this option multiple times to change multiple option values
+simultaneously.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.incremental}{}\texttt{-\/-incremental}]
+Dump a revision or revision range only as a diff against the previous
+revision, instead of the default, which is begin a dumped revision range
+with a complete expansion of all contents of the repository as of that
+revision.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.no_auth_cache}{}\texttt{-\/-no-auth-cache}]
+Prevents caching of authentication information (e.g., username and
+password) in the Subversion runtime configuration directories.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.non_interactive}{}\texttt{-\/-non-interactive}]
+In the case of an authentication failure or insufficient credentials,
+prevents prompting for credentials (e.g., username or password). This is
+useful if you\textquotesingle re running Subversion inside an automated
+script and it\textquotesingle s more appropriate to have Subversion fail
+than to prompt for more information.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.password}{}\texttt{-\/-password}
+\textless PASSWD\textgreater{}]
+Specifies the password to use when authenticating against a Subversion
+server. If not provided, or if incorrect, Subversion will prompt you for
+this information as needed.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.quiet}{}\texttt{-\/-quiet}
+(\texttt{-q})]
+Requests that the client print only essential information while
+performing an operation.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.revision}{}\texttt{-\/-revision}
+(\texttt{-r}) \textless ARG\textgreater{}]
+Specifies a particular revision or revision range on which to operate.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.trust_server_cert}{}\texttt{-\/-trust-server-cert}]
+Used with \texttt{-\/-non-interactive} to accept any unknown SSL server
+certificates without prompting.
+\item[\protect\phantomsection\label{svn.ref.svnrdump.sw.username}{}\texttt{-\/-username}
+\textless NAME\textgreater{}]
+Specifies the username to use when authenticating against a Subversion
+server. If not provided, or if incorrect, Subversion will prompt you for
+this information as needed.
+\end{description}
+
+\section{svnrdump dump}\label{svn.ref.svnrdump.c.dump}
+
+\emph{}
+
+\textbf{Synopsis}
+
+\texttt{svnrdump\ dump\ SOURCE\_URL}
+
+\subsection{Description}
+
+Dump---that is, generate a repository dump stream of---revisions of the
+repository item located at \textless SOURCE\_URL\textgreater, printing
+the information to standard output. By default, the entire history will
+be included in the dump stream, but the scope of the operation can be
+limited via the use of the \texttt{-\/-revision} (\texttt{-r}) option.
+
+\subsection{Options}
+
+\begin{verbatim}
+--config-dir DIR
+--config-option FILE:SECTION:OPTION=[VALUE]
+--incremental
+--no-auth-cache
+--non-interactive
+--password PASSWD
+--quiet (-q)
+--revision (-r) ARG
+--trust-server-cert
+--username NAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Generate a dump stream of the full history of a remote repository
+(assuming that the user as who this runs has authorization to read all
+paths in the repository).
+
+\begin{verbatim}
+$ svnrdump dump http://svn.example.com/repos/calc > full.dump
+* Dumped revision 0.
+* Dumped revision 1.
+* Dumped revision 2.
+…
+\end{verbatim}
+
+Incrementally dump a single revision from that same repository:
+
+\begin{verbatim}
+$ svnrdump dump http://svn.example.com/repos/calc \
+           -r 21 --incremental > inc.dump
+* Dumped revision 21.
+$
+\end{verbatim}
+
+\section{svnrdump help}\label{svn.ref.svnrdump.c.help}
+
+\emph{Help!}
+
+\textbf{Synopsis}
+
+\texttt{svnrdump\ help}
+
+\subsection{Description}
+
+Use this to get help. Well, certain kinds of help. Need white lab coat
+and straightjackets kind of help? There\textquotesingle s a whole
+different protocol for that sort of thing.
+
+\subsection{Options}
+
+None
+
+\section{svnrdump load}\label{svn.ref.svnrdump.c.load}
+
+\emph{}
+
+\textbf{Synopsis}
+
+\texttt{svnrdump\ load\ DEST\_URL}
+
+\subsection{Description}
+
+Read from standard input revision information described in a Subversion
+repository dump stream, and load that information into the repository
+located at \textless DEST\_URL\textgreater.
+
+\subsection{Options}
+
+\begin{verbatim}
+--config-dir DIR
+--config-option FILE:SECTION:OPTION=[VALUE]
+--no-auth-cache
+--non-interactive
+--password PASSWD
+--quiet (-q)
+--trust-server-cert
+--username NAME
+\end{verbatim}
+
+\subsection{Examples}
+
+Dump the contents of a local repository, and use \texttt{svnrdump\ load}
+to transfer that revision information into an existing remote
+repository:
+
+\begin{verbatim}
+$ svnadmin dump -q /var/svn/repos/new-project | \
+      svnrdump load http://svn.example.com/repos/new-project
+* Loaded revision 0
+* Loaded revision 1.
+* Loaded revision 2.
+…
+\end{verbatim}
+
+To operate properly \texttt{svnrdump\ load} requires that the target
+repository have revision property modification enabled via the
+pre-revprop-change hook. For details about that hook, see
+\hyperref[svn.ref.reposhooks.pre-revprop-change]{pre-revprop-change}.
+
