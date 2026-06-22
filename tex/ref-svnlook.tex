@@ -641,6 +641,7 @@ List the value of a property on a path in the repository.
 --revprop
 --show-inherited-props
 --transaction (-t) ID
+--verbose (-v)
 \end{verbatim}
 
 \subsection{Examples}
@@ -747,6 +748,7 @@ revision IDs.
 
 \begin{verbatim}
 --full-paths
+--memory-cache-size (-M) ARG
 --non-recursive (-N)
 --revision (-r) REV
 --show-ids
@@ -851,7 +853,9 @@ Print the youngest revision number of a repository.
 
 \subsection{Options}
 
-None
+\begin{verbatim}
+--no-newline
+\end{verbatim}
 
 \subsection{Examples}
 

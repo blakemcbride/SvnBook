@@ -58,6 +58,9 @@ By default, when loading data into a repository that already contains
 revisions, \texttt{svnadmin} will ignore the UUID from the dump stream.
 This option will cause the repository\textquotesingle s UUID to be set
 to the UUID from the stream.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.ignore_dates}{}\texttt{-\/-ignore-dates}]
+When loading a dump stream, ignore the revision datestamps it contains,
+so the loaded revisions are stamped with the time of loading instead.
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.ignore_uuid}{}\texttt{-\/-ignore-uuid}]
 By default, when loading data into an empty repository,
 \texttt{svnadmin} will set the repository\textquotesingle s UUID to the
@@ -86,6 +89,14 @@ When used with \texttt{svnadmin\ verify}, check only the
 repository\textquotesingle s metadata and structure without reading and
 verifying the full text of every representation. This is much faster but
 less thorough. (Subversion 1.9.)
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.no_flush_to_disk}{}\texttt{-\/-no-flush-to-disk}]
+Disable the usual flushing of data to disk during the operation. This
+speeds up a bulk load at the cost of durability should the machine crash
+partway through.
+\item[\protect\phantomsection\label{svn.ref.svnadmin.sw.normalize_props}{}\texttt{-\/-normalize-props}]
+When loading a dump stream, normalize the encoding and line endings of
+property values that need it (such as \texttt{svn:*} properties) instead
+of rejecting nonconforming values. (Subversion 1.10.)
 \item[\protect\phantomsection\label{svn.ref.svnadmin.sw.parent_dir}{}\texttt{-\/-parent-dir}
 \textless DIR\textgreater{}]
 When loading a dump file, root paths at \textless DIR\textgreater{}
@@ -163,6 +174,7 @@ introduced in Subversion 1.14.
 \subsection{Options}
 
 \begin{verbatim}
+--memory-cache-size (-M) ARG
 --revision (-r) ARG
 --quiet (-q)
 \end{verbatim}
@@ -427,6 +439,7 @@ command was introduced in Subversion 1.10.
 \subsection{Options}
 
 \begin{verbatim}
+--file (-F) FILE
 --revision (-r) ARG
 --quiet (-q)
 \end{verbatim}
@@ -524,6 +537,7 @@ supported for FSFS repositories only.
 
 \begin{verbatim}
 --incremental
+--quiet (-q)
 \end{verbatim}
 
 \section{svnadmin info}\label{svn.ref.svnadmin.c.info}
@@ -597,9 +611,13 @@ easier.
 
 \begin{verbatim}
 --bypass-prop-validation
+--file (-F) FILE
 --force-uuid
+--ignore-dates
 --ignore-uuid
 --memory-cache-size (-M) ARG
+--no-flush-to-disk
+--normalize-props
 --parent-dir DIR
 --quiet (-q)
 --revision (-r) ARG
@@ -670,6 +688,7 @@ introduced in Subversion 1.10.
 --revision (-r) ARG
 --quiet (-q)
 --bypass-prop-validation
+--file (-F) FILE
 --force-uuid
 --normalize-props
 --no-flush-to-disk
@@ -707,6 +726,7 @@ token.
 
 \begin{verbatim}
 --bypass-hooks
+--quiet (-q)
 \end{verbatim}
 
 \section{svnadmin lslocks}\label{svn.ref.svnadmin.c.lslocks}
@@ -786,7 +806,10 @@ filesystems} for more information.
 
 \subsection{Options}
 
-None
+\begin{verbatim}
+--memory-cache-size (-M) ARG
+--quiet (-q)
+\end{verbatim}
 
 \section{svnadmin recover}\label{svn.ref.svnadmin.c.recover}
 
@@ -871,6 +894,7 @@ command was introduced in Subversion 1.13.
 \subsection{Options}
 
 \begin{verbatim}
+--memory-cache-size (-M) ARG
 --revision (-r) ARG
 --quiet (-q)
 \end{verbatim}
@@ -898,7 +922,9 @@ Remove one or more locks from each \textless LOCKED\_PATH\textgreater.
 
 \subsection{Options}
 
-None
+\begin{verbatim}
+--quiet (-q)
+\end{verbatim}
 
 \subsection{Examples}
 
@@ -1008,6 +1034,7 @@ from your post-revprop-change hook).
 
 \begin{verbatim}
 --revision (-r) ARG
+--transaction (-t) ARG
 --use-post-revprop-change-hook
 --use-pre-revprop-change-hook
 \end{verbatim}
@@ -1076,6 +1103,7 @@ associated with the lock matches \textless TOKEN\textgreater.
 
 \begin{verbatim}
 --bypass-hooks
+--quiet (-q)
 \end{verbatim}
 
 \section{svnadmin upgrade}\label{svn.ref.svnadmin.c.upgrade}

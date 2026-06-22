@@ -92,13 +92,17 @@ limited via the use of the \texttt{-\/-revision} (\texttt{-r}) option.
 \begin{verbatim}
 --config-dir DIR
 --config-option FILE:SECTION:OPTION=[VALUE]
+--file (-F) FILE
+--force-interactive
 --incremental
 --no-auth-cache
 --non-interactive
 --password PASSWD
+--password-from-stdin
 --quiet (-q)
 --revision (-r) ARG
 --trust-server-cert
+--trust-server-cert-failures ARG
 --username NAME
 \end{verbatim}
 
@@ -162,11 +166,16 @@ located at \textless DEST\_URL\textgreater.
 \begin{verbatim}
 --config-dir DIR
 --config-option FILE:SECTION:OPTION=[VALUE]
+--file (-F) FILE
+--force-interactive
 --no-auth-cache
 --non-interactive
 --password PASSWD
+--password-from-stdin
 --quiet (-q)
+--skip-revprop
 --trust-server-cert
+--trust-server-cert-failures ARG
 --username NAME
 \end{verbatim}
 
