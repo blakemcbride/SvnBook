@@ -121,6 +121,35 @@ through version~1.8.\\[6pt]
 This update to Subversion~1.14.5 was performed by Claude Code under the
 direction of Blake McBride.}
 
+% --- KDP print-margin fixes --------------------------------------------------
+% KDP flagged content running into the inner (gutter) and outer margins.  The
+% culprits are long monospace runs (Windows registry paths, URLs, option
+% names) and over-long uppercase running heads.  The fixes below let such
+% content break so it stays inside the text block; no geometry change needed.
+\makeatletter
+% 1. Restore the break-after-backslash inside \texttt.  hyperref (pulled in by
+%    bookmark, loaded after our redefinition above) overrides \textbackslash,
+%    so re-apply the discretionary at \begin{document}, reusing the original
+%    backslash captured in \svn@bs before hyperref loaded.
+\AtBeginDocument{\DeclareRobustCommand\textbackslash{\svn@bs\discretionary{}{}{}}}
+% 2. Let a monospace run break at any character as a last resort (URLs, paths,
+%    and option names that have no \ or _ to break at).  seqsplit only breaks a
+%    line that would otherwise overflow, so short inline code is unaffected.
+%    Inside inline code \^{} and \~{} are pandoc's escapes for a literal caret
+%    and tilde; map the accent commands to their no-argument symbol forms so
+%    seqsplit's character iteration can't split them from a {} argument.
+\usepackage{seqsplit}
+\let\svn@oldtexttt\texttt
+\renewcommand{\texttt}[1]{\svn@oldtexttt{\begingroup
+  \let\^\textasciicircum \let\~\textasciitilde \seqsplit{#1}\endgroup}}
+% 3. Don't UPPERCASE the running heads; long "svnrdump Reference---Remote
+%    Subversion Repository Data Migration"-style titles overflow the outer
+%    margin when set in (wider) capitals.
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{#1}}
+\makeatother
+% ---------------------------------------------------------------------------
+
 \begin{document}
 \frontmatter
 \maketitle

@@ -197,7 +197,12 @@ common pieces of WebDAV-enabled software. You can find more details
 about these software offerings, as well as their general category, in
 the sections that follow.
 
-\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)/6\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)/6\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)/6\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)/6\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)/6\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)/6\relax}@{}}
+% Column widths rebalanced (was 6 equal columns): widen Software just enough to
+% hold "Dreamweaver" without spilling into the gutter, taking the width from the
+% narrow OS columns -- which still fit their "Windows"/"Mac"/"Linux" headers.
+% Weights are /1000 of the same total content width pandoc computed, so the
+% table still fits \linewidth.
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)*205/1000\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)*167/1000\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)*153/1000\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)*152/1000\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)*152/1000\relax}>{\raggedright\arraybackslash}p{\dimexpr(\linewidth-2\tabcolsep*6)*171/1000\relax}@{}}
 \caption{Common WebDAV
 clients}\label{svn.webdav.clients.tbl-1}\tabularnewline
 \toprule\noalign{}
